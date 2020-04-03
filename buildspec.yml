@@ -14,14 +14,14 @@ phases:
       - zip -r Deploy.zip ./
       - aws s3 mv ./Deploy.zip s3://neo-cycle-lambda/${CODEBUILD_BUILD_NUMBER}/SessionMaintainer/Deploy.zip
       - cd ../../neo-cycle-infra
-      - aws cloudformation create-stack \
-          --stack-name neo-cycle-lambda \
-          --template-body file://Lambda/lambda.yaml \
-          --parameters ParameterKey=BucketKeyPrefix,ParameterValue=${CODEBUILD_BUILD_NUMBER} \
-          --capabilities CAPABILITY_AUTO_EXPAND \
-      - aws cloudformation wait stack-create-complete \
-        --stack-name presto-lambda-${ENV_NAME} \
-      - cd ../..
+      - aws cloudformation create-stack
+          --stack-name neo-cycle-lambda
+          --template-body file://Lambda/lambda.yaml
+          --parameters ParameterKey=BucketKeyPrefix,ParameterValue=${CODEBUILD_BUILD_NUMBER}
+          --capabilities CAPABILITY_AUTO_EXPAND
+      - aws cloudformation wait stack-create-complete
+        --stack-name presto-lambda-${ENV_NAME}
+      - cd ..
   build:
     commands:
       - cd neo-cycle-client
