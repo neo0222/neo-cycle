@@ -15,7 +15,7 @@ phases:
       - zip -r Deploy.zip ./
       - aws s3 mv ./Deploy.zip s3://neo-cycle-lambda/${CODEBUILD_BUILD_NUMBER}/SessionMaintainer/Deploy.zip
       - cd ../../neo-cycle-infra
-      - res=$(aws cloudformation describe-stack --stack-name neo-cycle-lambda)
+      - res=$(aws cloudformation describe-stacks --stack-name neo-cycle-lambda)
       - if [[ $res =~ COMPLETE ]];
         then
           aws cloudformation update-stack
