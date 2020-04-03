@@ -69,6 +69,14 @@ Resources:
               - "*"
             Action:
               - lambda:GetFunction
+              - lambda:CreateFunction
+              - lambda:PutFunctionConcurrency
+          - Effect: Allow
+            Resource:
+              # LambdaにアタッチするRoleが増えるごとにここに追加していく
+              - !ImportValue RoleSessionMaintainerArn
+            Action:
+              - iam:PassRole
 
   RoleCodeBuildService:
     Type: AWS::IAM::Role
