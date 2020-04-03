@@ -30,7 +30,7 @@ Parameters:
 Mappings:
   StackConfig:
     NameTag:
-      Value: ftf-web-management
+      Value: neo-cycle
 
 ######################################################
 # Resources
@@ -52,7 +52,7 @@ Resources:
               - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${NameTag}-build:*
           - Effect: Allow
             Resource:
-              - !Sub arn:aws:s3:::codepipeline-${AWS::Region}-*
+              - "*"
             Action:
               - s3:PutObject
               - s3:GetObject
@@ -134,7 +134,7 @@ Resources:
                   - s3:*
                   - iam:PassRole
 
-  FtfWebManagementPipeline:
+  NeoCyclePipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
       Name: !Sub
