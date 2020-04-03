@@ -62,7 +62,7 @@ async function retrieveSessionId(memberId, password) {
   try {
     const res = await axios.post(url.Parameter.Value, params, config);
     const html = res.data;
-    const sessionId = html.substr(html.indexOf('"SessionID" value="') + 19, 35+memberId.length);
+    const sessionId = html.substr(html.indexOf('"SessionID" value="') + 19, 36+memberId.length);
     return sessionId;
   }
   catch (error) {
