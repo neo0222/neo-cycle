@@ -61,6 +61,6 @@ Resources:
 #################################
 Outputs:
   RoleSessionMaintainerArn:
-    Value: !Ref RoleSessionMaintainer
+    Value: !GetAtt RoleSessionMaintainer.Arn
     Export:
       Name: RoleSessionMaintainerArn
