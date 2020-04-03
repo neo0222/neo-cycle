@@ -20,7 +20,7 @@ phases:
           --parameters ParameterKey=ObjectKeyPrefix,ParameterValue=${CODEBUILD_BUILD_NUMBER}
           --capabilities CAPABILITY_AUTO_EXPAND
       - aws cloudformation wait stack-create-complete
-        --stack-name presto-lambda-${ENV_NAME}
+        --stack-name neo-cycle-lambda
       - cd ..
   build:
     commands:
