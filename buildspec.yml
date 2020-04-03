@@ -15,10 +15,11 @@ phases:
       - zip -r Deploy.zip ./
       - aws s3 mv ./Deploy.zip s3://neo-cycle-lambda/${CODEBUILD_BUILD_NUMBER}/SessionMaintainer/Deploy.zip
       - cd ../../neo-cycle-infra
-      - res=$(aws cloudformation describe-stacks --stack-name neo-cycle-lambda)
-      - if [[ $res =~ COMPLETE ]] ; then aws cloudformation update-stack --stack-name neo-cycle-lambda --template-body file://Lambda/lambda.yaml --parameters ParameterKey=ObjectKeyPrefix,ParameterValue=${CODEBUILD_BUILD_NUMBER} --capabilities CAPABILITY_AUTO_EXPAND ; aws cloudformation wait stack-update-complete --stack-name neo-cycle-lambda ; fi
-      - aws cloudformation create-stack --stack-name neo-cycle-lambda --template-body file://Lambda/lambda.yaml --parameters ParameterKey=ObjectKeyPrefix,ParameterValue=${CODEBUILD_BUILD_NUMBER} --capabilities CAPABILITY_AUTO_EXPAND
-      - aws cloudformation wait stack-create-complete --stack-name neo-cycle-lambda
+      - aws cloudformation deploy
+          --stack-name neo-cycle-lambda
+          --template-file /Lambda/lambda.yaml
+          --parameter-overrides ObjectKeyPrefix=${CODEBUILD_BUILD_NUMBER}
+          --capabilities CAPABILITY_AUTO_EXPAND
       - cd ..
   build:
     commands:
