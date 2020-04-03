@@ -31,19 +31,15 @@ Resources:
       Runtime: nodejs12.x
       Timeout: 10
   
-  LambdaSessionMaintainerScheduleEvent:
-    Type: AWS::Events::Rule
-    Properties:
-      Description: ’schedule event for lambda session maintainer’
-      ScheduleExpression: 'cron(0/30 * * * ? *)'
-      State: ENABLED
-      Targets:
-        - Arn: !GetAtt LambdaSessionMaintainer.Arn
-          Id: schedule-session-maintenance-target
-  LambdaSessionMaintainerInvokePermission:
-    Type: AWS::Lambda::Permission
-    Properties: 
-      Action: lambda:InvokeFunction
-      FunctionName: !Ref LambdaSessionMaintainer
-      Principal: events.amazonaws.com
-      SourceArn: !GetAtt LambdaSessionMaintainerScheduleEvent.Arn
+#################################
+# Outputs
+#################################
+Outputs:
+  LambdaSessionMaintainerArn:
+    Value: !GetAtt LambdaSessionMaintainer.Arn
+    Export:
+      Name: LambdaSessionMaintainerArn
+  LambdaSessionMaintainerFunctionName:
+    Value: !Ref LambdaSessionMaintainer
+    Export:
+      Name: LambdaSessionMaintainerFunctionName
