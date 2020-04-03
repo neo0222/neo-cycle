@@ -27,6 +27,6 @@ Resources:
       FunctionName: SessionMaintainer
       Handler: index.handler
       ReservedConcurrentExecutions: 1
-      Role: !ImportValue RoleLambdaFoodDynamoArn
+      Role: !ImportValue RoleSessionMaintainerArn
       Runtime: nodejs12.x
       Timeout: 10
