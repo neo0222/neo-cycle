@@ -17,7 +17,7 @@ phases:
       - cd ../../neo-cycle-infra
       - aws cloudformation deploy
           --stack-name neo-cycle-lambda
-          --template-file /Lambda/lambda.yaml
+          --template-file file://Lambda/lambda.yaml
           --parameter-overrides ObjectKeyPrefix=${CODEBUILD_BUILD_NUMBER}
           --capabilities CAPABILITY_AUTO_EXPAND
       - cd ..
