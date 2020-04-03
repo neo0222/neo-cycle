@@ -1,0 +1,38 @@
+version: 0.2
+
+phases:
+  install:
+    runtime-versions:
+      nodejs: 10
+  pre_build:
+    commands:
+      - cd neo-cycle-client
+      - if [ -e /tmp/node_modules.tar ]; then tar xf /tmp/node_modules.tar; fi
+      - npm install
+      - cd ../neo-cycle-lambda
+      - cd ./SessionMaintainer
+      - zip -r Deploy.zip ./
+      - aws s3 mv ./Deploy.zip s3://neo-cycle-lambda/${CODEBUILD_BUILD_NUMBER}/SessionMaintainer/Deploy.zip
+      - cd ../../neo-cycle-infra
+      - aws cloudformation create-stack \
+          --stack-name neo-cycle-lambda \
+          --template-body file://Lambda/lambda.yaml \
+          --parameters ParameterKey=BucketKeyPrefix,ParameterValue=${CODEBUILD_BUILD_NUMBER} \
+          --capabilities CAPABILITY_AUTO_EXPAND \
+      - aws cloudformation wait stack-create-complete \
+        --stack-name presto-lambda-${ENV_NAME} \
+      - cd ../..
+  build:
+    commands:
+      - cd neo-cycle-client
+      - npm run build
+  post_build:
+    commands:
+      - tar cf /tmp/node_modules.tar node_modules
+artifacts:
+  files:
+    - '**/*'
+  base-directory: neo-cycle-client/dist
+cache:
+  paths:
+    - /tmp/node_modules.tar
