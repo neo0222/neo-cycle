@@ -17,7 +17,7 @@ phases:
       - aws cloudformation create-stack
           --stack-name neo-cycle-lambda
           --template-body file://Lambda/lambda.yaml
-          --parameters ParameterKey=BucketKeyPrefix,ParameterValue=${CODEBUILD_BUILD_NUMBER}
+          --parameters ParameterKey=ObjectKeyPrefix,ParameterValue=${CODEBUILD_BUILD_NUMBER}
           --capabilities CAPABILITY_AUTO_EXPAND
       - aws cloudformation wait stack-create-complete
         --stack-name presto-lambda-${ENV_NAME}
