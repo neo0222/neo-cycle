@@ -11,6 +11,7 @@ phases:
       - npm install
       - cd ../neo-cycle-lambda
       - cd ./SessionMaintainer
+      - npm install
       - zip -r Deploy.zip ./
       - aws s3 mv ./Deploy.zip s3://neo-cycle-lambda/${CODEBUILD_BUILD_NUMBER}/SessionMaintainer/Deploy.zip
       - cd ../../neo-cycle-infra
