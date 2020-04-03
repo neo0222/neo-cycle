@@ -64,6 +64,11 @@ Resources:
               - "*"
             Action:
               - cloudformation:*
+          - Effect: Allow
+            Resource:
+              - "*"
+            Action:
+              - lambda:GetFunction
 
   RoleCodeBuildService:
     Type: AWS::IAM::Role
