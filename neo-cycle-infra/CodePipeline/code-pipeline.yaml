@@ -61,8 +61,7 @@ Resources:
               - s3:GetBucketLocation
           - Effect: Allow
             Resource:
-              - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${NameTag}}-build
-              - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${NameTag}-build:*
+              - "*"
             Action:
               - cloudformation:*
 
