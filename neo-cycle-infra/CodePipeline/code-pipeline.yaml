@@ -71,6 +71,8 @@ Resources:
               - lambda:GetFunction
               - lambda:CreateFunction
               - lambda:PutFunctionConcurrency
+              - lambda:UpdateFunctionCode
+              - lambda:GetFunctionConfiguration
           - Effect: Allow
             Resource:
               # LambdaにアタッチするRoleが増えるごとにここに追加していく
