@@ -14,6 +14,10 @@ phases:
       - npm install
       - zip -r Deploy.zip ./
       - aws s3 mv ./Deploy.zip s3://neo-cycle-lambda/${CODEBUILD_BUILD_NUMBER}/SessionMaintainer/Deploy.zip
+      - cd ../ParkingRetriever
+      - npm install
+      - zip -r Deploy.zip ./
+      - aws s3 mv ./Deploy.zip s3://neo-cycle-lambda/${CODEBUILD_BUILD_NUMBER}/ParkingRetriever/Deploy.zip
       - cd ../../neo-cycle-infra
       - aws cloudformation deploy
           --stack-name neo-cycle-lambda
