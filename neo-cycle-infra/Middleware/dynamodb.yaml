@@ -1,0 +1,28 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  FtfWebManagementRecorder
+  and FtfWebManagement DynamoDB setup
+
+######################################################
+# Resources
+######################################################
+Resources:
+  #----------------------------------------------
+  # SESSION
+  #----------------------------------------------
+  FOOD:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      KeySchema:
+        - AttributeName: memberId
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: memberId
+          AttributeType: S
+      TableName: neo-cycle-SESSION
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
