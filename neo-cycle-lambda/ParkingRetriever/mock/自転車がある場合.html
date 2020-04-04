@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="description" content="">
+  <meta name="keywords" content="">
+  <meta name="author" content="NTT DOCOMO">
+  <meta name="copyright" content="(c) DOCOMO BIKE SHARE, INC. All Rights Reserved.">
+  <meta name="robots" content="index,follow">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <meta name="format-detection" content="telephone=no">
+  <link rel="stylesheet" type="text/css" href="./css/jquery.mobile.structure-1.4.5.min.css">
+  <script type="text/javascript" src="./js/jquery.min.js"></script>
+  <script type="text/javascript" src="./js/jquery-migrate-3.0.0.min.js"></script>
+  <script type="text/javascript">< !--
+      $(document).bind("mobileinit", function () {
+        $.mobile.page.prototype.options.keepNative = ".data-role-none, .data-role-none *";
+        $.mobile.ajaxEnabled = false;
+        $.mobile.pushStateEnabled = false;
+      });
+// -->
+  </script>
+  <script type="text/javascript" src="./js/jquery.mobile-1.4.5.min.js"></script>
+  <link rel="stylesheet" type="text/css" href="./css/import_sp_tab_pc.css">
+  <title>自転車シェアリング広域実験</title>
+  <script>
+    (function (i, s, o, g, r, a, m) {
+    i['GoogleAnalyticsObject'] = r; i[r] = i[r] || function () {
+      (i[r].q = i[r].q || []).push(arguments)
+    }, i[r].l = 1 * new Date(); a = s.createElement(o),
+      m = s.getElementsByTagName(o)[0]; a.async = 1; a.src = g; m.parentNode.insertBefore(a, m)
+    })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+
+    ga('create', 'UA-93460803-1', 'auto');
+    ga('send', 'pageview', { 'page': '/cs_web_main/mypage/port_select/bike_select/', 'title': '利用自転車選択画面[駐輪場から選ぶ]' });
+
+  </script>
+</head>
+
+<body id="wrapper_jqm" class="data-role-none">
+  <header>
+    <div class="hdr clearfix">
+      <img class="hdr_logo_l" src="./img/hdr_logo01.png">
+    </div>
+  </header>
+  <script type="text/javascript">
+< !--
+      function doubleDisableSp(cyc_num) {
+        for (var cnt = 0; cnt < cyc_num; cnt++) {
+          document.getElementById("cycBtnSp_" + cnt).classList.add("cycle_list_btn_disable");
+          document.getElementById("cycBtnSp_" + cnt).classList.remove("ui-icon-redcarat");
+        }
+      }
+    function doubleDisableTab(cyc_num) {
+      for (var cnt = 0; cnt < cyc_num; cnt++) {
+        document.getElementById("cycBtnTab_" + cnt).classList.add("cycle_list_btn_disable");
+        document.getElementById("cycBtnTab_" + cnt).classList.remove("ui-icon-redcarat");
+      }
+    }
+// -->
+  </script>
+  <div class="main">
+    <div class="tittle">
+      <div class="main_inner_wide_tittle">
+        <h1 class="tittle_h1">自転車を指定する/Select a bike</h1>
+      </div>
+    </div>
+    <div class="main_inner_wide">
+      <h2 class="cpt_h2">自転車を指定する/Select a bike</h2>
+      <div class="park_info_box">
+        <div class="park_info_img">
+          <img src="../park_img/00010507.jpg" class="park_img"></div>
+        <div class="park_info_inner">
+          <div class="park_info_inner_left">
+            ■ポート名/Port name<br>
+            　C2-17.goodoffice ROPPONGI<br>
+            　C2-17.goodoffice ROPPONGI
+          </div>
+          <div class="park_info_inner_right">
+            ■利用可能時間/Available time<br>
+            　24時間営業<br>
+            　(24/7)
+          </div>
+        </div>
+      </div>
+      <hr class="mt10 mb10">
+      検索結果　2件中　1～2件表示/ 1-2 of 2 results<br>
+      <div class="table_name">自転車一覧/Bike list</div>
+      <div class="sp_view">
+        <form method="POST" action="/cycle/TYO/cs_web_main.php" name="sp_TYO_5740">
+          <input type="hidden" name="EventNo" value="25901">
+          <input type="hidden" name="SessionID" value="TYOmemberId2c02098f1e85eb3b103da389b6eb93a68">
+          <input type="hidden" name="UserID" value="TYO">
+          <input type="hidden" name="MemberID" value="memberId">
+          <input type="hidden" name="CenterLat" value="0.000000">
+          <input type="hidden" name="CenterLon" value="0.000000">
+          <input type="hidden" name="CycLat" value="35.665760">
+          <input type="hidden" name="CycLon" value="139.728087">
+          <input type="hidden" name="CycleID" value="5740">
+          <input type="hidden" name="AttachID" value="17121">
+          <input type="hidden" name="CycleTypeNo" value="6">
+          <input type="hidden" name="CycleEntID" value="TYO">
+          <div class="cycle_list_btn">
+            <a id="cycBtnSp_0" class="cycle_list_btn ui-btn ui-icon-redcarat ui-btn-icon-right ui-nodisc-icon"
+              href="javascript:doubleDisableSp(2); sp_TYO_5740.submit();">MNT1607</a>
+          </div>
+        </form>
+        <form method="POST" action="/cycle/TYO/cs_web_main.php" name="sp_TYO_11579">
+          <input type="hidden" name="EventNo" value="25901">
+          <input type="hidden" name="SessionID" value="TYOmemberId2c02098f1e85eb3b103da389b6eb93a68">
+          <input type="hidden" name="UserID" value="TYO">
+          <input type="hidden" name="MemberID" value="memberId">
+          <input type="hidden" name="CenterLat" value="0.000000">
+          <input type="hidden" name="CenterLon" value="0.000000">
+          <input type="hidden" name="CycLat" value="35.665043">
+          <input type="hidden" name="CycLon" value="139.728340">
+          <input type="hidden" name="CycleID" value="11579">
+          <input type="hidden" name="AttachID" value="22481">
+          <input type="hidden" name="CycleTypeNo" value="6">
+          <input type="hidden" name="CycleEntID" value="TYO">
+          <div class="cycle_list_btn">
+            <a id="cycBtnSp_1" class="cycle_list_btn ui-btn ui-icon-redcarat ui-btn-icon-right ui-nodisc-icon"
+              href="javascript:doubleDisableSp(2); sp_TYO_11579.submit();">TYO5876</a>
+          </div>
+        </form>
+      </div>
+      <div class="pc_view">
+        <div class="main_inner_wide_box">
+          <div class="main_inner_wide_left_list">
+            <form method="POST" action="/cycle/TYO/cs_web_main.php" name="tab_TYO_5740">
+              <input type="hidden" name="EventNo" value="25901">
+              <input type="hidden" name="SessionID" value="TYOmemberId2c02098f1e85eb3b103da389b6eb93a68">
+              <input type="hidden" name="UserID" value="TYO">
+              <input type="hidden" name="MemberID" value="memberId">
+              <input type="hidden" name="CenterLat" value="0.000000">
+              <input type="hidden" name="CenterLon" value="0.000000">
+              <input type="hidden" name="CycLat" value="35.665760">
+              <input type="hidden" name="CycLon" value="139.728087">
+              <input type="hidden" name="CycleID" value="5740">
+              <input type="hidden" name="AttachID" value="17121">
+              <input type="hidden" name="CycleTypeNo" value="6">
+              <input type="hidden" name="CycleEntID" value="TYO">
+              <div class="cycle_list_btn">
+                <a id="cycBtnTab_0" class="cycle_list_btn ui-btn ui-icon-redcarat ui-btn-icon-right ui-nodisc-icon"
+                  href="javascript:doubleDisableTab(2); tab_TYO_5740.submit();">MNT1607</a>
+              </div>
+            </form>
+          </div>
+          <div class="main_inner_wide_right_list">
+            <form method="POST" action="/cycle/TYO/cs_web_main.php" name="tab_TYO_11579">
+              <input type="hidden" name="EventNo" value="25901">
+              <input type="hidden" name="SessionID" value="TYOmemberId2c02098f1e85eb3b103da389b6eb93a68">
+              <input type="hidden" name="UserID" value="TYO">
+              <input type="hidden" name="MemberID" value="memberId">
+              <input type="hidden" name="CenterLat" value="0.000000">
+              <input type="hidden" name="CenterLon" value="0.000000">
+              <input type="hidden" name="CycLat" value="35.665043">
+              <input type="hidden" name="CycLon" value="139.728340">
+              <input type="hidden" name="CycleID" value="11579">
+              <input type="hidden" name="AttachID" value="22481">
+              <input type="hidden" name="CycleTypeNo" value="6">
+              <input type="hidden" name="CycleEntID" value="TYO">
+              <div class="cycle_list_btn">
+                <a id="cycBtnTab_1" class="cycle_list_btn ui-btn ui-icon-redcarat ui-btn-icon-right ui-nodisc-icon"
+                  href="javascript:doubleDisableTab(2); tab_TYO_11579.submit();">TYO5876</a>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+      <div class="main_inner_wide_box mt20">
+        <div class="main_inner_wide_left">
+        </div>
+        <div class="main_inner_wide_right">
+          <form method="POST" action="/cycle/TYO/cs_web_main.php">
+            <input type="hidden" name="EventNo" value="25904">
+            <input type="hidden" name="SessionID" value="TYOmemberId2c02098f1e85eb3b103da389b6eb93a68">
+            <input type="hidden" name="UserID" value="TYO">
+            <input type="hidden" name="MemberID" value="memberId">
+            <input type="submit" value="トップに戻る/HOME" class="button_submit prevaction">
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!--フッター-->
+  <div class="ftr">
+    <br><span class="ftr_copyright sp_view">(c) NTT DOCOMO<br>(c) DOCOMO BIKE SHARE</span>
+    <span class="ftr_copyright pc_view">(c) NTT DOCOMO, INC. All Rights Reserved.<br>(c) DOCOMO BIKE SHARE, INC. All
+      Rights Reserved.</span>
+  </div>
+  <!--フッター-->
+</body>
+
+</html>
