@@ -69,10 +69,10 @@ Resources:
             Principal:
               Service: lambda.amazonaws.com
   
-  RolePortRetriever:
+  RoleParkingRetriever:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: role-port-retriever
+      RoleName: role-parking-retriever
       ManagedPolicyArns:
         - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
         - !Ref NeoCycleSessionTableGetItemPolicy
@@ -94,7 +94,7 @@ Outputs:
     Export:
       Name: RoleSessionMaintainerArn
 
-  RolePortRetrieverArn:
-    Value: !GetAtt RolePortRetriever.Arn
+  RoleParkingRetrieverArn:
+    Value: !GetAtt RoleParkingRetriever.Arn
     Export:
-      Name: RolePortRetrieverArn
+      Name: RoleParkingRetrieverArn
