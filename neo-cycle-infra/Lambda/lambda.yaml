@@ -30,7 +30,27 @@ Resources:
       Role: !ImportValue RoleSessionMaintainerArn
       Runtime: nodejs12.x
       Timeout: 10
-  
+
+  LambdaParkingRetriever:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: neo-cycle-lambda
+        S3Key: !Sub
+          - ${ObjectKeyPrefix}/ParkingRetriever/Deploy.zip
+          - {
+            ObjectKeyPrefix: !Ref ObjectKeyPrefix
+          }
+      Environment:
+        Variables:
+          PARKING_IDS: 10124,10077,10507
+      FunctionName: ParkingRetriever
+      Handler: index.handler
+      ReservedConcurrentExecutions: 1
+      Role: !ImportValue RoleParkingRetrieverArn
+      Runtime: nodejs12.x
+      Timeout: 10
+
 #################################
 # Outputs
 #################################
@@ -43,3 +63,11 @@ Outputs:
     Value: !Ref LambdaSessionMaintainer
     Export:
       Name: LambdaSessionMaintainerFunctionName
+  LambdaParkingRetrieverArn:
+    Value: !GetAtt LambdaParkingRetriever.Arn
+    Export:
+      Name: LambdaParkingRetrieverArn
+  LambdaParkingRetrieverFunctionName:
+    Value: !Ref LambdaParkingRetriever
+    Export:
+      Name: LambdaParkingRetrieverFunctionName

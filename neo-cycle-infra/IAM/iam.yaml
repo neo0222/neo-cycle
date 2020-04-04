@@ -22,6 +22,19 @@ Resources:
             Resource:
               - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/neo-cycle-SESSION"
 
+  NeoCycleSessionTableGetItemPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: authorize to get item from session dynamodb 
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:GetItem
+            Resource:
+              - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/neo-cycle-SESSION"
+
   NeoCycleGetParameterPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -55,6 +68,22 @@ Resources:
             Action: sts:AssumeRole
             Principal:
               Service: lambda.amazonaws.com
+  
+  RolePortRetriever:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: role-port-retriever
+      ManagedPolicyArns:
+        - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
+        - !Ref NeoCycleSessionTableGetItemPolicy
+        - !Ref NeoCycleGetParameterPolicy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: lambda.amazonaws.com
 
 #################################
 # Outputs
@@ -64,3 +93,8 @@ Outputs:
     Value: !GetAtt RoleSessionMaintainer.Arn
     Export:
       Name: RoleSessionMaintainerArn
+
+  RolePortRetrieverArn:
+    Value: !GetAtt RolePortRetriever.Arn
+    Export:
+      Name: RolePortRetrieverArn
