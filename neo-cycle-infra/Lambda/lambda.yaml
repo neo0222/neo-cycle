@@ -41,6 +41,9 @@ Resources:
           - {
             ObjectKeyPrefix: !Ref ObjectKeyPrefix
           }
+      Environment:
+        Variables:
+          PARKING_IDS: 10124,10077,10507
       FunctionName: ParkingRetriever
       Handler: index.handler
       ReservedConcurrentExecutions: 1
