@@ -1,5 +1,24 @@
 <template>
   <div class="hello">
+    <el-table
+      :data="tableData"
+      style="width: 100%;margin-bottom: 20px;"
+      row-key="id"
+      border
+      default-expand-all>
+      <el-table-column
+        prop="date"
+        label="date"
+        sortable
+        width="270">
+      </el-table-column>
+      <el-table-column
+        prop="name"
+        label="Name"
+        sortable
+        width="90">
+      </el-table-column>
+    </el-table>
     <h1>{{ msg }}</h1>
     <h2>Essential Links</h2>
     <ul>
@@ -84,11 +103,61 @@
 </template>
 
 <script>
+import api from '../api/index'
+
 export default {
   name: 'HelloWorld',
   data () {
     return {
-      msg: 'Welcome to Your Vue.js App'
+      msg: 'Welcome to Your Vue.js App',
+      status: '',
+      tableData: [],
+    }
+  },
+  async mounted() {
+    await this.checkStatus();
+    await this.retrieveParkingList();
+  },
+  methods: {
+    load(tree, treeNode, resolve) {
+      setTimeout(() => {
+        resolve([
+          {
+            id: 31,
+            date: '2016-05-01',
+            name: 'wangxiaohu'
+          }, {
+            id: 32,
+            date: '2016-05-01',
+            name: 'wangxiaohu'
+          }
+        ])
+      }, 1000)
+    },
+    async checkStatus() {
+      const result = await api.checkStatus();
+      console.log(result.status)
+      this.status = result.status;
+      setTimeout(this.checkStatus, 5000)
+    },
+    async retrieveParkingList() {
+      const result = await api.retrieveParkingList();
+      this.tableData.length = 0;
+      for (const parking of result.parkingList) {
+        this.tableData.push({
+          id: parking.parkingId,
+          date: parking.parkingName,
+          name: parking.cycleList.length + '台',
+          children: parking.cycleList.map((cycle) => {
+            return {
+              id: cycle.CycleName,
+              date: cycle.CycleName,
+              name: ''
+            }
+          })
+        })
+      }
+      setTimeout(this.retrieveParkingList, 5000)
     }
   }
 }
