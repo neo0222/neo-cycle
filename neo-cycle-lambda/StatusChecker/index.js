@@ -20,12 +20,9 @@ exports.handler = async (event, context) => {
 async function main(event, context) {
   const { memberId } = await getUserInfoFromSsm();
   const sessionId = await getSessionId(memberId);
-  const status = await checkStatus(memberId, sessionId);
   const response = {
     statusCode: 200,
-    body: {
-      status
-    },
+    body: await checkStatus(memberId, sessionId),
     headers: {
         "Access-Control-Allow-Origin": '*'
     }
@@ -85,7 +82,7 @@ async function checkStatus(memberId, sessionId) {
       const cyceleName = children.get(0).prev.data.substr(16, 7);
       const cyclePasscode = children.get(1).children[0].data;
       return {
-        code: 'RESERVED',
+        status: 'RESERVED',
         detail: {
           cyceleName,
           cyclePasscode
@@ -93,11 +90,11 @@ async function checkStatus(memberId, sessionId) {
       };
     } else if (html.indexOf('自転車を借りる') !== -1) {
       return {
-        code: 'WAITING_FOR_RESERVATION'
+        status: 'WAITING_FOR_RESERVATION'
       }
     } else {
       return {
-        code: 'IN_USE'
+        status: 'IN_USE'
       }
     }
   }
