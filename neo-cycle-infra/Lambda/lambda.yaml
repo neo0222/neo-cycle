@@ -64,7 +64,7 @@ Resources:
       FunctionName: ReservationMaker
       Handler: index.handler
       ReservedConcurrentExecutions: 1
-      Role: !ImportValue RoleReservationMaker
+      Role: !ImportValue RoleReservationMakerArn
       Runtime: nodejs12.x
       Timeout: 10
 
