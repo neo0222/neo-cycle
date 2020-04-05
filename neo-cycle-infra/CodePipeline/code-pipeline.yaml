@@ -75,9 +75,10 @@ Resources:
               - lambda:GetFunctionConfiguration
           - Effect: Allow
             Resource:
-              # LambdaにアタッチするRoleが増えるごとにここに追加していく
+              # RoleをアタッチするLambdaが増えるごとにここに追加していく
               - !ImportValue RoleSessionMaintainerArn
               - !ImportValue RoleParkingRetrieverArn
+              - !ImportValue RoleReservationMakerArn
             Action:
               - iam:PassRole
 
