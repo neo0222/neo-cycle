@@ -85,6 +85,22 @@ Resources:
             Principal:
               Service: lambda.amazonaws.com
 
+  RoleReservationMaker:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: role-reservation-maker
+      ManagedPolicyArns:
+        - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
+        - !Ref NeoCycleSessionTableGetItemPolicy
+        - !Ref NeoCycleGetParameterPolicy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: lambda.amazonaws.com
+
 #################################
 # Outputs
 #################################
@@ -98,3 +114,8 @@ Outputs:
     Value: !GetAtt RoleParkingRetriever.Arn
     Export:
       Name: RoleParkingRetrieverArn
+
+  RoleReservationMakerArn:
+    Value: !GetAtt RoleReservationMaker.Arn
+    Export:
+      Name: RoleReservationMakerArn
