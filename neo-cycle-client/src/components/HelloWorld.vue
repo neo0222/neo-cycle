@@ -53,9 +53,11 @@
     </el-card>
     <el-table
       :data="tableData"
+      ref="tableData"
       :cell-style="{padding: '0', height: '40px'}"
       style="width: 100%;margin-bottom: 20px;"
       row-key="id"
+      @row-click="rowClicked"
       border>
       <el-table-column
         prop="date"
@@ -287,7 +289,10 @@ export default {
       }
       // 取消が新たに行われた形跡がなければ10秒後に消す
       setTimeout(() => {this.isCancellationAttempted = false, this.terminateProcessReservation()}, 10000)
-    }
+    },
+    rowClicked(row) {
+      this.$refs.tableData.toggleRowExpansion(row);
+    },
   },
   watch: {
     isCancellationBeenProcessing: function(newVal) {
