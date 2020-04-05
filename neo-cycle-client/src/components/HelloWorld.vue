@@ -1,5 +1,42 @@
 <template>
   <div class="hello">
+    <el-card class="box-card">
+      <div slot="header" class="clearfix">
+        <span>{{ headerMessage }}</span>
+      </div>
+      <div v-show="status !== 'WAITING_FOR_RESERVATION'" class="text item">
+        Cycle Name: {{ reservedBike.cycleName }}
+      </div>
+      <div v-show="status !== 'WAITING_FOR_RESERVATION'" class="text item">
+        Passcode: {{ reservedBike.cyclePasscode }}
+      </div>
+      <div class="text item">
+        <el-popconfirm
+          confirmButtonText='Yes'
+          cancelButtonText='No, Thanks'
+          icon="el-icon-question"
+          iconColor="red"
+          title="Are you sure to cancel reservation?"
+          v-if="status === 'RESERVED'"
+          @onConfirm="cancelReservation()"
+          @onCancel="terminateCancellation">
+          <el-button
+            slot="reference"
+            type="danger"
+            plain>
+            Cancel Reservation
+          </el-button>
+        </el-popconfirm>
+      </div>
+      <div v-if="status === 'WAITING_FOR_RESERVATION'" class="text item">
+        <el-button
+          slot="reference"
+          type="success"
+          @click="makeReservation(favoritePort.children.length ? favoritePort.children[0].cycle : undefined)">
+          RESERVE ANYWAY!!!
+        </el-button>
+      </div>
+    </el-card>
     <el-table
       :data="tableData"
       :cell-style="{padding: '0', height: '40px'}"
@@ -30,7 +67,7 @@
             iconColor="red"
             title="Are you sure to cancel reservation?"
             v-if="isRowReservedBike(scope)"
-            @onConfirm="cancelReservation(scope.row)"
+            @onConfirm="cancelReservation()"
             @onCancel="terminateCancellation">
             <el-button
               slot="reference"
@@ -44,7 +81,7 @@
           <el-button
             v-if="isRowVacantBike(scope)"
             :disabled="status !== 'WAITING_FOR_RESERVATION'"
-            @click="makeReservation(scope.row)"
+            @click="makeReservation(scope.row.cycle)"
             type="primary"
             plain
             size="mini">
@@ -81,6 +118,18 @@ export default {
     await this.retrieveParkingList();
     loading.close()
   },
+  computed: {
+    headerMessage() {
+      if (this.status === 'WAITING_FOR_RESERVATION') {
+        return 'Please choose a bike you want to reserve.'
+      } else if (this.status === 'RESERVED') {
+        return 'Your reservation was successfully accepted.'
+      }
+    },
+    favoritePort() {
+      return this.tableData.find((parking) => {return parking.id === '10124'})
+    }
+  },
   methods: {
     load(tree, treeNode, resolve) {
       setTimeout(() => {
@@ -99,8 +148,11 @@ export default {
     },
     async checkStatus() {
       const result = await api.checkStatus();
-      console.log(result.status)
       this.status = result.status;
+      if (this.status === 'RESERVED') {
+        this.reservedBike.cycleName = result.detail.cyceleName
+        this.reservedBike.cyclePasscode = result.detail.cyclePasscode
+      }
       setTimeout(this.checkStatus, 10000)
     },
     async retrieveParkingList() {
@@ -110,7 +162,6 @@ export default {
         return
       }
       const result = await api.retrieveParkingList();
-      console.log('parkingRetriever is invoked')
       this.tableData.length = 0;
       for (const parking of result.parkingList) {
         if (!parking.parkingName) continue
@@ -130,20 +181,23 @@ export default {
       }
       setTimeout(this.retrieveParkingList, 10000)
     },
-    async makeReservation(row) {
+    async makeReservation(cycle) {
       const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Processing...'))
-      console.log(row)
+      if (!cycle) return
       this.beginProcessReservation();
-      const responseBody = await api.makeReservation(row.cycle);
+      const responseBody = await api.makeReservation(cycle);
       this.reservedBike.cycleName = responseBody.cycleName;
       this.reservedBike.cyclePasscode = responseBody.cyclePasscode;
       this.status = 'RESERVED';
       loading.close()
+      this.terminateProcessReservation();
     },
     async cancelReservation(row) {
       const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Processing...'))
       this.beginProcessReservation();
-      const responseBody = await api.cancelReservation(row.cycle);
+      const responseBody = await api.cancelReservation();
+      this.reservedBike.cycleName = '';
+      this.reservedBike.cyclePasscode = '';
       this.status = 'WAITING_FOR_RESERVATION';
       loading.close()
       this.terminateProcessReservation();
@@ -178,7 +232,7 @@ export default {
         setTimeout(this.terminateProcessReservation, 10000)
         return
       }
-      this.isReservationBeenProcessing = false
+      setTimeout(() => {this.isReservationBeenProcessing = false}, 10000)
     },
     beginCancellation() {
       this.isCancellationBeenProcessing = true;
@@ -188,7 +242,6 @@ export default {
       this.isCancellationBeenProcessing = false;
     },
     deleteCancellationHistory() {
-      console.log('begin deleteCancellationHistory')
       if (this.isCancellationBeenProcessing) {// 次の取消が動いていたら取消履歴の抹消は10秒待つ
         setTimeout(this.deleteCancellationHistory, 0)
         return
@@ -200,7 +253,6 @@ export default {
   watch: {
     isCancellationBeenProcessing: function(newVal) {
       if (!newVal) {
-        console.log('cancellation is not processed')
         this.deleteCancellationHistory()
       }
     }
@@ -223,5 +275,26 @@ li {
 }
 a {
   color: #42b983;
+}
+
+.text {
+  font-size: 14px;
+}
+
+.item {
+  margin-bottom: 18px;
+}
+
+.clearfix:before,
+.clearfix:after {
+  display: table;
+  content: "";
+}
+.clearfix:after {
+  clear: both
+}
+
+.box-card {
+  width: 100%;
 }
 </style>
