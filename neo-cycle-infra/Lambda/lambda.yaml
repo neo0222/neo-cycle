@@ -68,6 +68,23 @@ Resources:
       Runtime: nodejs12.x
       Timeout: 10
 
+  LambdaReservationCanceller:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: neo-cycle-lambda
+        S3Key: !Sub
+          - ${ObjectKeyPrefix}/ReservationCanceller/Deploy.zip
+          - {
+            ObjectKeyPrefix: !Ref ObjectKeyPrefix
+          }
+      FunctionName: ReservationCanceller
+      Handler: index.handler
+      ReservedConcurrentExecutions: 1
+      Role: !ImportValue RoleReservationCancellerArn
+      Runtime: nodejs12.x
+      Timeout: 10
+
 #################################
 # Outputs
 #################################
@@ -96,3 +113,11 @@ Outputs:
     Value: !Ref LambdaReservationMaker
     Export:
       Name: LambdaReservationMakerFunctionName
+  LambdaReservationCancellerArn:
+    Value: !GetAtt LambdaReservationCanceller.Arn
+    Export:
+      Name: LambdaReservationCancellerArn
+  LambdaReservationCancellerFunctionName:
+    Value: !Ref LambdaReservationCanceller
+    Export:
+      Name: LambdaReservationCancellerFunctionName

@@ -101,6 +101,22 @@ Resources:
             Principal:
               Service: lambda.amazonaws.com
 
+  RoleReservationCanceller:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: role-reservation-canceller
+      ManagedPolicyArns:
+        - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
+        - !Ref NeoCycleSessionTableGetItemPolicy
+        - !Ref NeoCycleGetParameterPolicy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: lambda.amazonaws.com
+
 #################################
 # Outputs
 #################################
@@ -119,3 +135,8 @@ Outputs:
     Value: !GetAtt RoleReservationMaker.Arn
     Export:
       Name: RoleReservationMakerArn
+
+  RoleReservationCancellerArn:
+    Value: !GetAtt RoleReservationCanceller.Arn
+    Export:
+      Name: RoleReservationCancellerArn
