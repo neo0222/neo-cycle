@@ -80,6 +80,7 @@ Resources:
               - !ImportValue RoleParkingRetrieverArn
               - !ImportValue RoleReservationMakerArn
               - !ImportValue RoleReservationCancellerArn
+              - !ImportValue RoleStatusCheckerArn
             Action:
               - iam:PassRole
 

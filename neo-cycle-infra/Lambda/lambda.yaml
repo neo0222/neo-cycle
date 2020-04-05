@@ -85,6 +85,23 @@ Resources:
       Runtime: nodejs12.x
       Timeout: 10
 
+  LambdaStatusChecker:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: neo-cycle-lambda
+        S3Key: !Sub
+          - ${ObjectKeyPrefix}/StatusChecker/Deploy.zip
+          - {
+            ObjectKeyPrefix: !Ref ObjectKeyPrefix
+          }
+      FunctionName: StatusChecker
+      Handler: index.handler
+      ReservedConcurrentExecutions: 1
+      Role: !ImportValue RoleStatusCheckerArn
+      Runtime: nodejs12.x
+      Timeout: 10
+
 #################################
 # Outputs
 #################################
@@ -121,3 +138,11 @@ Outputs:
     Value: !Ref LambdaReservationCanceller
     Export:
       Name: LambdaReservationCancellerFunctionName
+  LambdaStatusCheckerArn:
+    Value: !GetAtt LambdaStatusChecker.Arn
+    Export:
+      Name: LambdaStatusCheckerArn
+  LambdaStatusCheckerName:
+    Value: !Ref LambdaStatusChecker
+    Export:
+      Name: LambdaStatusCheckerFunctionName

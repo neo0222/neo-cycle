@@ -292,3 +292,87 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !ImportValue LambdaReservationCancellerFunctionName
       Principal: apigateway.amazonaws.com
+
+  ######################################################
+  # Status
+  #   - Resource
+  #     - path: /status
+  #   - Method
+  #     - POST
+  #     - OPTION(for enable CORS)
+  #   - Lambda Permission
+  ######################################################
+  StatusResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref NeoCycleRestAPI
+      ParentId: !GetAtt
+        - NeoCycleRestAPI
+        - RootResourceId
+      PathPart: status
+
+  StatusPostMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: POST
+      ResourceId: !Ref StatusResource
+      RestApiId: !Ref NeoCycleRestAPI
+      MethodResponses: 
+        - StatusCode: 200
+          ResponseParameters:
+            "method.response.header.Access-Control-Allow-Origin" : true
+      Integration:
+        Type: AWS
+        Uri: !Sub
+          - arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/${LambdaStatusCheckerArn}/invocations
+          - {
+            LambdaStatusCheckerArn: {
+              'Fn::ImportValue': LambdaStatusCheckerArn
+            }
+          }
+        IntegrationHttpMethod: POST
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              'method.response.header.Access-Control-Allow-Origin' : "'*'" # 中身を一重引用符で囲う
+    DependsOn: LambdaStatusCheckerPermission
+
+  StatusOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      RestApiId:
+        Ref: NeoCycleRestAPI
+      ResourceId:
+        Ref: StatusResource
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+            method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
+            method.response.header.Access-Control-Allow-Origin: "'*'"
+          ResponseTemplates:
+            application/json: ''
+        PassthroughBehavior: WHEN_NO_MATCH
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        Type: MOCK
+      MethodResponses:
+      - StatusCode: 200
+        ResponseModels:
+          application/json: 'Empty'
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+    DependsOn: StatusResource
+
+  LambdaStatusCheckerPermission:
+    Type: AWS::Lambda::Permission
+    Properties: 
+      Action: lambda:InvokeFunction
+      FunctionName: !ImportValue LambdaStatusCheckerFunctionName
+      Principal: apigateway.amazonaws.com
