@@ -79,12 +79,12 @@ async function checkStatus(memberId, sessionId) {
     const $ = cheerio.load(html);
     if (html.indexOf('利用予約中') !== -1) {
       const children = $('[class=usr_stat]').children()
-      const cyceleName = children.get(0).prev.data.substr(16, 7);
+      const cycleName = children.get(0).prev.data.substr(16, children.get(0).prev.data.length-17);
       const cyclePasscode = children.get(1).children[0].data;
       return {
         status: 'RESERVED',
         detail: {
-          cyceleName,
+          cycleName,
           cyclePasscode
         }
       };
@@ -93,8 +93,18 @@ async function checkStatus(memberId, sessionId) {
         status: 'WAITING_FOR_RESERVATION'
       }
     } else {
+      const children = $('[class=usr_stat]').children()
+      const cycleName = children.get(0).prev.data.substr(12, children.get(0).prev.data.length-13);
+      const cyclePasscode = children.get(2).children[0].data;
+      const cycleUseStartDatetime = children.get(0).next.data.substr(22, 16);
+      console.log(cycleName, cyclePasscode, cycleUseStartDatetime)
       return {
-        status: 'IN_USE'
+        status: 'IN_USE',
+        detail: {
+          cycleName,
+          cyclePasscode,
+          cycleUseStartDatetime
+        }
       }
     }
   }

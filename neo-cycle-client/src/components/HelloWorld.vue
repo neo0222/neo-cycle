@@ -10,6 +10,9 @@
       <div v-show="status !== 'WAITING_FOR_RESERVATION'" class="text item">
         Passcode: {{ reservedBike.cyclePasscode }}
       </div>
+      <div v-show="status === 'IN_USE'" class="text item">
+        Use Start Time: {{ reservedBike.cycleUseStartDatetime }}
+      </div>
       <div class="text item">
         <el-popconfirm
           confirmButtonText='Yes'
@@ -106,6 +109,7 @@ export default {
       reservedBike: {
         cycleName: '',
         cyclePasscode: '',
+        cycleUseStartDatetime: ','
       },
       isReservationBeenProcessing: false,
       isCancellationBeenProcessing: false,
@@ -124,6 +128,8 @@ export default {
         return 'Please choose a bike you want to reserve.'
       } else if (this.status === 'RESERVED') {
         return 'Your reservation was successfully accepted.'
+      } else {
+        return 'Your bike is in use. Enjoy your cycling!'
       }
     },
     favoritePort() {
@@ -150,8 +156,16 @@ export default {
       const result = await api.checkStatus();
       this.status = result.status;
       if (this.status === 'RESERVED') {
-        this.reservedBike.cycleName = result.detail.cyceleName
+        this.reservedBike.cycleName = result.detail.cycleName
         this.reservedBike.cyclePasscode = result.detail.cyclePasscode
+      } else if (this.status === 'IN_USE') {
+        this.reservedBike.cycleName = result.detail.cycleName
+        this.reservedBike.cyclePasscode = result.detail.cyclePasscode
+        this.reservedBike.cycleUseStartDatetime = result.detail.cycleUseStartDatetime
+      } else {
+        this.reservedBike.cycleName = ''
+        this.reservedBike.cyclePasscode = ''
+        this.reservedBike.cycleUseStartDatetime = ''
       }
       setTimeout(this.checkStatus, 10000)
     },
