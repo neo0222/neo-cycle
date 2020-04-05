@@ -112,50 +112,6 @@ export default {
       msg: 'Welcome to Your Vue.js App',
       status: '',
       tableData: [],
-      // tableData: [{
-      //   id: 1,
-      //   date: '2016-05-02',
-      //   name: 'wangxiaohu'
-      // }, {
-      //   id: 2,
-      //   date: '2016-05-04',
-      //   name: 'wangxiaohu'
-      // }, {
-      //   id: 3,
-      //   date: '2016-05-01',
-      //   name: 'wangxiaohu',
-      //   children: [{
-      //     id: 31,
-      //     date: '2016-05-01',
-      //     name: 'wangxiaohu'
-      //   }, {
-      //     id: 32,
-      //     date: '2016-05-01',
-      //     name: 'wangxiaohu'
-      //   }]
-      // }, {
-      //   id: 4,
-      //   date: '2016-05-03',
-      //   name: 'wangxiaohu'
-      // }],
-      // tableData1: [{
-      //   id: 1,
-      //   date: '2016-05-02',
-      //   name: 'wangxiaohu'
-      // }, {
-      //   id: 2,
-      //   date: '2016-05-04',
-      //   name: 'wangxiaohu'
-      // }, {
-      //   id: 3,
-      //   date: '2016-05-01',
-      //   name: 'wangxiaohu',
-      //   hasChildren: true
-      // }, {
-      //   id: 4,
-      //   date: '2016-05-03',
-      //   name: 'wangxiaohu'
-      // }]
     }
   },
   async mounted() {
