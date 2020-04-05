@@ -1,6 +1,6 @@
 <template>
   <div class="hello">
-    <el-card class="box-card">
+    <el-card class="box-card" :body-style="{height: '111px', margin: 'auto'}">
       <div slot="header" class="clearfix">
         <span>{{ headerMessage }}</span>
       </div>
@@ -13,7 +13,7 @@
       <div v-show="status === 'IN_USE'" class="text item">
         Use Start Time: {{ reservedBike.cycleUseStartDatetime }}
       </div>
-      <div class="text item">
+      <div >
         <el-popconfirm
           confirmButtonText='Yes'
           cancelButtonText='No, Thanks'
@@ -31,12 +31,23 @@
           </el-button>
         </el-popconfirm>
       </div>
-      <div v-if="status === 'WAITING_FOR_RESERVATION'" class="text item">
+      <div v-if="status === 'WAITING_FOR_RESERVATION'" class="button">
         <el-button
           slot="reference"
           type="success"
+          :plain="isGoToOfficeButtonPlain"
+          :style="{width: '258.48px'}"
           @click="makeReservation(favoritePort.children.length ? favoritePort.children[0].cycle : undefined)">
-          RESERVE ANYWAY!!!
+          I WANNA GO TO OFFICE NOW
+        </el-button>
+      </div>
+      <div v-if="status === 'WAITING_FOR_RESERVATION'" class="button">
+        <el-button
+          slot="reference"
+          type="success"
+          :plain="isGoHomeButtonPlain"
+          @click="makeReservation(atagoPort.children.length ? atagoPort.children[0].cycle : undefined)">
+          I WANNA GO HOME RIGHT NOW
         </el-button>
       </div>
     </el-card>
@@ -134,6 +145,20 @@ export default {
     },
     favoritePort() {
       return this.tableData.find((parking) => {return parking.id === '10124'})
+    },
+    atagoPort() {
+      return this.tableData.find((parking) => {return parking.id === '10077'})
+    },
+    isGoToOfficeButtonPlain() {
+      const now =  new Date()
+      if (now.getHours < 12) {
+        return true
+      } else {
+        return false
+      }
+    },
+    isGoHomeButtonPlain() {
+      return !this.isGoToOfficeButtonPlain
     }
   },
   methods: {
@@ -297,6 +322,10 @@ a {
 
 .item {
   margin-bottom: 18px;
+}
+
+.button {
+  margin-top: 10px;
 }
 
 .clearfix:before,
