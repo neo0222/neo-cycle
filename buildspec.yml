@@ -22,6 +22,10 @@ phases:
       - npm install
       - zip -r Deploy.zip ./
       - aws s3 mv ./Deploy.zip s3://neo-cycle-lambda/${CODEBUILD_BUILD_NUMBER}/ReservationMaker/Deploy.zip
+      - cd ../ReservationCanceller
+      - npm install
+      - zip -r Deploy.zip ./
+      - aws s3 mv ./Deploy.zip s3://neo-cycle-lambda/${CODEBUILD_BUILD_NUMBER}/ReservationCanceller/Deploy.zip
       - cd ../../neo-cycle-infra
       - aws cloudformation deploy
           --stack-name neo-cycle-lambda
