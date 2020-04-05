@@ -3,6 +3,13 @@
 import Vue from 'vue'
 import App from './App'
 import router from './router'
+import ElementUI from 'element-ui'
+
+import '../node_modules/element-ui/lib/theme-chalk/index.css'
+// ElementUIでの言語設定、datePickerとかで適用される
+import locale from 'element-ui/lib/locale/lang/ja'
+
+Vue.use(ElementUI,{locale})
 
 Vue.config.productionTip = false
 
