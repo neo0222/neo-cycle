@@ -185,7 +185,7 @@ Outputs:
     Value: !GetAtt RoleSessionMaintainer.Arn
     Export:
       Name: !Sub
-        - ${NameTag}-${EnvName}-SessionMaintainerRoleArn
+        - ${NameTag}-${EnvName}-RoleSessionMaintainerArn
         - {
           NameTag: !FindInMap [ StackConfig, NameTag, Value ],
           EnvName: !Ref EnvName
@@ -195,7 +195,7 @@ Outputs:
     Value: !GetAtt RoleParkingRetriever.Arn
     Export:
       Name: !Sub
-        - ${NameTag}-${EnvName}-ParkingRetrieverRoleArn
+        - ${NameTag}-${EnvName}-RoleParkingRetrieverArn
         - {
           NameTag: !FindInMap [ StackConfig, NameTag, Value ],
           EnvName: !Ref EnvName
@@ -205,7 +205,7 @@ Outputs:
     Value: !GetAtt RoleReservationMaker.Arn
     Export:
       Name: !Sub
-        - ${NameTag}-${EnvName}-ReservationMakerRoleArn
+        - ${NameTag}-${EnvName}-RoleReservationMakerArn
         - {
           NameTag: !FindInMap [ StackConfig, NameTag, Value ],
           EnvName: !Ref EnvName
@@ -215,7 +215,7 @@ Outputs:
     Value: !GetAtt RoleReservationCanceller.Arn
     Export:
       Name: !Sub
-        - ${NameTag}-${EnvName}-ReservationCancellerRoleArn
+        - ${NameTag}-${EnvName}-RoleReservationCancellerArn
         - {
           NameTag: !FindInMap [ StackConfig, NameTag, Value ],
           EnvName: !Ref EnvName
@@ -225,7 +225,7 @@ Outputs:
     Value: !GetAtt RoleStatusChecker.Arn
     Export:
       Name: !Sub
-        - ${NameTag}-${EnvName}-StatusCheckerRoleArn
+        - ${NameTag}-${EnvName}-RoleStatusCheckerArn
         - {
           NameTag: !FindInMap [ StackConfig, NameTag, Value ],
           EnvName: !Ref EnvName
