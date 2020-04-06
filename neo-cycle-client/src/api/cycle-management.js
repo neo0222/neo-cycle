@@ -12,8 +12,8 @@ export async function checkStatus() {
   return res.data.body
 }
 
-export async function makeReservation() {
-  const res = await axios.post(url + '/reservation');
+export async function makeReservation(cycle) {
+  const res = await axios.post(url + '/reservation', cycle);
   return res.data.body
 }
 

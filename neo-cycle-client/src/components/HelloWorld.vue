@@ -1,104 +1,111 @@
 <template>
   <div class="hello">
+    <el-card class="box-card" :body-style="{height: '111px', margin: 'auto'}">
+      <div slot="header" class="clearfix">
+        <span>{{ headerMessage }}</span>
+      </div>
+      <div v-show="status !== 'WAITING_FOR_RESERVATION'" class="text item">
+        Cycle Name: {{ reservedBike.cycleName }}
+      </div>
+      <div v-show="status !== 'WAITING_FOR_RESERVATION'" class="text item">
+        Passcode: {{ reservedBike.cyclePasscode }}
+      </div>
+      <div v-show="status === 'IN_USE'" class="text item">
+        Use Start Time: {{ reservedBike.cycleUseStartDatetime }}
+      </div>
+      <div >
+        <el-popconfirm
+          confirmButtonText='Yes'
+          cancelButtonText='No, Thanks'
+          icon="el-icon-question"
+          iconColor="red"
+          title="Are you sure to cancel reservation?"
+          v-if="status === 'RESERVED'"
+          @onConfirm="cancelReservation()"
+          @onCancel="terminateCancellation">
+          <el-button
+            slot="reference"
+            type="danger"
+            plain>
+            Cancel Reservation
+          </el-button>
+        </el-popconfirm>
+      </div>
+      <div v-if="status === 'WAITING_FOR_RESERVATION'" class="button">
+        <el-button
+          slot="reference"
+          type="success"
+          :plain="isGoToOfficeButtonPlain"
+          :style="{width: '258.48px'}"
+          @click="makeReservation(favoritePort.children.length ? favoritePort.children[0].cycle : undefined)">
+          I WANNA GO TO OFFICE NOW
+        </el-button>
+      </div>
+      <div v-if="status === 'WAITING_FOR_RESERVATION'" class="button">
+        <el-button
+          slot="reference"
+          type="success"
+          :plain="isGoHomeButtonPlain"
+          @click="makeReservation(atagoPort.children.length ? atagoPort.children[0].cycle : undefined)">
+          I WANNA GO HOME RIGHT NOW
+        </el-button>
+      </div>
+    </el-card>
     <el-table
       :data="tableData"
+      ref="tableData"
+      :cell-style="{padding: '0', height: '40px'}"
       style="width: 100%;margin-bottom: 20px;"
       row-key="id"
-      border
-      default-expand-all>
+      @row-click="rowClicked"
+      border>
       <el-table-column
         prop="date"
-        label="date"
-        sortable
-        width="270">
+        label="Name"
+        width="282"
+        header-align="left">
       </el-table-column>
       <el-table-column
         prop="name"
-        label="Name"
-        sortable
-        width="90">
+        label="Bikes"
+        width="78"
+        header-align="left"
+        align="center">
+        <template
+          slot-scope="scope">
+          <p v-if="isRowParking(scope)">
+            {{scope.row.name}}
+          </p>
+          <el-popconfirm
+            confirmButtonText='Yes'
+            cancelButtonText='No, Thanks'
+            icon="el-icon-question"
+            iconColor="red"
+            title="Are you sure to cancel reservation?"
+            v-if="isRowReservedBike(scope)"
+            @onConfirm="cancelReservation()"
+            @onCancel="terminateCancellation">
+            <el-button
+              slot="reference"
+              type="danger"
+              plain
+              size="mini"
+              @click="beginCancellation">
+              取消
+            </el-button>
+          </el-popconfirm>
+          <el-button
+            v-if="isRowVacantBike(scope)"
+            :disabled="status !== 'WAITING_FOR_RESERVATION'"
+            @click="makeReservation(scope.row.cycle)"
+            type="primary"
+            plain
+            size="mini">
+            予約
+          </el-button>
+        </template>
       </el-table-column>
     </el-table>
-    <h1>{{ msg }}</h1>
-    <h2>Essential Links</h2>
-    <ul>
-      <li>
-        <a
-          href="https://vuejs.org"
-          target="_blank"
-        >
-          Core Docs
-        </a>
-      </li>
-      <li>
-        <a
-          href="https://forum.vuejs.org"
-          target="_blank"
-        >
-          Forum
-        </a>
-      </li>
-      <li>
-        <a
-          href="https://chat.vuejs.org"
-          target="_blank"
-        >
-          Community Chat
-        </a>
-      </li>
-      <li>
-        <a
-          href="https://twitter.com/vuejs"
-          target="_blank"
-        >
-          Twitter
-        </a>
-      </li>
-      <br>
-      <li>
-        <a
-          href="http://vuejs-templates.github.io/webpack/"
-          target="_blank"
-        >
-          Docs for This Template
-        </a>
-      </li>
-    </ul>
-    <h2>Ecosystem</h2>
-    <ul>
-      <li>
-        <a
-          href="http://router.vuejs.org/"
-          target="_blank"
-        >
-          vue-router
-        </a>
-      </li>
-      <li>
-        <a
-          href="http://vuex.vuejs.org/"
-          target="_blank"
-        >
-          vuex
-        </a>
-      </li>
-      <li>
-        <a
-          href="http://vue-loader.vuejs.org/"
-          target="_blank"
-        >
-          vue-loader
-        </a>
-      </li>
-      <li>
-        <a
-          href="https://github.com/vuejs/awesome-vue"
-          target="_blank"
-        >
-          awesome-vue
-        </a>
-      </li>
-    </ul>
   </div>
 </template>
 
@@ -112,11 +119,49 @@ export default {
       msg: 'Welcome to Your Vue.js App',
       status: '',
       tableData: [],
+      reservedBike: {
+        cycleName: '',
+        cyclePasscode: '',
+        cycleUseStartDatetime: ','
+      },
+      isReservationBeenProcessing: false,
+      isCancellationBeenProcessing: false,
+      isCancellationAttempted: false,
     }
   },
   async mounted() {
+    const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Laoding...'))
     await this.checkStatus();
     await this.retrieveParkingList();
+    loading.close()
+  },
+  computed: {
+    headerMessage() {
+      if (this.status === 'WAITING_FOR_RESERVATION') {
+        return 'Please choose a bike you want to reserve.'
+      } else if (this.status === 'RESERVED') {
+        return 'Your reservation was successfully accepted.'
+      } else {
+        return 'Your bike is in use. Enjoy your cycling!'
+      }
+    },
+    favoritePort() {
+      return this.tableData.find((parking) => {return parking.id === '10124'})
+    },
+    atagoPort() {
+      return this.tableData.find((parking) => {return parking.id === '10077'})
+    },
+    isGoToOfficeButtonPlain() {
+      const now =  new Date()
+      if (now.getHours < 12) {
+        return true
+      } else {
+        return false
+      }
+    },
+    isGoHomeButtonPlain() {
+      return !this.isGoToOfficeButtonPlain
+    }
   },
   methods: {
     load(tree, treeNode, resolve) {
@@ -136,14 +181,31 @@ export default {
     },
     async checkStatus() {
       const result = await api.checkStatus();
-      console.log(result.status)
       this.status = result.status;
-      setTimeout(this.checkStatus, 5000)
+      if (this.status === 'RESERVED') {
+        this.reservedBike.cycleName = result.detail.cycleName
+        this.reservedBike.cyclePasscode = result.detail.cyclePasscode
+      } else if (this.status === 'IN_USE') {
+        this.reservedBike.cycleName = result.detail.cycleName
+        this.reservedBike.cyclePasscode = result.detail.cyclePasscode
+        this.reservedBike.cycleUseStartDatetime = result.detail.cycleUseStartDatetime
+      } else {
+        this.reservedBike.cycleName = ''
+        this.reservedBike.cyclePasscode = ''
+        this.reservedBike.cycleUseStartDatetime = ''
+      }
+      setTimeout(this.checkStatus, 10000)
     },
     async retrieveParkingList() {
+      // 予約処理中は取得しない
+      if (this.isReservationBeenProcessing) {
+        setTimeout(this.retrieveParkingList, 10000)
+        return
+      }
       const result = await api.retrieveParkingList();
       this.tableData.length = 0;
       for (const parking of result.parkingList) {
+        if (!parking.parkingName) continue
         this.tableData.push({
           id: parking.parkingId,
           date: parking.parkingName,
@@ -152,12 +214,91 @@ export default {
             return {
               id: cycle.CycleName,
               date: cycle.CycleName,
-              name: ''
+              name: '',
+              cycle: cycle,
             }
           })
         })
       }
-      setTimeout(this.retrieveParkingList, 5000)
+      setTimeout(this.retrieveParkingList, 10000)
+    },
+    async makeReservation(cycle) {
+      const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Processing...'))
+      if (!cycle) return
+      this.beginProcessReservation();
+      const responseBody = await api.makeReservation(cycle);
+      this.reservedBike.cycleName = responseBody.cycleName;
+      this.reservedBike.cyclePasscode = responseBody.cyclePasscode;
+      this.status = 'RESERVED';
+      loading.close()
+      this.terminateProcessReservation();
+    },
+    async cancelReservation(row) {
+      const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Processing...'))
+      this.beginProcessReservation();
+      const responseBody = await api.cancelReservation();
+      this.reservedBike.cycleName = '';
+      this.reservedBike.cyclePasscode = '';
+      this.status = 'WAITING_FOR_RESERVATION';
+      loading.close()
+      this.terminateProcessReservation();
+      await this.retrieveParkingList();
+    },
+    createFullScreenLoadingMaskOptionWithText(text) {
+      return {
+        lock: true,
+        text: text,
+        background: 'rgba(208, 208, 208, 0.7)'
+      }
+    },
+    isRowParking(scope) {
+      return scope.row.name !== ""
+    },
+    isRowReservedBike(scope) {
+      return scope.row.name === "" && scope.row.date === this.reservedBike.cycleName
+    },
+    isRowVacantBike(scope) {
+      return scope.row.name === "" && scope.row.date !== this.reservedBike.cycleName
+    },
+    beginProcessReservation() {
+      this.isReservationBeenProcessing = true
+    },
+    terminateProcessReservation() {
+      if (this.status !== 'RESERVED') {
+        this.isReservationBeenProcessing = false
+        return;
+      }
+      // 直近10秒以内に取消をしようとした形跡がある場合は予約処理は10秒延長
+      if (this.isCancellationAttempted) {
+        setTimeout(this.terminateProcessReservation, 10000)
+        return
+      }
+      setTimeout(() => {this.isReservationBeenProcessing = false}, 10000)
+    },
+    beginCancellation() {
+      this.isCancellationBeenProcessing = true;
+      this.isCancellationAttempted = true;
+    },
+    terminateCancellation() {
+      this.isCancellationBeenProcessing = false;
+    },
+    deleteCancellationHistory() {
+      if (this.isCancellationBeenProcessing) {// 次の取消が動いていたら取消履歴の抹消は10秒待つ
+        setTimeout(this.deleteCancellationHistory, 0)
+        return
+      }
+      // 取消が新たに行われた形跡がなければ10秒後に消す
+      setTimeout(() => {this.isCancellationAttempted = false, this.terminateProcessReservation()}, 10000)
+    },
+    rowClicked(row) {
+      this.$refs.tableData.toggleRowExpansion(row);
+    },
+  },
+  watch: {
+    isCancellationBeenProcessing: function(newVal) {
+      if (!newVal) {
+        this.deleteCancellationHistory()
+      }
     }
   }
 }
@@ -178,5 +319,30 @@ li {
 }
 a {
   color: #42b983;
+}
+
+.text {
+  font-size: 14px;
+}
+
+.item {
+  margin-bottom: 18px;
+}
+
+.button {
+  margin-top: 10px;
+}
+
+.clearfix:before,
+.clearfix:after {
+  display: table;
+  content: "";
+}
+.clearfix:after {
+  clear: both
+}
+
+.box-card {
+  width: 100%;
 }
 </style>

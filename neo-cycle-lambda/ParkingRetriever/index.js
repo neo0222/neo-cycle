@@ -67,23 +67,23 @@ async function retrieveParkingList(memberId, sessionId) {
   
   const parkingList = [];
   for (const parkingId of parkingIdList) {
-    const params = new URLSearchParams()
-    params.append('EventNo', 25701);
-    params.append('SessionID', sessionId);
-    params.append('UserID', 'TYO');
-    params.append('MemberID', memberId);
-    params.append('GetInfoNum', getInfoNum);
-    params.append('GetInfoTopNum', 1);
-    params.append('ParkingEntID', 'TYO');
-    params.append('ParkingID', parkingId);
-    
-    const config = {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3'
+    parkingList.push((async () => {
+      const params = new URLSearchParams()
+      params.append('EventNo', 25701);
+      params.append('SessionID', sessionId);
+      params.append('UserID', 'TYO');
+      params.append('MemberID', memberId);
+      params.append('GetInfoNum', getInfoNum);
+      params.append('GetInfoTopNum', 1);
+      params.append('ParkingEntID', 'TYO');
+      params.append('ParkingID', parkingId);
+      
+      const config = {
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3'
+        }
       }
-    }
-    try {
       let parking = {
         parkingId,
         parkingName: '',
@@ -93,7 +93,11 @@ async function retrieveParkingList(memberId, sessionId) {
       const html = res.data;
       const $ = cheerio.load(html);
       // レンタル可能な自転車がない場合
-      if (!$('[class=park_info_inner_left]').children().get(0)) continue;
+      if (!$('[class=park_info_inner_left]').children().get(0)) return {
+        parkingId,
+        parkingName: '',
+        cycleList: []
+      };;
       // 自転車がある場合は処理を継続
       parking.parkingName = $('[class=park_info_inner_left]').children().get(0).next.data.substr(2);
 
@@ -123,11 +127,13 @@ async function retrieveParkingList(memberId, sessionId) {
 
         parking.cycleList.push(cycle);
       })
-      parkingList.push(parking);
-    }
-    catch (error) {
-      throw error;
-    }
+      return parking;
+    })()); 
   }
-  return parkingList;
+  try {
+    return await Promise.all(parkingList);
+  }
+  catch (error) {
+    throw error;
+  }
 }
