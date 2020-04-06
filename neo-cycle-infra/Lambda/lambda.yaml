@@ -9,6 +9,20 @@ Description: >
 Parameters:
   ObjectKeyPrefix:
     Type: String
+  EnvName:
+    Type: String
+    AllowedValues:
+      - dev
+      - prod
+    Description: Enter profile.
+
+######################################################
+# Mappings:
+######################################################
+Mappings:
+  StackConfig:
+    NameTag:
+      Value: neo-cycle
 
 ######################################################
 # Resources
@@ -18,16 +32,32 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       Code:
-        S3Bucket: neo-cycle-lambda
+        S3Bucket: !Sub
+          - ${NameTag}-${EnvName}-lambda
+          - {
+            NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+            EnvName: !Ref EnvName
+          }
         S3Key: !Sub
           - ${ObjectKeyPrefix}/SessionMaintainer/Deploy.zip
           - {
             ObjectKeyPrefix: !Ref ObjectKeyPrefix
           }
-      FunctionName: SessionMaintainer
+      FunctionName: !Sub
+        - ${NameTag}-${EnvName}-SessionMaintainer
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
       Handler: index.handler
       ReservedConcurrentExecutions: 1
-      Role: !ImportValue RoleSessionMaintainerArn
+      Role: !ImportValue
+        Fn::Sub:
+          - ${NameTag}-${EnvName}-RoleSessionMaintainerArn
+          - {
+            NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+            EnvName: !Ref EnvName
+          }
       Runtime: nodejs12.x
       Timeout: 10
 
@@ -35,7 +65,12 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       Code:
-        S3Bucket: neo-cycle-lambda
+        S3Bucket: !Sub
+          - ${NameTag}-${EnvName}-lambda
+          - {
+            NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+            EnvName: !Ref EnvName
+          }
         S3Key: !Sub
           - ${ObjectKeyPrefix}/ParkingRetriever/Deploy.zip
           - {
@@ -44,10 +79,21 @@ Resources:
       Environment:
         Variables:
           PARKING_IDS: 10124,10077,10507
-      FunctionName: ParkingRetriever
+      FunctionName: !Sub
+        - ${NameTag}-${EnvName}-ParkingRetriever
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+          }
       Handler: index.handler
       ReservedConcurrentExecutions: 1
-      Role: !ImportValue RoleParkingRetrieverArn
+      Role: !ImportValue
+        Fn::Sub:
+          - ${NameTag}-${EnvName}-RoleParkingRetrieverArn
+          - {
+            NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+            EnvName: !Ref EnvName
+          }
       Runtime: nodejs12.x
       Timeout: 10
 
@@ -55,16 +101,32 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       Code:
-        S3Bucket: neo-cycle-lambda
+        S3Bucket: !Sub
+          - ${NameTag}-${EnvName}-lambda
+          - {
+            NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+            EnvName: !Ref EnvName
+          }
         S3Key: !Sub
           - ${ObjectKeyPrefix}/ReservationMaker/Deploy.zip
           - {
             ObjectKeyPrefix: !Ref ObjectKeyPrefix
           }
-      FunctionName: ReservationMaker
+      FunctionName: !Sub
+        - ${NameTag}-${EnvName}-ReservationMaker
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
       Handler: index.handler
       ReservedConcurrentExecutions: 1
-      Role: !ImportValue RoleReservationMakerArn
+      Role: !ImportValue
+        Fn::Sub:
+          - ${NameTag}-${EnvName}-RoleReservationMakerArn
+          - {
+            NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+            EnvName: !Ref EnvName
+          }
       Runtime: nodejs12.x
       Timeout: 10
 
@@ -72,16 +134,32 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       Code:
-        S3Bucket: neo-cycle-lambda
+        S3Bucket: !Sub
+          - ${NameTag}-${EnvName}-lambda
+          - {
+            NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+            EnvName: !Ref EnvName
+          }
         S3Key: !Sub
           - ${ObjectKeyPrefix}/ReservationCanceller/Deploy.zip
           - {
             ObjectKeyPrefix: !Ref ObjectKeyPrefix
           }
-      FunctionName: ReservationCanceller
+      FunctionName: !Sub
+        - ${NameTag}-${EnvName}-ReservationCanceller
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
       Handler: index.handler
       ReservedConcurrentExecutions: 1
-      Role: !ImportValue RoleReservationCancellerArn
+      Role: !ImportValue
+        Fn::Sub:
+          - ${NameTag}-${EnvName}-RoleReservationCancellerArn
+          - {
+            NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+            EnvName: !Ref EnvName
+          }
       Runtime: nodejs12.x
       Timeout: 10
 
@@ -89,16 +167,32 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       Code:
-        S3Bucket: neo-cycle-lambda
+        S3Bucket: !Sub
+          - ${NameTag}-${EnvName}-lambda
+          - {
+            NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+            EnvName: !Ref EnvName
+          }
         S3Key: !Sub
           - ${ObjectKeyPrefix}/StatusChecker/Deploy.zip
           - {
             ObjectKeyPrefix: !Ref ObjectKeyPrefix
           }
-      FunctionName: StatusChecker
+      FunctionName: !Sub
+        - ${NameTag}-${EnvName}-StatusChecker
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
       Handler: index.handler
       ReservedConcurrentExecutions: 1
-      Role: !ImportValue RoleStatusCheckerArn
+      Role: !ImportValue
+        Fn::Sub:
+          - ${NameTag}-${EnvName}-RoleStatusCheckerArn
+          - {
+            NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+            EnvName: !Ref EnvName
+          }
       Runtime: nodejs12.x
       Timeout: 10
 
@@ -109,40 +203,90 @@ Outputs:
   LambdaSessionMaintainerArn:
     Value: !GetAtt LambdaSessionMaintainer.Arn
     Export:
-      Name: LambdaSessionMaintainerArn
+      Name: !Sub
+        - ${NameTag}-${EnvName}-LambdaSessionMaintainerArn
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
   LambdaSessionMaintainerFunctionName:
     Value: !Ref LambdaSessionMaintainer
     Export:
-      Name: LambdaSessionMaintainerFunctionName
+      Name: !Sub
+        - ${NameTag}-${EnvName}-LambdaSessionMaintainerFunctionName
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
   LambdaParkingRetrieverArn:
     Value: !GetAtt LambdaParkingRetriever.Arn
     Export:
-      Name: LambdaParkingRetrieverArn
+      Name: !Sub
+        - ${NameTag}-${EnvName}-LambdaParkingRetrieverArn
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
   LambdaParkingRetrieverFunctionName:
     Value: !Ref LambdaParkingRetriever
     Export:
-      Name: LambdaParkingRetrieverFunctionName
+      Name: !Sub
+        - ${NameTag}-${EnvName}-LambdaParkingRetrieverFunctionName
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
   LambdaReservationMakerArn:
     Value: !GetAtt LambdaReservationMaker.Arn
     Export:
-      Name: LambdaReservationMakerArn
+      Name: !Sub
+        - ${NameTag}-${EnvName}-LambdaReservationMakerArn
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
   LambdaReservationMakerFunctionName:
     Value: !Ref LambdaReservationMaker
     Export:
-      Name: LambdaReservationMakerFunctionName
+      Name: !Sub
+        - ${NameTag}-${EnvName}-LambdaReservationMakerFunctionName
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
   LambdaReservationCancellerArn:
     Value: !GetAtt LambdaReservationCanceller.Arn
     Export:
-      Name: LambdaReservationCancellerArn
+      Name: !Sub
+        - ${NameTag}-${EnvName}-LambdaReservationCancellerArn
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
   LambdaReservationCancellerFunctionName:
     Value: !Ref LambdaReservationCanceller
     Export:
-      Name: LambdaReservationCancellerFunctionName
+      Name: !Sub
+        - ${NameTag}-${EnvName}-LambdaReservationCancellerFunctionName
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
   LambdaStatusCheckerArn:
     Value: !GetAtt LambdaStatusChecker.Arn
     Export:
-      Name: LambdaStatusCheckerArn
+      Name: !Sub
+        - ${NameTag}-${EnvName}-LambdaStatusCheckerArn
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
   LambdaStatusCheckerName:
     Value: !Ref LambdaStatusChecker
     Export:
-      Name: LambdaStatusCheckerFunctionName
+      Name: !Sub
+        - ${NameTag}-${EnvName}-LambdaStatusCheckerFunctionName
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }

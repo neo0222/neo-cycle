@@ -12,6 +12,12 @@ Parameters:
     Default: neo-cycle
     AllowedValues:
       - neo-cycle
+  EnvName:
+    Type: String
+    AllowedValues:
+      - dev
+      - prod
+    Description: Enter profile.
 
 ######################################################
 # Mappings
@@ -32,9 +38,10 @@ Resources:
     Type: AWS::ApiGateway::RestApi
     Properties:
       Name: !Sub 
-        - ${NameTag}
+        - ${NameTag}-${EnvName}-api-gateway
         - {
-          NameTag: !FindInMap [ StackConfig, NameTag, Value]
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
         }
       EndpointConfiguration:
         Types:
@@ -76,7 +83,8 @@ Resources:
           - arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/${LambdaParkingRetrieverArn}/invocations
           - {
             LambdaParkingRetrieverArn: {
-              'Fn::ImportValue': LambdaParkingRetrieverArn
+              'Fn::ImportValue':
+                !Sub "${NameTag}-${EnvName}-LambdaParkingRetrieverArn"
             }
           }
         IntegrationHttpMethod: POST
@@ -122,7 +130,13 @@ Resources:
     Type: AWS::Lambda::Permission
     Properties: 
       Action: lambda:InvokeFunction
-      FunctionName: !ImportValue LambdaParkingRetrieverFunctionName
+      FunctionName: !ImportValue
+        Fn::Sub:
+          - ${NameTag}-${EnvName}-LambdaParkingRetrieverFunctionName
+          - {
+            NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+            EnvName: !Ref EnvName
+          }
       Principal: apigateway.amazonaws.com
 
   ######################################################
@@ -160,7 +174,8 @@ Resources:
           - arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/${LambdaReservationMakerArn}/invocations
           - {
             LambdaReservationMakerArn: {
-              'Fn::ImportValue': LambdaReservationMakerArn
+              'Fn::ImportValue':
+                !Sub "${NameTag}-${EnvName}-LambdaReservationMakerArn"
             }
           }
         IntegrationHttpMethod: POST
@@ -206,7 +221,13 @@ Resources:
     Type: AWS::Lambda::Permission
     Properties: 
       Action: lambda:InvokeFunction
-      FunctionName: !ImportValue LambdaReservationMakerFunctionName
+      FunctionName: !ImportValue
+        Fn::Sub:
+          - ${NameTag}-${EnvName}-LambdaReservationMakerFunctionName
+          - {
+            NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+            EnvName: !Ref EnvName
+          }
       Principal: apigateway.amazonaws.com
 
   ######################################################
@@ -244,7 +265,8 @@ Resources:
           - arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/${LambdaReservationCancellerArn}/invocations
           - {
             LambdaReservationCancellerArn: {
-              'Fn::ImportValue': LambdaReservationCancellerArn
+              'Fn::ImportValue':
+                !Sub "${NameTag}-${EnvName}-LambdaReservationCancellerArn"
             }
           }
         IntegrationHttpMethod: POST
@@ -290,7 +312,13 @@ Resources:
     Type: AWS::Lambda::Permission
     Properties: 
       Action: lambda:InvokeFunction
-      FunctionName: !ImportValue LambdaReservationCancellerFunctionName
+      FunctionName: !ImportValue
+        Fn::Sub:
+          - ${NameTag}-${EnvName}-LambdaReservationCancellerFunctionName
+          - {
+            NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+            EnvName: !Ref EnvName
+          }
       Principal: apigateway.amazonaws.com
 
   ######################################################
@@ -328,7 +356,8 @@ Resources:
           - arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/${LambdaStatusCheckerArn}/invocations
           - {
             LambdaStatusCheckerArn: {
-              'Fn::ImportValue': LambdaStatusCheckerArn
+              'Fn::ImportValue':
+                !Sub "${NameTag}-${EnvName}-LambdaStatusCheckerArn"
             }
           }
         IntegrationHttpMethod: POST
@@ -374,5 +403,11 @@ Resources:
     Type: AWS::Lambda::Permission
     Properties: 
       Action: lambda:InvokeFunction
-      FunctionName: !ImportValue LambdaStatusCheckerFunctionName
+      FunctionName: !ImportValue
+        Fn::Sub:
+          - ${NameTag}-${EnvName}-LambdaStatusCheckerFunctionName
+          - {
+            NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+            EnvName: !Ref EnvName
+          }
       Principal: apigateway.amazonaws.com

@@ -17,12 +17,18 @@ Parameters:
     Type: String
   S3Bucket:
     Type: String
-    Default: cycle.blog-neo.com
+    Default: prod.neo-cycle.com
   NameTag:
     Type: String
     Default: neo-cycle
     AllowedValues:
       - neo-cycle
+  EnvName:
+    Type: String
+    AllowedValues:
+      - dev
+      - prod
+    Description: Enter profile.
 
 ######################################################
 # Mappings
@@ -48,8 +54,18 @@ Resources:
               - logs:CreateLogStream
               - logs:PutLogEvents
             Resource:
-              - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${NameTag}}-build
-              - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${NameTag}-build:*
+              - !Sub
+                - arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${NameTag}-build
+                - {
+                  NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+                  EnvName: !Ref EnvName
+                }
+              - !Sub
+                - arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${NameTag}-build:*
+                - {
+                  NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+                  EnvName: !Ref EnvName
+                }
           - Effect: Allow
             Resource:
               - "*"
@@ -76,18 +92,53 @@ Resources:
           - Effect: Allow
             Resource:
               # RoleをアタッチするLambdaが増えるごとにここに追加していく
-              - !ImportValue RoleSessionMaintainerArn
-              - !ImportValue RoleParkingRetrieverArn
-              - !ImportValue RoleReservationMakerArn
-              - !ImportValue RoleReservationCancellerArn
-              - !ImportValue RoleStatusCheckerArn
+              - !ImportValue
+                Fn::Sub:
+                  - ${NameTag}-${EnvName}-RoleSessionMaintainerArn
+                  - {
+                    NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+                    EnvName: !Ref EnvName
+                  }
+              - !ImportValue
+                Fn::Sub:
+                  - ${NameTag}-${EnvName}-RoleParkingRetrieverArn
+                  - {
+                    NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+                    EnvName: !Ref EnvName
+                  }
+              - !ImportValue
+                Fn::Sub:
+                  - ${NameTag}-${EnvName}-RoleReservationMakerArn
+                  - {
+                    NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+                    EnvName: !Ref EnvName
+                  }
+              - !ImportValue
+                Fn::Sub:
+                  - ${NameTag}-${EnvName}-RoleReservationCancellerArn
+                  - {
+                    NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+                    EnvName: !Ref EnvName
+                  }
+              - !ImportValue
+                Fn::Sub:
+                  - ${NameTag}-${EnvName}-RoleStatusCheckerArn
+                  - {
+                    NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+                    EnvName: !Ref EnvName
+                  }
             Action:
               - iam:PassRole
 
   RoleCodeBuildService:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub role-${NameTag}-codebuild
+      RoleName: !Sub
+        - role-${NameTag}-${EnvName}-codebuild
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
       ManagedPolicyArns:
         - !Ref CodeBuildBasePolicy
       AssumeRolePolicyDocument:
@@ -107,13 +158,17 @@ Resources:
         Type: CODEPIPELINE
       Environment:
         ComputeType: BUILD_GENERAL1_SMALL
+        EnvironmentVariables:
+          - Name: ENVIRONMENT_NAME
+            Value: !Ref EnvName
         Type: LINUX_CONTAINER
         Image: aws/codebuild/standard:2.0-1.13.0
       ServiceRole: !GetAtt RoleCodeBuildService.Arn
       Name: !Sub
-        - ${NameTag}-build
+        - ${NameTag}-${EnvName}-build
         - {
-          NameTag: !FindInMap [ StackConfig, NameTag, Value ]
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
         }
       Source:
         Type: CODEPIPELINE
@@ -121,7 +176,12 @@ Resources:
   CodePipelineServiceRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub role-${NameTag}-code-pipeline
+      RoleName: !Sub
+        - role-${NameTag}-${EnvName}-code-pipeline
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
       Path: /
       AssumeRolePolicyDocument:
         Version: 2012-10-17
@@ -156,9 +216,10 @@ Resources:
     Type: AWS::CodePipeline::Pipeline
     Properties:
       Name: !Sub
-        - ${NameTag}
+        - ${NameTag}-${EnvName}-code-pipeline
         - {
-          NameTag: !FindInMap [ StackConfig, NameTag, Value ]
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
         }
       ArtifactStore:
         Type: S3
