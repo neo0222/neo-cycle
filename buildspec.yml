@@ -32,7 +32,7 @@ phases:
       - aws s3 mv ./Deploy.zip s3://neo-cycle-lambda/${CODEBUILD_BUILD_NUMBER}/StatusChecker/Deploy.zip
       - cd ../../neo-cycle-infra
       - aws cloudformation deploy
-          --stack-name neo-cycle-lambda
+          --stack-name neo-cycle-${ENVIRONMENT_NAME}-lambda
           --template-file Lambda/lambda.yaml
           --parameter-overrides ObjectKeyPrefix=${CODEBUILD_BUILD_NUMBER}
           --capabilities CAPABILITY_AUTO_EXPAND
@@ -40,7 +40,7 @@ phases:
   build:
     commands:
       - cd neo-cycle-client
-      - npm run build
+      - npm run build:${ENVIRONMENT_NAME}
   post_build:
     commands:
       - tar cf /tmp/node_modules.tar node_modules

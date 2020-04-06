@@ -1,5 +1,5 @@
 const axios = require('axios');
-
+import env from '../environment/index'
 const url = 'https://bmamuk9hjf.execute-api.ap-northeast-1.amazonaws.com/prod';
 
 export async function retrieveParkingList() {
