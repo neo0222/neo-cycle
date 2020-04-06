@@ -1,0 +1,215 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+    CodePipeline for deployment client and lambda.
+
+######################################################
+# Parameters:
+######################################################
+Parameters:
+  GitHubRepoName:
+    Type: String
+    Default: neo-cycle
+  GitHubBranchName:
+    Type: String
+    Default: dev
+  GitHubOAuthToken:
+    Type: String
+  S3Bucket:
+    Type: String
+    Default: cycle.blog-neo.com
+  NameTag:
+    Type: String
+    Default: neo-cycle
+    AllowedValues:
+      - neo-cycle
+
+######################################################
+# Mappings
+######################################################
+Mappings:
+  StackConfig:
+    NameTag:
+      Value: neo-cycle
+
+######################################################
+# Resources
+######################################################
+Resources:
+  CodeBuildBasePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - logs:CreateLogGroup
+              - logs:CreateLogStream
+              - logs:PutLogEvents
+            Resource:
+              - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${NameTag}}-build
+              - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${NameTag}-build:*
+          - Effect: Allow
+            Resource:
+              - "*"
+            Action:
+              - s3:PutObject
+              - s3:GetObject
+              - s3:GetObjectVersion
+              - s3:GetBucketAcl
+              - s3:GetBucketLocation
+          - Effect: Allow
+            Resource:
+              - "*"
+            Action:
+              - cloudformation:*
+          - Effect: Allow
+            Resource:
+              - "*"
+            Action:
+              - lambda:GetFunction
+              - lambda:CreateFunction
+              - lambda:PutFunctionConcurrency
+              - lambda:UpdateFunctionCode
+              - lambda:GetFunctionConfiguration
+          - Effect: Allow
+            Resource:
+              # RoleをアタッチするLambdaが増えるごとにここに追加していく
+              - !ImportValue RoleSessionMaintainerArn
+              - !ImportValue RoleParkingRetrieverArn
+              - !ImportValue RoleReservationMakerArn
+              - !ImportValue RoleReservationCancellerArn
+              - !ImportValue RoleStatusCheckerArn
+            Action:
+              - iam:PassRole
+
+  RoleCodeBuildService:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub role-${NameTag}-codebuild
+      ManagedPolicyArns:
+        - !Ref CodeBuildBasePolicy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: codebuild.amazonaws.com
+
+  NeoCycleBuildProject:
+    Type: AWS::CodeBuild::Project
+    Properties:
+      Artifacts:
+        Type: CODEPIPELINE
+      Source:
+        Type: CODEPIPELINE
+      Environment:
+        ComputeType: BUILD_GENERAL1_SMALL
+        Type: LINUX_CONTAINER
+        Image: aws/codebuild/standard:2.0-1.13.0
+      ServiceRole: !GetAtt RoleCodeBuildService.Arn
+      Name: !Sub
+        - ${NameTag}-build
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ]
+        }
+      Source:
+        Type: CODEPIPELINE
+
+  CodePipelineServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub role-${NameTag}-code-pipeline
+      Path: /
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: codepipeline.amazonaws.com
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: SamplePipelinePolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Resource:
+                  - !Sub arn:aws:s3:::${S3Bucket}/*
+                Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:GetObject
+                  - s3:GetObjectVersion
+                  - s3:GetBucketVersioning
+              - Resource: "*"
+                Effect: Allow
+                Action:
+                  - cloudformation:*
+                  - codedeploy:*
+                  - codebuild:*
+                  - s3:*
+                  - iam:PassRole
+
+  NeoCyclePipeline:
+    Type: AWS::CodePipeline::Pipeline
+    Properties:
+      Name: !Sub
+        - ${NameTag}
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ]
+        }
+      ArtifactStore:
+        Type: S3
+        Location: codepipeline-ap-northeast-1-299374294168
+      RoleArn: !GetAtt CodePipelineServiceRole.Arn
+      RestartExecutionOnUpdate: false
+      Stages:
+        - Name: Source
+          Actions:
+            - Name: Source
+              ActionTypeId:
+                Category: Source
+                Owner: ThirdParty
+                Provider: GitHub
+                Version : 1
+              Configuration:
+                Owner: neo0222
+                Repo: !Ref GitHubRepoName
+                Branch: !Ref GitHubBranchName
+                OAuthToken: !Ref GitHubOAuthToken #GitHubでPersonal Access Tokenを発行する。
+                PollForSourceChanges: true
+              OutputArtifacts:
+                - Name: SourceArtifact
+              Region: ap-northeast-1
+              RunOrder: 1
+        - Name: Build
+          Actions:
+            - Name: Build
+              ActionTypeId:
+                Category: Build
+                Owner: AWS
+                Version: 1
+                Provider: CodeBuild
+              Configuration:
+                ProjectName: !Ref NeoCycleBuildProject
+              InputArtifacts:
+                - Name: SourceArtifact
+              OutputArtifacts:
+                - Name: BuildArtifacts
+              RunOrder: 1
+        - Name: Deploy
+          Actions:
+            - Name: Deploy
+              ActionTypeId:
+                Category: Deploy
+                Owner: AWS
+                Version: 1
+                Provider: S3
+              Configuration:
+                BucketName: !Ref S3Bucket
+                Extract: true
+              InputArtifacts:
+                - Name: BuildArtifacts
+              RunOrder: 1

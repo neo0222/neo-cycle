@@ -1,0 +1,163 @@
+AWSTemplateFormatVersion: "2010-09-09"
+
+Mappings:
+  StackConfig:
+    ManagedPolicyArns:
+      AWSLambdaBasicExecutionRole: arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+
+Resources:
+  #-----------------------
+  # ポリシー作成
+  #-----------------------
+  NeoCycleSessionTablePutItemPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: authorize to put item into session dynamodb 
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:PutItem
+            Resource:
+              - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/neo-cycle-SESSION"
+
+  NeoCycleSessionTableGetItemPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: authorize to get item from session dynamodb 
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:GetItem
+            Resource:
+              - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/neo-cycle-SESSION"
+
+  NeoCycleGetParameterPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: authorize to get parameter from ssm
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - ssm:getParameter
+            Resource:
+              - arn:aws:ssm:ap-northeast-1:010660485109:parameter/neo-cycle/memberId
+              - arn:aws:ssm:ap-northeast-1:010660485109:parameter/neo-cycle/password
+              - arn:aws:ssm:ap-northeast-1:010660485109:parameter/neo-cycle/php-url
+
+  #-----------------------
+  # ロールの作成
+  #-----------------------
+  RoleSessionMaintainer:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: role-session-maintainer
+      ManagedPolicyArns:
+        - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
+        - !Ref NeoCycleSessionTablePutItemPolicy
+        - !Ref NeoCycleGetParameterPolicy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: lambda.amazonaws.com
+  
+  RoleParkingRetriever:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: role-parking-retriever
+      ManagedPolicyArns:
+        - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
+        - !Ref NeoCycleSessionTableGetItemPolicy
+        - !Ref NeoCycleGetParameterPolicy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: lambda.amazonaws.com
+
+  RoleReservationMaker:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: role-reservation-maker
+      ManagedPolicyArns:
+        - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
+        - !Ref NeoCycleSessionTableGetItemPolicy
+        - !Ref NeoCycleGetParameterPolicy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: lambda.amazonaws.com
+
+  RoleReservationCanceller:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: role-reservation-canceller
+      ManagedPolicyArns:
+        - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
+        - !Ref NeoCycleSessionTableGetItemPolicy
+        - !Ref NeoCycleGetParameterPolicy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: lambda.amazonaws.com
+
+  RoleStatusChecker:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: role-status-checker
+      ManagedPolicyArns:
+        - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
+        - !Ref NeoCycleSessionTableGetItemPolicy
+        - !Ref NeoCycleGetParameterPolicy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: lambda.amazonaws.com
+
+#################################
+# Outputs
+#################################
+Outputs:
+  RoleSessionMaintainerArn:
+    Value: !GetAtt RoleSessionMaintainer.Arn
+    Export:
+      Name: RoleSessionMaintainerArn
+
+  RoleParkingRetrieverArn:
+    Value: !GetAtt RoleParkingRetriever.Arn
+    Export:
+      Name: RoleParkingRetrieverArn
+
+  RoleReservationMakerArn:
+    Value: !GetAtt RoleReservationMaker.Arn
+    Export:
+      Name: RoleReservationMakerArn
+
+  RoleReservationCancellerArn:
+    Value: !GetAtt RoleReservationCanceller.Arn
+    Export:
+      Name: RoleReservationCancellerArn
+
+  RoleStatusCheckerArn:
+    Value: !GetAtt RoleStatusChecker.Arn
+    Export:
+      Name: RoleStatusCheckerArn
