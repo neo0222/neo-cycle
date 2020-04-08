@@ -80,6 +80,7 @@ Resources:
               - "*"
             Action:
               - cloudformation:*
+              - apigateway:*
           - Effect: Allow
             Resource:
               - "*"
