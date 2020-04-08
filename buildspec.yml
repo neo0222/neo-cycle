@@ -13,23 +13,23 @@ phases:
       - cd ./SessionMaintainer
       - npm install
       - zip -r Deploy.zip ./
-      - aws s3 mv ./Deploy.zip s3://neo-cycle-lambda/${CODEBUILD_BUILD_NUMBER}/SessionMaintainer/Deploy.zip
+      - aws s3 mv ./Deploy.zip s3://neo-cycle-dev-lambda/${CODEBUILD_BUILD_NUMBER}/SessionMaintainer/Deploy.zip
       - cd ../ParkingRetriever
       - npm install
       - zip -r Deploy.zip ./
-      - aws s3 mv ./Deploy.zip s3://neo-cycle-lambda/${CODEBUILD_BUILD_NUMBER}/ParkingRetriever/Deploy.zip
+      - aws s3 mv ./Deploy.zip s3://neo-cycle-dev-lambda/${CODEBUILD_BUILD_NUMBER}/ParkingRetriever/Deploy.zip
       - cd ../ReservationMaker
       - npm install
       - zip -r Deploy.zip ./
-      - aws s3 mv ./Deploy.zip s3://neo-cycle-lambda/${CODEBUILD_BUILD_NUMBER}/ReservationMaker/Deploy.zip
+      - aws s3 mv ./Deploy.zip s3://neo-cycle-dev-lambda/${CODEBUILD_BUILD_NUMBER}/ReservationMaker/Deploy.zip
       - cd ../ReservationCanceller
       - npm install
       - zip -r Deploy.zip ./
-      - aws s3 mv ./Deploy.zip s3://neo-cycle-lambda/${CODEBUILD_BUILD_NUMBER}/ReservationCanceller/Deploy.zip
+      - aws s3 mv ./Deploy.zip s3://neo-cycle-dev-lambda/${CODEBUILD_BUILD_NUMBER}/ReservationCanceller/Deploy.zip
       - cd ../StatusChecker
       - npm install
       - zip -r Deploy.zip ./
-      - aws s3 mv ./Deploy.zip s3://neo-cycle-lambda/${CODEBUILD_BUILD_NUMBER}/StatusChecker/Deploy.zip
+      - aws s3 mv ./Deploy.zip s3://neo-cycle-dev-lambda/${CODEBUILD_BUILD_NUMBER}/StatusChecker/Deploy.zip
       - cd ../../neo-cycle-infra
       - aws cloudformation deploy
           --stack-name neo-cycle-${ENVIRONMENT_NAME}-lambda
