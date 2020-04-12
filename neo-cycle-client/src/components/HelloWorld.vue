@@ -254,31 +254,44 @@ export default {
     async makeReservation(cycle) {
       const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Processing...'))
       if (!cycle) return
-      this.beginProcessReservation();
-      const responseBody = await api.makeReservation(
-        sessionStorage.getItem('currentUserName'),
-        sessionStorage.getItem('sessionId'),
-        cycle
-      );
-      this.reservedBike.cycleName = responseBody.cycleName;
-      this.reservedBike.cyclePasscode = responseBody.cyclePasscode;
-      this.status = 'RESERVED';
-      loading.close()
-      this.terminateProcessReservation();
+      try {
+        this.beginProcessReservation();
+        const responseBody = await api.makeReservation(
+          sessionStorage.getItem('currentUserName'),
+          sessionStorage.getItem('sessionId'),
+          cycle
+        );
+        this.reservedBike.cycleName = responseBody.cycleName;
+        this.reservedBike.cyclePasscode = responseBody.cyclePasscode;
+        this.status = 'RESERVED';
+        loading.close()
+        this.terminateProcessReservation();
+      }
+      catch (error) {
+        loading.close()
+        this.handleErrorResponse(this, error)
+      }
     },
     async cancelReservation(row) {
       const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Processing...'))
-      this.beginProcessReservation();
-      const responseBody = await api.cancelReservation(
-        sessionStorage.getItem('currentUserName'),
-        sessionStorage.getItem('sessionId')
-      );
-      this.reservedBike.cycleName = '';
-      this.reservedBike.cyclePasscode = '';
-      this.status = 'WAITING_FOR_RESERVATION';
-      loading.close()
-      this.terminateProcessReservation();
-      await this.retrieveParkingList();
+      try {
+        this.beginProcessReservation();
+        const responseBody = await api.cancelReservation(
+          sessionStorage.getItem('currentUserName'),
+          sessionStorage.getItem('sessionId')
+        );
+        this.reservedBike.cycleName = '';
+        this.reservedBike.cyclePasscode = '';
+        this.status = 'WAITING_FOR_RESERVATION';
+        loading.close()
+        this.terminateProcessReservation();
+        await this.retrieveParkingList();
+      }
+      catch (error) {
+        loading.close()
+        this.handleErrorResponse(this, error)
+      }
+
     },
     createFullScreenLoadingMaskOptionWithText(text) {
       return {
