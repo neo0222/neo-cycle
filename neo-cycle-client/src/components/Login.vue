@@ -4,7 +4,7 @@
       <el-form>
         <el-form-item>
           <div class="input-form-wrapper">
-            <el-input style="width: 440px; max-width: 70%" type="text" placeholder="user ID or e-mail address" v-model="username"/>
+            <el-input style="width: 440px; max-width: 70%" type="text" placeholder="user ID" v-model="username"/>
           </div>
         </el-form-item>
         <el-form-item>
