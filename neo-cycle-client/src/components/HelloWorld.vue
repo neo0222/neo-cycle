@@ -180,7 +180,10 @@ export default {
       }, 1000)
     },
     async checkStatus() {
-      const result = await api.checkStatus();
+      const result = await api.checkStatus(
+        sessionStorage.getItem('currentUserName'),
+        sessionStorage.getItem('sessionId')
+      );
       this.status = result.status;
       if (this.status === 'RESERVED') {
         this.reservedBike.cycleName = result.detail.cycleName
@@ -202,7 +205,10 @@ export default {
         setTimeout(this.retrieveParkingList, 10000)
         return
       }
-      const result = await api.retrieveParkingList();
+      const result = await api.retrieveParkingList(
+        sessionStorage.getItem('currentUserName'),
+        sessionStorage.getItem('sessionId')
+      );
       this.tableData.length = 0;
       for (const parking of result.parkingList) {
         if (!parking.parkingName) continue
@@ -226,7 +232,11 @@ export default {
       const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Processing...'))
       if (!cycle) return
       this.beginProcessReservation();
-      const responseBody = await api.makeReservation(cycle);
+      const responseBody = await api.makeReservation(
+        sessionStorage.getItem('currentUserName'),
+        sessionStorage.getItem('sessionId'),
+        cycle
+      );
       this.reservedBike.cycleName = responseBody.cycleName;
       this.reservedBike.cyclePasscode = responseBody.cyclePasscode;
       this.status = 'RESERVED';
@@ -236,7 +246,10 @@ export default {
     async cancelReservation(row) {
       const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Processing...'))
       this.beginProcessReservation();
-      const responseBody = await api.cancelReservation();
+      const responseBody = await api.cancelReservation(
+        sessionStorage.getItem('currentUserName'),
+        sessionStorage.getItem('sessionId')
+      );
       this.reservedBike.cycleName = '';
       this.reservedBike.cyclePasscode = '';
       this.status = 'WAITING_FOR_RESERVATION';
