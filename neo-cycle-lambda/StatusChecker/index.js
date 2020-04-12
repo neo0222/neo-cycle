@@ -22,10 +22,11 @@ async function main(event, context) {
   const sessionId = await getSessionId(memberId);
   const response = {
     statusCode: 200,
-    body: await checkStatus(memberId, sessionId),
+    body: JSON.stringify(await checkStatus(memberId, sessionId)),
     headers: {
         "Access-Control-Allow-Origin": '*'
-    }
+    },
+    isBase64Encoded: false
   };
   return response;
 }
