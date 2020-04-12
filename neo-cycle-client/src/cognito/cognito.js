@@ -261,13 +261,12 @@ export default class Cognito {
         resolve(session)
       })
     } else {
-      console.log(this.userPool.getCurrentUser())
-      const cognitoUser = this.userPool.getCurrentUser()
+      const cognitoUser = JSON.parse(sessionStorage.getItem('storeStateCredentials')).cognitoUser;
       return new Promise(async (resolve, reject) => {
         if (cognitoUser === null) {
           reject(cognitoUser)
         }
-        const session = cognitoUser.getSignInUserSession()
+        const session = cognitoUser.signInUserSession
         if (session === null || !this.isSessionValid(session)) {
           reject('session invalid')
         } else {
