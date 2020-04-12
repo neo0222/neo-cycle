@@ -39,7 +39,9 @@ Resources:
       BucketEncryption:
         ServerSideEncryptionConfiguration:
           - ServerSideEncryptionByDefault:
-              SSEAlgorithm: AES256  
+              SSEAlgorithm: AES256
+      WebsiteConfiguration:
+        IndexDocument: index.html
       # LifecycleConfiguration:
       #   Rules:
       #     - Id: !Join ['-', [!Ref 'BucketNameContents', 'Contents-LifeCycle']]
