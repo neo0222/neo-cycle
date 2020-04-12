@@ -48,6 +48,8 @@ Resources:
           RequireSymbols: false
           RequireUppercase: false
           TemporaryPasswordValidityDays: 7
+      AutoVerifiedAttributes:
+        - email
 
   NeoCycleUserPoolClient:
     Type: AWS::Cognito::UserPoolClient
