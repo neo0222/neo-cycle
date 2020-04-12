@@ -21,7 +21,7 @@ async function main(event, context) {
   const memberId = JSON.parse(event.body).memberId;
   const sessionId = JSON.parse(event.body).sessionId;
   try {
-    const { cycleName, cyclePasscode } = await makeReservation(memberId, sessionId, JSON.parse(event.body));
+    const { cycleName, cyclePasscode } = await makeReservation(memberId, sessionId, JSON.parse(event.body).cycle);
     const response = {
       statusCode: 200,
       body: JSON.stringify({
