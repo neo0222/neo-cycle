@@ -20,6 +20,8 @@
 </template>
 
 <script>
+import api from '../api/index'
+
 export default {
   name: 'Confirm',
   data () {
@@ -32,7 +34,7 @@ export default {
     async confirm () {
       const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Please wait...'))
       try {
-        await this.$cognito.confirmation(this.username, this.confirmationCode)
+        await api.confirmSignUp(this.username, this.confirmationCode)
         this.$message({
             message: 'Confirmation was successfully completed.',
             type: 'success',

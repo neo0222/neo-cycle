@@ -11,7 +11,6 @@ import {
 import * as AWS from 'aws-sdk/global'
 import env from '../environment/index'
 
-
 export default class Cognito {
   configure(config) {
     if (config.userPool) {
@@ -52,43 +51,6 @@ export default class Cognito {
   }
 
 
-  signUp(userInfo) {
-    console.log('invoked')
-    const attributeList = []
-    const dataEmail = {
-      Name: 'email',
-      Value: userInfo.email
-    }
-    attributeList.push(new CognitoUserAttribute(dataEmail))
-    return new Promise((resolve, reject) => {
-      this.userPool.signUp(userInfo.username, userInfo.password, attributeList, null, (err, result) => {
-        if (err) {
-          reject(err)
-        } else {
-          resolve(result)
-        }
-      })
-    })
-  }
-
-
-  confirmation(username, confirmationCode) {
-    const userData = {
-      Username: username,
-      Pool: this.userPool
-    }
-    const cognitoUser = new CognitoUser(userData)
-    return new Promise((resolve, reject) => {
-      cognitoUser.confirmRegistration(confirmationCode, true, (err, result) => {
-        if (err) {
-          reject(err)
-        } else {
-          resolve(result)
-        }
-      })
-    })
-  }
-
   updateAttributes(attributeName, newAttribute) {
     const cognitoUser = this.userPool.getCurrentUser()
     return new Promise((resolve, reject) => {
@@ -99,7 +61,7 @@ export default class Cognito {
         if (err) {
           reject(err)
         } else {
-          if (!session.isValid()) {
+          if (!this.isSessionValid(session)) {
             reject(session)
           } else {
             console.log('session success')
@@ -139,11 +101,9 @@ export default class Cognito {
       cognitoUser.authenticateUser(authenticationDetails, {
         onSuccess: async (result) => {
           try {
+            console.log(result)
             await this.createSpecificCredentials(result, cognitoUser)
             sessionStorage.setItem('currentUserName', username)
-            const groups = result.getIdToken().payload['cognito:groups']
-            result.groupName = groups ? groups[0] : undefined
-            sessionStorage.setItem('group', result.groupName)
             result.status = 'SUCCESS'
             resolve(result)
           } catch (error) {
@@ -168,7 +128,7 @@ export default class Cognito {
   updatePassword(params) {
     return new Promise((resolve, reject) => {
       const userData = {
-        UserName: sessionStorage.getItem('currentUserName'),
+        Username: sessionStorage.getItem('currentUserName'),
         Pool: this.userPool,
         Storage: sessionStorage,
       }
@@ -209,16 +169,16 @@ export default class Cognito {
         IdentityId: cognitoIdentityId.IdentityId,
         Logins: provider
       }).promise()
+      const credenetials = Object.assign( /** target */ {}, cognitoIdentityCredentials.Credentials, /** source2 */ {
+        IdToken: IdToken,
+        cognitoUser
+      })
+      sessionStorage.removeItem('storeStateCredentials')
+      sessionStorage.setItem('storeStateCredentials', JSON.stringify(credenetials))
     } catch (error) {
+      console.log(error)
       throw error
-    }
-    const credenetials = Object.assign( /** target */ {}, cognitoIdentityCredentials.Credentials, /** source2 */ {
-      IdToken: IdToken,
-      cognitoUser
-    })
-    sessionStorage.setItem('credentials', JSON.stringify(credenetials))
-    sessionStorage.removeItem('storeStateCredentials')
-    sessionStorage.setItem('storeStateCredentials', JSON.stringify(credenetials))
+    } 
   }
 
 
@@ -229,7 +189,6 @@ export default class Cognito {
     sessionStorage.removeItem('authorities')
     sessionStorage.removeItem('currentUserName')
     sessionStorage.removeItem('storeStateCredentials')
-    sessionStorage.removeItem('credentials')
     sessionStorage.removeItem('group')
   }
 
@@ -243,7 +202,7 @@ export default class Cognito {
         if (err) {
           reject(err)
         } else {
-          if (!session.isValid()) {
+          if (!this.isSessionValid(session)) {
             reject(session)
           } else {
             console.log('session success')
@@ -268,6 +227,7 @@ export default class Cognito {
   }
 
   async isAuthenticated() {
+    console.log(this.userPool)
     if (this.userPool == null) {
       const data = {
         UserPoolId: env.userPoolId,
@@ -284,36 +244,34 @@ export default class Cognito {
       }
 
       // それ以外の場合
+      console.log(JSON.parse(sessionStorage.getItem('storeStateCredentials')))
       const userData = {
-        UserName: sessionStorage.getItem('currentUserName'),
+        Username: sessionStorage.getItem('currentUserName'),
         Pool: this.userPool,
         Storage: sessionStorage,
       }
-      let cognitoUser = new CognitoUser(userData);
-      const session = await new Promise((resolve, reject) => {
-        cognitoUser.getSession((err, result) => {
-          if (err) reject(err);
-          resolve(result)
-        })
-      })
+      let cognitoUser = JSON.parse(sessionStorage.getItem('storeStateCredentials')).cognitoUser;
+      console.log(cognitoUser)
+      const session = cognitoUser.signInUserSession
       return new Promise(async (resolve, reject) => {
-        if (!session.isValid()) {
+        if (!this.isSessionValid(session)) {
           reject('session invalid')
         }
-        await this.refreshCognitoTokens();
+        // await this.refreshCognitoTokens();
         resolve(session)
       })
     } else {
+      console.log(this.userPool.getCurrentUser())
       const cognitoUser = this.userPool.getCurrentUser()
       return new Promise(async (resolve, reject) => {
         if (cognitoUser === null) {
           reject(cognitoUser)
         }
         const session = cognitoUser.getSignInUserSession()
-        if (session === null || !session.isValid()) {
+        if (session === null || !this.isSessionValid(session)) {
           reject('session invalid')
         } else {
-          await this.refreshCognitoTokens()
+          // await this.refreshCognitoTokens()
           resolve(session)
         }
       })
@@ -322,13 +280,8 @@ export default class Cognito {
   }
 
   async refreshCognitoTokens() {
-    const userData = {
-      UserName: sessionStorage.getItem('currentUserName'),
-      Pool: this.userPool,
-      Storage: sessionStorage,
-    }
-    let cognitoUser = new CognitoUser(userData);
-    const refreshToken = cognitoUser.getSignInUserSession().getRefreshToken()
+    let cognitoUser = JSON.parse(sessionStorage.getItem('storeStateCredentials')).cognitoUser;
+    const refreshToken = cognitoUser.signInUserSession.refreshToken
     const session = await new Promise((resolve, reject) => {
       cognitoUser.refreshSession(refreshToken, (error, result) => {
         if (error) {
@@ -340,4 +293,13 @@ export default class Cognito {
     })
     await this.createSpecificCredentials(session, cognitoUser)
   }
+
+  isSessionValid(session) {
+    console.log(session)
+    var now = Math.floor(new Date() / 1000);
+    var adjusted = now - session.clockDrift;
+    return adjusted < session.accessToken.payload.exp && adjusted < session.idToken.payload.exp;
+  }
+
+
 }

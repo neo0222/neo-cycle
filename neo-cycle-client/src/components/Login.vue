@@ -68,7 +68,6 @@ export default {
           this.openUpdatePasswordDialog()
           return
         }
-        sessionStorage.setItem('nickname', session.idToken.payload.nickname)
         loading.close()
         this.$router.replace('/')
       }

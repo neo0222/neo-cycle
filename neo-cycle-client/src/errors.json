@@ -28,6 +28,10 @@
       "CodeMismatchException": {
         "description": "this exception is thrown when a confirmation code mismatches.",
         "ja": "検証コードが不正です。入力内容をご確認の上再度入力してください。"
+      },
+      "LimitExceededException": {
+        "description": "this exception is thrown when a number of confirmation code attempts exceeded.",
+        "ja": "試行回数が上限を超過しました。時間を置いて再度入力してください。"
       }
     }
   }

@@ -29,6 +29,8 @@
 </template>
 
 <script>
+import api from '../api/index'
+
 export default {
   name: 'Signup',
   data () {
@@ -52,14 +54,7 @@ export default {
         return
       }
       try {
-        console.log(this)
-        await this.$cognito.signUp(this.signUpForm)
-        this.$message({
-            message: '仮登録完了！検証コードを送信します。',
-            type: 'success',
-            offset: 76,
-            showClose: true
-          });
+        await api.signup(this.signUpForm)
         this.$router.replace('/confirm')
       }
       catch (error) {
