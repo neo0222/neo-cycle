@@ -20,8 +20,8 @@ exports.handler = async (event, context) => {
 async function main(event, context) {
   const { memberId } = await getUserInfoFromSsm();
   const sessionId = await getSessionId(memberId);
-  const { cycleName, cyclePasscode } = await makeReservation(memberId, sessionId, event);
-  if (event.CycleName !== cycleName) {throw new Error("unexpected error occurred.")}
+  const { cycleName, cyclePasscode } = await makeReservation(memberId, sessionId, JSON.parse(event.body));
+  if (JSON.parse(event.body).CycleName !== cycleName) {throw new Error("unexpected error occurred.")}
   const response = {
     statusCode: 200,
     body: JSON.stringify({

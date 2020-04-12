@@ -67,11 +67,7 @@ Resources:
             Resource:
               - "*"
             Action:
-              - lambda:GetFunction
-              - lambda:CreateFunction
-              - lambda:PutFunctionConcurrency
-              - lambda:UpdateFunctionCode
-              - lambda:GetFunctionConfiguration
+              - lambda:*
           - Effect: Allow
             Resource:
               # RoleをアタッチするLambdaが増えるごとにここに追加していく
@@ -85,6 +81,8 @@ Resources:
                 Fn::Sub: ${NameTag}-${EnvName}-RoleReservationCancellerArn
               - !ImportValue
                 Fn::Sub: ${NameTag}-${EnvName}-RoleStatusCheckerArn
+              - !ImportValue
+                Fn::Sub: ${NameTag}-${EnvName}-RoleSessionCreatorArn
             Action:
               - iam:PassRole
 
