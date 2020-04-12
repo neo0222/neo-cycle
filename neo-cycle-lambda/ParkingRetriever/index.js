@@ -25,12 +25,13 @@ async function main(event, context) {
   const parkingList = await retrieveParkingList(memberId, sessionId);
   const response = {
     statusCode: 200,
-    body: {
+    body: JSON.stringify({
       parkingList
-    },
+    }),
     headers: {
         "Access-Control-Allow-Origin": '*'
-    }
+    },
+    isBase64Encoded: false
   };
   return response;
 }

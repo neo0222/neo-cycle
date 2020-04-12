@@ -24,13 +24,14 @@ async function main(event, context) {
   if (event.CycleName !== cycleName) {throw new Error("unexpected error occurred.")}
   const response = {
     statusCode: 200,
-    body: {
+    body: JSON.stringify({
       cycleName,
       cyclePasscode
-    },
+    }),
     headers: {
         "Access-Control-Allow-Origin": '*'
-    }
+    },
+    isBase64Encoded: false
   };
   return response;
 }

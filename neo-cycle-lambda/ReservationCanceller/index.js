@@ -24,10 +24,11 @@ async function main(event, context) {
   await cancelReservation(memberId, sessionId, 27901);
   const response = {
     statusCode: 200,
-    body: {},
+    body: "",
     headers: {
         "Access-Control-Allow-Origin": '*'
-    }
+    },
+    isBase64Encoded: false
   };
   return response;
 }
