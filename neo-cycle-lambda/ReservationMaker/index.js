@@ -20,20 +20,32 @@ exports.handler = async (event, context) => {
 async function main(event, context) {
   const memberId = JSON.parse(event.body).memberId;
   const sessionId = JSON.parse(event.body).sessionId;
-  const { cycleName, cyclePasscode } = await makeReservation(memberId, sessionId, JSON.parse(event.body));
-  if (JSON.parse(event.body).CycleName !== cycleName) {throw new Error("unexpected error occurred.")}
-  const response = {
-    statusCode: 200,
-    body: JSON.stringify({
-      cycleName,
-      cyclePasscode
-    }),
-    headers: {
-        "Access-Control-Allow-Origin": '*'
-    },
-    isBase64Encoded: false
-  };
-  return response;
+  try {
+    const { cycleName, cyclePasscode } = await makeReservation(memberId, sessionId, JSON.parse(event.body));
+    const response = {
+      statusCode: 200,
+      body: JSON.stringify({
+        cycleName,
+        cyclePasscode
+      }),
+      headers: {
+          "Access-Control-Allow-Origin": '*'
+      },
+      isBase64Encoded: false
+    };
+    return response;
+  }
+  catch (error) {
+    return {
+      statusCode: 440,
+      body: JSON.stringify({message: 'session expired.'}),
+      headers: {
+          "Access-Control-Allow-Origin": '*'
+      },
+      isBase64Encoded: false
+    };
+  }
+  
 }
 
 async function makeReservation(memberId, sessionId, request) {
@@ -65,7 +77,7 @@ async function makeReservation(memberId, sessionId, request) {
   try {
     const res = await axios.post(url.Parameter.Value, params, config);
     const html = res.data;
-    console.log(html)
+    if (html.indexOf('ログイン情報が削除されました') !== -1) throw 'session expired.'
     const $ = cheerio.load(html);
     // レンタル可能な自転車がない場合
     if (!$('[class=main_inner_wide]').children().get(0)) return;

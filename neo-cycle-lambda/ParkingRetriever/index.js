@@ -22,18 +22,30 @@ exports.handler = async (event, context) => {
 async function main(event, context) {
   const memberId = JSON.parse(event.body).memberId;
   const sessionId = JSON.parse(event.body).sessionId;
-  const parkingList = await retrieveParkingList(memberId, sessionId);
-  const response = {
-    statusCode: 200,
-    body: JSON.stringify({
-      parkingList
-    }),
-    headers: {
-        "Access-Control-Allow-Origin": '*'
-    },
-    isBase64Encoded: false
-  };
-  return response;
+  try {
+    const parkingList = await retrieveParkingList(memberId, sessionId);
+    const response = {
+      statusCode: 200,
+      body: JSON.stringify({
+        parkingList
+      }),
+      headers: {
+          "Access-Control-Allow-Origin": '*'
+      },
+      isBase64Encoded: false
+    };
+    return response;
+  }
+  catch (error) {
+    return {
+      statusCode: 440,
+      body: JSON.stringify({message: 'session expired.'}),
+      headers: {
+          "Access-Control-Allow-Origin": '*'
+      },
+      isBase64Encoded: false
+    };
+  }
 }
 
 async function retrieveParkingList(memberId, sessionId) {
@@ -68,6 +80,7 @@ async function retrieveParkingList(memberId, sessionId) {
       };
       const res = await axios.post(url.Parameter.Value, params, config);
       const html = res.data;
+      if (html.indexOf('ログイン情報が削除されました') !== -1) throw 'session expired.'
       const $ = cheerio.load(html);
       // レンタル可能な自転車がない場合
       if (!$('[class=park_info_inner_left]').children().get(0)) return {

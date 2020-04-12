@@ -16,16 +16,28 @@ exports.handler = async (event, context) => {
 
 async function main(event, context) {
   const body = JSON.parse(event.body);
-  const sessionId = await retrieveSessionId(body.memberId, body.password);
-  const response = {
-    statusCode: 200,
-    body: JSON.stringify({ sessionId }),
-    headers: {
-        "Access-Control-Allow-Origin": '*'
-    },
-    isBase64Encoded: false
-  };
-  return response;
+  try {
+    const sessionId = await retrieveSessionId(body.memberId, body.password);
+    const response = {
+      statusCode: 200,
+      body: JSON.stringify({ sessionId }),
+      headers: {
+          "Access-Control-Allow-Origin": '*'
+      },
+      isBase64Encoded: false
+    };
+    return response;
+  }
+  catch (error) {
+    return {
+      statusCode: 440,
+      body: JSON.stringify({message: error}),
+      headers: {
+          "Access-Control-Allow-Origin": '*'
+      },
+      isBase64Encoded: false
+    };
+  }
 }
 
 async function retrieveSessionId(memberId, password) {
@@ -47,6 +59,8 @@ async function retrieveSessionId(memberId, password) {
   try {
     const res = await axios.post(url.Parameter.Value, params, config);
     const html = res.data;
+    if (html.indexOf('IDまたはパスワードが異なります') !== -1) throw 'User does not exist.'
+    if (html.indexOf('連続して誤ったパスワードを複数回入力したため') !== -1) throw 'Account is locked.'
     const sessionId = html.substr(html.indexOf('"SessionID" value="') + 19, 36+memberId.length);
     return sessionId;
   }

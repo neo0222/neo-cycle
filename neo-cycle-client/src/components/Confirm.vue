@@ -13,7 +13,7 @@
         </el-form-item>
       </div>
     </el-form>
-    <el-button @click="confirm">送信</el-button>
+    <el-button @click="confirm">Send</el-button>
     <p>Have you created account?
       <router-link to="/login">Log in now!!</router-link></p>
   </div>

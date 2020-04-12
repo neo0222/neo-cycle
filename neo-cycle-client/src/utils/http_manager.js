@@ -4,7 +4,7 @@ import moment, {
 import errorMap from '../errors'
 
 // expected http error status
-const httpErrorCodeListForAPI = [400, 401, 403, 404, 413, 415, 428, 429, 500, 504]
+const httpErrorCodeListForAPI = [400, 401, 403, 404, 413, 415, 428, 429, 440, 500, 504]
 const httpErrorCodeListForAWSAPI = [400, 403, 404, 409, 500, 503]
 
 // ErrorMapping Configuration
@@ -61,6 +61,16 @@ export default {
           }
         },
         440: function () {
+          if (errorRes.data.message === 'User does not exist.') {
+            const message = httpManagerPrivate.getTranslatedMessage('aws', 'IncorrectUsernameOrPassword', errorMessageLang)
+            httpManagerPrivate.notifyWarning(vm, 'IncorrectUsernameOrPassword', message)
+            return
+          }
+          if (errorRes.data.message === 'Account is locked.') {
+            const message = httpManagerPrivate.getTranslatedMessage('aws', 'LimitExceededException', errorMessageLang)
+            httpManagerPrivate.notifyWarning(vm, 'LimitExceededException', message)
+            return
+          }
           vm.openSessionTimeoutDialog()
         }
       }
