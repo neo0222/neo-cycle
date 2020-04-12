@@ -53,25 +53,34 @@ export default {
         });
         return
       }
+      const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Please wait...'))
       try {
-        await api.createSession(this.username, this.password)
+        await api.createSession(this.signUpForm.username, this.signUpForm.password)
+        try {
+          await api.signup(this.signUpForm)
+          this.$router.replace('/confirm')
+        }
+        catch (error) {
+          this.handleLoginErrorResponse(this, error)
+        }
       }
       catch (error) {
         this.handleErrorResponse(this, error)
       }
-      try {
-        await api.signup(this.signUpForm)
-        this.$router.replace('/confirm')
-      }
-      catch (error) {
-        this.handleLoginErrorResponse(this, error)
-      }
+      loading.close()
     },
     validateSignUpForm() {
       return this.signUpForm.username
         && this.signUpForm.email
         && this.signUpForm.password
-    }
+    },
+    createFullScreenLoadingMaskOptionWithText(text) {
+      return {
+        lock: true,
+        text: text,
+        background: 'rgba(208, 208, 208, 0.7)'
+      }
+    },
   }
 }
 </script>

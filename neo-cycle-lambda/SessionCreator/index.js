@@ -31,7 +31,7 @@ async function main(event, context) {
   catch (error) {
     return {
       statusCode: 440,
-      body: JSON.stringify({message: 'User does not exist.'}),
+      body: JSON.stringify({message: error}),
       headers: {
           "Access-Control-Allow-Origin": '*'
       },
@@ -59,7 +59,8 @@ async function retrieveSessionId(memberId, password) {
   try {
     const res = await axios.post(url.Parameter.Value, params, config);
     const html = res.data;
-    if (html.indexOf('IDまたはパスワードが異なります') !== -1) throw error
+    if (html.indexOf('IDまたはパスワードが異なります') !== -1) throw 'User does not exist.'
+    if (html.indexOf('連続して誤ったパスワードを複数回入力したため') !== -1) throw 'Account is locked.'
     const sessionId = html.substr(html.indexOf('"SessionID" value="') + 19, 36+memberId.length);
     return sessionId;
   }

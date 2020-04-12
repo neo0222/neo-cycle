@@ -63,7 +63,12 @@ export default {
         440: function () {
           if (errorRes.data.message === 'User does not exist.') {
             const message = httpManagerPrivate.getTranslatedMessage('aws', 'IncorrectUsernameOrPassword', errorMessageLang)
-            httpManagerPrivate.notifyWarning(vm, errorCode, message)
+            httpManagerPrivate.notifyWarning(vm, 'IncorrectUsernameOrPassword', message)
+            return
+          }
+          if (errorRes.data.message === 'Account is locked.') {
+            const message = httpManagerPrivate.getTranslatedMessage('aws', 'LimitExceededException', errorMessageLang)
+            httpManagerPrivate.notifyWarning(vm, 'LimitExceededException', message)
             return
           }
           vm.openSessionTimeoutDialog()
