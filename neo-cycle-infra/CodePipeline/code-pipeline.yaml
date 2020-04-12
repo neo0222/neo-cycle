@@ -85,6 +85,8 @@ Resources:
                 Fn::Sub: ${NameTag}-${EnvName}-RoleReservationCancellerArn
               - !ImportValue
                 Fn::Sub: ${NameTag}-${EnvName}-RoleStatusCheckerArn
+              - !ImportValue
+                Fn::Sub: ${NameTag}-${EnvName}-RoleSessioCreator
             Action:
               - iam:PassRole
 

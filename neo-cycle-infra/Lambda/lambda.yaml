@@ -446,6 +446,96 @@ Resources:
       FunctionName: !Ref LambdaStatusChecker
       Principal: apigateway.amazonaws.com
 
+  ######################################################
+  # SessionCreate
+  #   - Resource
+  #     - path: /sessions/create
+  #   - Method
+  #     - POST
+  #     - OPTION(for enable CORS)
+  #   - Lambda Permission
+  ######################################################
+  SessionResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref NeoCycleRestAPI
+      ParentId: !GetAtt
+        - NeoCycleRestAPI
+        - RootResourceId
+      PathPart: sessions
+
+  SessionCreateResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref NeoCycleRestAPI
+      ParentId: !Ref SessionResource
+      PathPart: create
+
+  SessionCreatePostMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: POST
+      ResourceId: !Ref SessionCreateResource
+      RestApiId: !Ref NeoCycleRestAPI
+      MethodResponses: 
+        - StatusCode: 200
+          ResponseParameters:
+            "method.response.header.Access-Control-Allow-Origin" : true
+        - StatusCode: 440
+          ResponseParameters:
+            "method.response.header.Access-Control-Allow-Origin" : true
+      Integration:
+        Type: AWS_PROXY
+        Uri: !Sub arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/${LambdaSessionCreator.Arn}/invocations
+        IntegrationHttpMethod: POST
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              'method.response.header.Access-Control-Allow-Origin' : "'*'" # 中身を一重引用符で囲う
+          - StatusCode: 440
+            ResponseParameters:
+              'method.response.header.Access-Control-Allow-Origin' : "'*'" # 中身を一重引用符で囲う
+    DependsOn: LambdaSessionCreatorPermission
+
+  SessionCreateOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      RestApiId:
+        Ref: NeoCycleRestAPI
+      ResourceId:
+        Ref: SessionCreateResource
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+            method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
+            method.response.header.Access-Control-Allow-Origin: "'*'"
+          ResponseTemplates:
+            application/json: ''
+        PassthroughBehavior: WHEN_NO_MATCH
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        Type: MOCK
+      MethodResponses:
+      - StatusCode: 200
+        ResponseModels:
+          application/json: 'Empty'
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+    DependsOn: SessionCreateResource
+
+  LambdaSessionCreatorPermission:
+    Type: AWS::Lambda::Permission
+    Properties: 
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LambdaSessionCreator
+      Principal: apigateway.amazonaws.com
 #################################
 # Outputs
 #################################
@@ -490,3 +580,11 @@ Outputs:
     Value: !Ref LambdaStatusChecker
     Export:
       Name: !Sub ${NameTag}-${EnvName}-LambdaStatusCheckerFunctionName
+  LambdaSessionCreatorArn:
+    Value: !GetAtt LambdaSessionCreator.Arn
+    Export:
+      Name: !Sub ${NameTag}-${EnvName}-LambdaSessionCreatorArn
+  LambdaSessionCreatorrName:
+    Value: !Ref LambdaSessionCreator
+    Export:
+      Name: !Sub ${NameTag}-${EnvName}-LambdaSessionCreatorName
