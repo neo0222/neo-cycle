@@ -4,7 +4,7 @@ import moment, {
 import errorMap from '../errors'
 
 // expected http error status
-const httpErrorCodeListForAPI = [400, 401, 403, 404, 413, 415, 428, 429, 500, 504]
+const httpErrorCodeListForAPI = [400, 401, 403, 404, 413, 415, 428, 429, 440, 500, 504]
 const httpErrorCodeListForAWSAPI = [400, 403, 404, 409, 500, 503]
 
 // ErrorMapping Configuration

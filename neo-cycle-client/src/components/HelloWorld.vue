@@ -106,6 +106,17 @@
         </template>
       </el-table-column>
     </el-table>
+    <el-dialog
+      :visible.sync="isSessionTimeOutDialogVisible"
+      title="Oops! Session expired."
+      @close="closeSessionTimeOutDialog"
+      width="80%">
+      <el-row>
+        <div class="dialog-body">
+          Session expired. Please Log in again.
+        </div>
+      </el-row>
+    </el-dialog>
   </div>
 </template>
 
@@ -127,12 +138,19 @@ export default {
       isReservationBeenProcessing: false,
       isCancellationBeenProcessing: false,
       isCancellationAttempted: false,
+      isSessionTimeOutDialogVisible: false,
     }
   },
   async mounted() {
     const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Laoding...'))
-    await this.checkStatus();
-    await this.retrieveParkingList();
+    try {
+      await this.checkStatus();
+      await this.retrieveParkingList();
+    }
+    catch (error) {
+      this.handleErrorResponse(this, error)
+    }
+    
     loading.close()
   },
   computed: {
@@ -180,24 +198,29 @@ export default {
       }, 1000)
     },
     async checkStatus() {
-      const result = await api.checkStatus(
-        sessionStorage.getItem('currentUserName'),
-        sessionStorage.getItem('sessionId')
-      );
-      this.status = result.status;
-      if (this.status === 'RESERVED') {
-        this.reservedBike.cycleName = result.detail.cycleName
-        this.reservedBike.cyclePasscode = result.detail.cyclePasscode
-      } else if (this.status === 'IN_USE') {
-        this.reservedBike.cycleName = result.detail.cycleName
-        this.reservedBike.cyclePasscode = result.detail.cyclePasscode
-        this.reservedBike.cycleUseStartDatetime = result.detail.cycleUseStartDatetime
-      } else {
-        this.reservedBike.cycleName = ''
-        this.reservedBike.cyclePasscode = ''
-        this.reservedBike.cycleUseStartDatetime = ''
+      try {
+        const result = await api.checkStatus(
+          sessionStorage.getItem('currentUserName'),
+          sessionStorage.getItem('sessionId')
+        );
+        this.status = result.status;
+        if (this.status === 'RESERVED') {
+          this.reservedBike.cycleName = result.detail.cycleName
+          this.reservedBike.cyclePasscode = result.detail.cyclePasscode
+        } else if (this.status === 'IN_USE') {
+          this.reservedBike.cycleName = result.detail.cycleName
+          this.reservedBike.cyclePasscode = result.detail.cyclePasscode
+          this.reservedBike.cycleUseStartDatetime = result.detail.cycleUseStartDatetime
+        } else {
+          this.reservedBike.cycleName = ''
+          this.reservedBike.cyclePasscode = ''
+          this.reservedBike.cycleUseStartDatetime = ''
+        }
+        setTimeout(this.checkStatus, 10000)
       }
-      setTimeout(this.checkStatus, 10000)
+      catch (error) {
+        this.handleErrorResponse(this, error)
+      }
     },
     async retrieveParkingList() {
       // 予約処理中は取得しない
@@ -308,10 +331,15 @@ export default {
     },
     openSessionTimeoutDialog() {
       // TODO: implement me.
+      this.isSessionTimeOutDialogVisible = true;
     },
     openErrorDialog(title, message) {
 
     },
+    closeSessionTimeOutDialog() {
+      sessionStorage.clear();
+      this.$router.replace('/login');
+    }
   },
   watch: {
     isCancellationBeenProcessing: function(newVal) {
