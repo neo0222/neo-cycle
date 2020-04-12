@@ -5,17 +5,17 @@
       <el-form-item
         label="user ID">
         <div class="input-form-wrapper">
-          <el-input style="width: 440px; max-width: 70%" type="text" placeholder="username" v-model="signUpForm.username"/>
+          <el-input style="width: 440px; max-width: 70%; font-size: 16px; transform: scale(0.8);" type="text" placeholder="username" v-model="signUpForm.username"/>
         </div>
       </el-form-item>
       <el-form-item label='e-mail address'>
         <div class="input-form-wrapper">
-          <el-input style="width: 440px; max-width: 70%" type="text" placeholder="xxxxxxxxx@yyyy.com" v-model="signUpForm.email"/>
+          <el-input style="width: 440px; max-width: 70%; font-size: 16px; transform: scale(0.8);" type="text" placeholder="xxxxxxxxx@yyyy.com" v-model="signUpForm.email"/>
         </div>
       </el-form-item>
       <el-form-item label='Password'>
         <div class="input-form-wrapper">
-          <el-input :show-password="true" style="width: 440px; max-width: 70%" placeholder="8文字以上、半角英数" v-model="signUpForm.password" required/>
+          <el-input :show-password="true" style="width: 440px; max-width: 70%; font-size: 16px; transform: scale(0.8);" placeholder="8文字以上、半角英数" v-model="signUpForm.password" required/>
         </div>
       </el-form-item>
     </el-form>

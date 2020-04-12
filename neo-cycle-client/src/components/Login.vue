@@ -4,12 +4,12 @@
       <el-form>
         <el-form-item>
           <div class="input-form-wrapper">
-            <el-input style="width: 440px; max-width: 70%" type="text" placeholder="user ID" v-model="username"/>
+            <el-input style="width: 440px; max-width: 70%; font-size: 16px; transform: scale(0.8);" type="text" placeholder="user ID" v-model="username"/>
           </div>
         </el-form-item>
         <el-form-item>
           <div class="input-form-wrapper">
-            <el-input :show-password="true" style="width: 440px; max-width: 70%" type="password" placeholder="password" v-model="password"/>
+            <el-input :show-password="true" style="width: 440px; max-width: 70%; font-size: 16px; transform: scale(0.8);" type="password" placeholder="password" v-model="password"/>
           </div>
         </el-form-item>
       </el-form>
