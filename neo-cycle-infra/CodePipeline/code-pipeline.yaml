@@ -67,12 +67,7 @@ Resources:
             Resource:
               - "*"
             Action:
-              - lambda:GetFunction
-              - lambda:CreateFunction
-              - lambda:PutFunctionConcurrency
-              - lambda:UpdateFunctionCode
-              - lambda:GetFunctionConfiguration
-              - lambda:AddPermission
+              - lambda:*
           - Effect: Allow
             Resource:
               # RoleをアタッチするLambdaが増えるごとにここに追加していく
