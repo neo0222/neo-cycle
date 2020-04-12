@@ -1,0 +1,155 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Cognito Identity Pool
+
+######################################################
+# Parameters:
+######################################################
+Parameters:
+  EnvName:
+    Type: String
+    AllowedValues:
+      - dev
+      - prod
+    Description: Enter profile.
+
+######################################################
+# Mappings
+######################################################
+Mappings:
+  StackConfig:
+    NameTag:
+      Value: neo-cycle
+    NameTagJoinedWithWhitespace:
+      Value: ftf web management
+
+######################################################
+# Resources
+######################################################
+Resources:
+  NeoCycleCognitoIdentityPool:
+    Type: AWS::Cognito::IdentityPool
+    Properties:
+      AllowUnauthenticatedIdentities: false
+      CognitoIdentityProviders:
+        - ClientId: !ImportValue
+            Fn::Sub:
+              - ${NameTag}-${EnvName}-AppClient
+              - {
+                NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+                EnvName: !Ref EnvName
+              }
+          ProviderName: !ImportValue
+            Fn::Sub:
+              - ${NameTag}-${EnvName}-UserPoolProviderName
+              - {
+                NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+                EnvName: !Ref EnvName
+              }
+      IdentityPoolName: !Sub
+        - ${NameTag}-${EnvName}-identity-pool
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+  #-----------------------
+  # ポリシー作成
+  #-----------------------
+  CognitoAuthenticatedPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: authenticated policy for cognito identity pool
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - mobileanalytics:PutEvents
+              - cognito-sync:*
+              - cognito-identity:*
+              - cognito-idp:*
+            Resource:
+              - "*"
+
+  CognitoUnauthenticatedPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: unauthenticated policy for cognito identity pool
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - mobileanalytics:PutEvents
+              - cognito-sync:*
+            Resource:
+              - "*"
+  #-----------------------
+  # ロールの作成
+  #-----------------------
+  RoleCognitoAuthenticated:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub
+        - ${NameTag}-${EnvName}-cognito-authenticated-role
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+      ManagedPolicyArns:
+        - !Ref CognitoAuthenticatedPolicy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRoleWithWebIdentity
+            Principal:
+              Federated: cognito-identity.amazonaws.com
+            Condition:
+              StringEquals:
+                cognito-identity.amazonaws.com:aud: !Ref NeoCycleCognitoIdentityPool
+              ForAnyValue:StringLike:
+                cognito-identity.amazonaws.com:amr: authenticated
+
+  RoleCognitoUnauthenticated:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub 
+        - ${EnvName}-${EnvName}-cognito-unauthenticated-role
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+      ManagedPolicyArns:
+        - !Ref CognitoUnauthenticatedPolicy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRoleWithWebIdentity
+            Principal:
+              Federated: cognito-identity.amazonaws.com
+            Condition:
+              StringEquals:
+                cognito-identity.amazonaws.com:aud: !Ref NeoCycleCognitoIdentityPool
+              ForAnyValue:StringLike:
+                cognito-identity.amazonaws.com:amr: unauthenticated
+  
+  CognitoIdentityPoolRoleAttachment:
+    Type: AWS::Cognito::IdentityPoolRoleAttachment
+    Properties:
+      IdentityPoolId: !Ref NeoCycleCognitoIdentityPool
+      Roles:
+        authenticated: !GetAtt RoleCognitoAuthenticated.Arn
+        unauthenticated: !GetAtt RoleCognitoUnauthenticated.Arn
+
+Outputs:
+  CognitoIdentityPoolId:
+    Value: !Ref NeoCycleCognitoIdentityPool
+    Export:
+      Name: !Sub
+        - ${NameTag}-${EnvName}-IdentityPoolId
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }

@@ -293,6 +293,12 @@ export default {
     rowClicked(row) {
       this.$refs.tableData.toggleRowExpansion(row);
     },
+    openSessionTimeoutDialog() {
+      // TODO: implement me.
+    },
+    openErrorDialog(title, message) {
+
+    },
   },
   watch: {
     isCancellationBeenProcessing: function(newVal) {
