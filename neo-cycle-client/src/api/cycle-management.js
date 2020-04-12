@@ -1,6 +1,6 @@
 const axios = require('axios');
 import env from '../environment/index'
-const url = 'https://bmamuk9hjf.execute-api.ap-northeast-1.amazonaws.com/prod';
+const url = 'https://zn2vxjwu4d.execute-api.ap-northeast-1.amazonaws.com/dev';
 
 export async function retrieveParkingList() {
   const res = await axios.post(url + '/parkings');
