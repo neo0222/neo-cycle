@@ -98,6 +98,19 @@ Resources:
       Runtime: nodejs12.x
       Timeout: 10
 
+  LambdaSessionCreator:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Sub ${NameTag}-${EnvName}-lambda
+        S3Key: !Sub ${ObjectKeyPrefix}/SessionCreator/Deploy.zip
+      FunctionName: !Sub ${NameTag}-${EnvName}-SessionCreator
+      Handler: index.handler
+      ReservedConcurrentExecutions: 1
+      Role: !ImportValue
+        Fn::Sub: ${NameTag}-${EnvName}-RoleSessionCreatorArn
+      Runtime: nodejs12.x
+      Timeout: 10
   ######################################################
   # Rest API
   ######################################################
