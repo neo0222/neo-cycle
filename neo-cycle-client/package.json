@@ -12,8 +12,11 @@
     "build:prod": "node build/build_prod.js"
   },
   "dependencies": {
+    "amazon-cognito-identity-js": "^4.2.1",
+    "aws-sdk": "^2.656.0",
     "axios": "^0.19.2",
     "element-ui": "^2.13.0",
+    "moment": "^2.24.0",
     "vue": "^2.5.2",
     "vue-router": "^3.0.1"
   },

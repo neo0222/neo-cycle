@@ -1,0 +1,34 @@
+{
+  "errors": {
+    "aws": {
+      "IncorrectUsernameOrPassword": {
+        "description": "This exception is used to describe the details of NotAuthorizedException, thrown when the inut username or password is invalid.",
+        "ja": "ユーザ名またはパスワードが正しくありません。"
+      },
+      "UserNotFoundException": {
+        "description": "This exception is thrown when a user is not found.",
+        "ja": "ユーザがみつかりません。"
+      },
+      "UsernameExistsException": {
+        "descfiption": "This exception is thrown when a user to be signed up already exists.",
+        "ja": "このユーザIDはすでに使用されています。ユーザIDを変更の上、再度実行してください。"
+      },
+      "InvalidPasswordException": {
+        "description": "this exception is thrown when a password does not confirmed with policy.",
+        "ja": "不正なパスワードです。半角英字および半角数字をそれぞれ１文字以上含む8文字以上のパスワードを設定してください。"
+      },
+      "InvalidParameterException": {
+        "description": "this exception is thrown when invalid parameters is input.",
+        "ja": "入力が不正です。入力内容をご確認の上再度入力してください。"
+      },
+      "UserNotConfirmedException": {
+        "description": "this exception is thrown when a user trying login is not confirmed.",
+        "ja": "未検証のユーザとしてログインしようとしています。検証完了後に再度ログインしてください。"
+      },
+      "CodeMismatchException": {
+        "description": "this exception is thrown when a confirmation code mismatches.",
+        "ja": "検証コードが不正です。入力内容をご確認の上再度入力してください。"
+      }
+    }
+  }
+}
