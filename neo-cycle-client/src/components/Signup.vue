@@ -54,6 +54,12 @@ export default {
         return
       }
       try {
+        await api.createSession(this.username, this.password)
+      }
+      catch (error) {
+        this.handleErrorResponse(this, error)
+      }
+      try {
         await api.signup(this.signUpForm)
         this.$router.replace('/confirm')
       }

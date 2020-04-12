@@ -67,6 +67,7 @@ export default {
       }
       catch (error) {
         console.log(error)
+        this.handleErrorResponse(error)
       }
       try {
         const session = await this.$cognito.login(this.username, this.password)

@@ -61,6 +61,11 @@ export default {
           }
         },
         440: function () {
+          if (errorRes.data.message === 'User does not exist.') {
+            const message = httpManagerPrivate.getTranslatedMessage('aws', 'IncorrectUsernameOrPassword', errorMessageLang)
+            httpManagerPrivate.notifyWarning(vm, errorCode, message)
+            return
+          }
           vm.openSessionTimeoutDialog()
         }
       }
