@@ -41,6 +41,8 @@
 </template>
 
 <script>
+import api from '../api/index'
+
 export default {
   name: 'Login',
   data () {
@@ -59,6 +61,13 @@ export default {
   methods: {
     async login () {
       const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Please wait...'))
+      try {
+        const res = await api.createSession(this.username, this.password)
+        sessionStorage.setItem('sessionId', res.sessionId)
+      }
+      catch (error) {
+        console.log(error)
+      }
       try {
         const session = await this.$cognito.login(this.username, this.password)
         console.log('end without error')

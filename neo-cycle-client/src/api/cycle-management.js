@@ -20,3 +20,8 @@ export async function cancelReservation() {
   const res = await axios.post(url + '/cancellation');
   return res.data
 }
+
+export async function createSession(memberId, password) {
+  const res = await axios.post(url + '/sessions/create', { memberId, password });
+  return res.data
+}
