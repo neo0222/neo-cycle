@@ -9,61 +9,14 @@
       @cancelReservation="cancelReservation"
       @terminateCancellation="terminateCancellation"
       @makeReservation="makeReservation" />
-    <el-table
-      :data="tableData"
-      ref="tableData"
-      :cell-style="{padding: '0', height: '40px'}"
-      style="width: 100%;margin-bottom: 20px;"
-      row-key="id"
-      @row-click="rowClicked"
-      border>
-      <el-table-column
-        prop="date"
-        label="Name"
-        width="282"
-        header-align="left">
-      </el-table-column>
-      <el-table-column
-        prop="name"
-        label="Bikes"
-        width="78"
-        header-align="left"
-        align="center">
-        <template
-          slot-scope="scope">
-          <p v-if="isRowParking(scope)">
-            {{scope.row.name}}
-          </p>
-          <el-popconfirm
-            confirmButtonText='Yes'
-            cancelButtonText='No, Thanks'
-            icon="el-icon-question"
-            iconColor="red"
-            title="Are you sure to cancel reservation?"
-            v-if="isRowReservedBike(scope)"
-            @onConfirm="cancelReservation()"
-            @onCancel="terminateCancellation">
-            <el-button
-              slot="reference"
-              type="danger"
-              plain
-              size="mini"
-              @click="beginCancellation">
-              取消
-            </el-button>
-          </el-popconfirm>
-          <el-button
-            v-if="isRowVacantBike(scope)"
-            :disabled="status !== 'WAITING_FOR_RESERVATION'"
-            @click="makeReservation(scope.row.cycle)"
-            type="primary"
-            plain
-            size="mini">
-            予約
-          </el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+    <parking-table-for-reservation
+      :tableData="tableData"
+      :reservedBike="reservedBike"
+      :status="status"
+      @cancelReservation="cancelReservation"
+      @terminateCancellation="terminateCancellation"
+      @beginCancellation="beginCancellation"
+      @makeReservation="makeReservation"/>
     <el-dialog
       :visible.sync="isSessionTimeOutDialogVisible"
       title="Oops! Session expired."
@@ -82,11 +35,13 @@
 import api from '../api/index'
 
 import StatusCard from './StatusCard'
+import ParkingTableForReservation from './ParkingTableForReservation'
 
 export default {
   name: 'HelloWorld',
   components: {
     StatusCard,
+    ParkingTableForReservation,
   },
   data () {
     return {
@@ -187,7 +142,7 @@ export default {
     },
     async retrieveParkingList() {
       // 予約処理中は取得しない
-      if (this.isReservationBeenProcessing) {
+      if (this.isReservationBeenProcessing || this.isCancellationAttempted) {
         setTimeout(this.retrieveParkingList, 10000)
         return
       }
@@ -295,12 +250,16 @@ export default {
       this.isCancellationBeenProcessing = false;
     },
     deleteCancellationHistory() {
-      if (this.isCancellationBeenProcessing) {// 次の取消が動いていたら取消履歴の抹消は10秒待つ
-        setTimeout(this.deleteCancellationHistory, 0)
-        return
-      }
-      // 取消が新たに行われた形跡がなければ10秒後に消す
-      setTimeout(() => {this.isCancellationAttempted = false, this.terminateProcessReservation()}, 10000)
+      setTimeout(() => {
+        // 取消キャンセルボタン押下10秒後に以下処理が行われる
+        if (this.isCancellationBeenProcessing) {// 次の取消が動いていたら取消履歴の抹消は10秒待つ
+          setTimeout(this.deleteCancellationHistory, 10000)
+          return
+        }
+        // 取消が新たに行われた形跡がなければ消す
+        this.isCancellationAttempted = false;
+        this.terminateProcessReservation()
+      }, 10000)
     },
     rowClicked(row) {
       this.$refs.tableData.toggleRowExpansion(row);
