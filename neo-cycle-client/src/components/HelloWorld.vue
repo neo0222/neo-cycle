@@ -1,56 +1,14 @@
 <template>
   <div class="hello">
-    <el-card class="box-card" :body-style="{height: '111px', margin: 'auto'}">
-      <div slot="header" class="clearfix">
-        <span>{{ headerMessage }}</span>
-      </div>
-      <div v-show="status !== 'WAITING_FOR_RESERVATION'" class="text item">
-        Cycle Name: {{ reservedBike.cycleName }}
-      </div>
-      <div v-show="status !== 'WAITING_FOR_RESERVATION'" class="text item">
-        Passcode: {{ reservedBike.cyclePasscode }}
-      </div>
-      <div v-show="status === 'IN_USE'" class="text item">
-        Use Start Time: {{ reservedBike.cycleUseStartDatetime }}
-      </div>
-      <div >
-        <el-popconfirm
-          confirmButtonText='Yes'
-          cancelButtonText='No, Thanks'
-          icon="el-icon-question"
-          iconColor="red"
-          title="Are you sure to cancel reservation?"
-          v-if="status === 'RESERVED'"
-          @onConfirm="cancelReservation()"
-          @onCancel="terminateCancellation">
-          <el-button
-            slot="reference"
-            type="danger"
-            plain>
-            Cancel Reservation
-          </el-button>
-        </el-popconfirm>
-      </div>
-      <div v-if="status === 'WAITING_FOR_RESERVATION'" class="button">
-        <el-button
-          slot="reference"
-          type="success"
-          :plain="isGoToOfficeButtonPlain"
-          :style="{width: '258.48px'}"
-          @click="makeReservation(favoritePort.children.length ? favoritePort.children[0].cycle : undefined)">
-          I WANNA GO TO OFFICE NOW
-        </el-button>
-      </div>
-      <div v-if="status === 'WAITING_FOR_RESERVATION'" class="button">
-        <el-button
-          slot="reference"
-          type="success"
-          :plain="isGoHomeButtonPlain"
-          @click="makeReservation(atagoPort.children.length ? atagoPort.children[0].cycle : undefined)">
-          I WANNA GO HOME RIGHT NOW
-        </el-button>
-      </div>
-    </el-card>
+    <status-card
+      :headerMessage="headerMessage" 
+      :status="status"
+      :reservedBike="reservedBike"
+      :favoritePort="favoritePort"
+      :atagoPort="atagoPort"
+      @cancelReservation="cancelReservation"
+      @terminateCancellation="terminateCancellation"
+      @makeReservation="makeReservation" />
     <el-table
       :data="tableData"
       ref="tableData"
@@ -123,8 +81,13 @@
 <script>
 import api from '../api/index'
 
+import StatusCard from './StatusCard'
+
 export default {
   name: 'HelloWorld',
+  components: {
+    StatusCard,
+  },
   data () {
     return {
       msg: 'Welcome to Your Vue.js App',
