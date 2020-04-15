@@ -7,6 +7,7 @@
       </el-radio-group>
     </div>
     <status-card
+      v-show="radio4 === 'Search from Fav. List'"
       :headerMessage="headerMessage" 
       :status="status"
       :reservedBike="reservedBike"
@@ -16,6 +17,7 @@
       @terminateCancellation="terminateCancellation"
       @makeReservation="makeReservation" />
     <parking-table-for-reservation
+      v-show="radio4 === 'Search from Fav. List'"
       :tableData="tableData"
       :reservedBike="reservedBike"
       :status="status"
@@ -23,6 +25,7 @@
       @terminateCancellation="terminateCancellation"
       @beginCancellation="beginCancellation"
       @makeReservation="makeReservation"/>
+    <parking-map v-show="radio4 !== 'Search from Fav. List'"/>
     <el-dialog
       :visible.sync="isSessionTimeOutDialogVisible"
       title="Oops! Session expired."
@@ -42,12 +45,14 @@ import api from '../api/index'
 
 import StatusCard from './StatusCard'
 import ParkingTableForReservation from './ParkingTableForReservation'
+import ParkingMap from './ParkingMap'
 
 export default {
   name: 'HelloWorld',
   components: {
     StatusCard,
     ParkingTableForReservation,
+    ParkingMap,
   },
   data () {
     return {
@@ -67,7 +72,8 @@ export default {
     }
   },
   async mounted() {
-    console.log(process.env['ENVIRONMENT_NAME'])
+    console.log(process.env['VUE_APP_TEST'])
+    console.log(process.env['VUE_APP_GOOGLE_API_KEY'])
     const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Laoding...'))
     try {
       await this.checkStatus();
