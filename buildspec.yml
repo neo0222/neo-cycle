@@ -48,7 +48,7 @@ phases:
   build:
     commands:
       - cd neo-cycle-client
-      - VUE_APP_GOOGLE_API_KEY=${VUE_APP_GOOGLE_API_KEY} npm run build:${ENVIRONMENT_NAME}
+      - cross-env VUE_APP_GOOGLE_API_KEY=${VUE_APP_GOOGLE_API_KEY} npm run build:${ENVIRONMENT_NAME}
   post_build:
     commands:
       - tar cf /tmp/node_modules.tar node_modules

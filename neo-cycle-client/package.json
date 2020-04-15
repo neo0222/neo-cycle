@@ -8,13 +8,14 @@
     "dev": "webpack-dev-server --inline --progress --config build/webpack.dev.conf.js",
     "start": "npm run dev",
     "build": "node build/build.js",
-    "build:dev": "node build/build_dev.js",
-    "build:prod": "node build/build_prod.js"
+    "build:dev": "cross-env VUE_APP_GOOGLE_API_KEY=TEST  node build/build_dev.js",
+    "build:prod": "cross-env VUE_APP_GOOGLE_API_KEY=TEST  node build/build_prod.js"
   },
   "dependencies": {
     "amazon-cognito-identity-js": "^4.2.1",
     "aws-sdk": "^2.656.0",
     "axios": "^0.19.2",
+    "cross-env": "^7.0.2",
     "dotenv": "^8.2.0",
     "element-ui": "^2.13.0",
     "google-maps-api-loader": "^1.1.1",
