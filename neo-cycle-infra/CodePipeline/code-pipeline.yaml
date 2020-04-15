@@ -18,6 +18,8 @@ Parameters:
   S3Bucket:
     Type: String
     Default: prod.neo-cycle.com
+  GoogleApiKey:
+    Type: String
   NameTag:
     Type: String
     Default: neo-cycle
@@ -83,6 +85,8 @@ Resources:
                 Fn::Sub: ${NameTag}-${EnvName}-RoleStatusCheckerArn
               - !ImportValue
                 Fn::Sub: ${NameTag}-${EnvName}-RoleSessionCreatorArn
+              - !ImportValue
+                Fn::Sub: ${NameTag}-${EnvName}-RoleParkingNearbyRetrieverArn
             Action:
               - iam:PassRole
 
@@ -112,6 +116,8 @@ Resources:
         EnvironmentVariables:
           - Name: ENVIRONMENT_NAME
             Value: !Ref EnvName
+          - Name: VUE_APP_GOOGLE_API_KEY
+            Value: !Ref GoogleApiKey
         Type: LINUX_CONTAINER
         Image: aws/codebuild/standard:2.0-1.13.0
       ServiceRole: !GetAtt RoleCodeBuildService.Arn

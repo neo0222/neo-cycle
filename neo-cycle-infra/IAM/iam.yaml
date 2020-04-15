@@ -197,6 +197,26 @@ Resources:
             Principal:
               Service: lambda.amazonaws.com
 
+  RoleParkingNearbyRetriever:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub
+        - ${NameTag}-${EnvName}-parking-nearby-retriever-role
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+      ManagedPolicyArns:
+        - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
+        - !Ref NeoCycleGetParameterPolicy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: lambda.amazonaws.com
+              
 #################################
 # Outputs
 #################################
@@ -256,6 +276,16 @@ Outputs:
     Export:
       Name: !Sub
         - ${NameTag}-${EnvName}-RoleSessionCreatorArn
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+      
+  RoleParkingNearbyRetrieverArn:
+    Value: !GetAtt RoleParkingNearbyRetriever.Arn
+    Export:
+      Name: !Sub
+        - ${NameTag}-${EnvName}-RoleParkingNearbyRetrieverArn
         - {
           NameTag: !FindInMap [ StackConfig, NameTag, Value ],
           EnvName: !Ref EnvName
