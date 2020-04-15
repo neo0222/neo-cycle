@@ -1,5 +1,11 @@
 <template>
   <div class="hello">
+    <div style="margin-bottom: 12px">
+      <el-radio-group v-model="radio4" size="mini" fill="#67C23A">
+        <el-radio-button label="Search from Fav. List"></el-radio-button>
+        <el-radio-button label="Search Neaby Parkings"></el-radio-button>
+      </el-radio-group>
+    </div>
     <status-card
       :headerMessage="headerMessage" 
       :status="status"
@@ -57,9 +63,11 @@ export default {
       isCancellationBeenProcessing: false,
       isSessionTimeOutDialogVisible: false,
       lastCancellationAttemptedDatetime: undefined,
+      radio4: 'Search from Fav. List',
     }
   },
   async mounted() {
+    console.log(process.env['ENVIRONMENT_NAME'])
     const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Laoding...'))
     try {
       await this.checkStatus();
