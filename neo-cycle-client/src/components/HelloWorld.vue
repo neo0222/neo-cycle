@@ -55,8 +55,8 @@ export default {
       },
       isReservationBeenProcessing: false,
       isCancellationBeenProcessing: false,
-      isCancellationAttempted: false,
       isSessionTimeOutDialogVisible: false,
+      lastCancellationAttemptedDatetime: undefined,
     }
   },
   async mounted() {
@@ -142,7 +142,7 @@ export default {
     },
     async retrieveParkingList() {
       // 予約処理中は取得しない
-      if (this.isReservationBeenProcessing || this.isCancellationAttempted) {
+      if (this.isReservationBeenProcessing) {
         setTimeout(this.retrieveParkingList, 10000)
         return
       }
@@ -236,18 +236,19 @@ export default {
         return;
       }
       // 直近10秒以内に取消をしようとした形跡がある場合は予約処理は10秒延長
-      if (this.isCancellationAttempted) {
+      const now = new Date()
+      if (!this.lastCancellationAttemptedDatetime || now.getTime() - this.lastCancellationAttemptedDatetime.getTime() < 10000) {
         setTimeout(this.terminateProcessReservation, 10000)
         return
       }
-      setTimeout(() => {this.isReservationBeenProcessing = false}, 10000)
+      this.isReservationBeenProcessing = false
     },
     beginCancellation() {
       this.isCancellationBeenProcessing = true;
-      this.isCancellationAttempted = true;
     },
     terminateCancellation() {
       this.isCancellationBeenProcessing = false;
+      this.lastCancellationAttemptedDatetime = new Date();
     },
     deleteCancellationHistory() {
       setTimeout(() => {
@@ -257,7 +258,6 @@ export default {
           return
         }
         // 取消が新たに行われた形跡がなければ消す
-        this.isCancellationAttempted = false;
         this.terminateProcessReservation()
       }, 10000)
     },
@@ -276,13 +276,6 @@ export default {
       this.$router.replace('/login');
     }
   },
-  watch: {
-    isCancellationBeenProcessing: function(newVal) {
-      if (!newVal) {
-        this.deleteCancellationHistory()
-      }
-    }
-  }
 }
 </script>
 
