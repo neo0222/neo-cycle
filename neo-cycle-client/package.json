@@ -8,8 +8,8 @@
     "dev": "webpack-dev-server --inline --progress --config build/webpack.dev.conf.js",
     "start": "npm run dev",
     "build": "node build/build.js",
-    "build:dev": "cross-env VUE_APP_GOOGLE_API_KEY=TEST  node build/build_dev.js",
-    "build:prod": "cross-env VUE_APP_GOOGLE_API_KEY=TEST  node build/build_prod.js"
+    "build:dev": "cross-env VUE_APP_GOOGLE_API_KEY=${VUE_APP_GOOGLE_API_KEY} node build/build_dev.js",
+    "build:prod": "cross-env VUE_APP_GOOGLE_API_KEY=${VUE_APP_GOOGLE_API_KEY} node build/build_prod.js"
   },
   "dependencies": {
     "amazon-cognito-identity-js": "^4.2.1",
