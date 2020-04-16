@@ -17,8 +17,8 @@ exports.handler = async (event, context) => {
 };
 
 async function main(event, context) {
-  const memberId = event.memberId;
-  const sessionId = event.sessionId;
+  const memberId = JSON.parse(event.body).memberId;
+  const sessionId = JSON.parse(event.body).sessionId;
   try {
     const parkingList = await retrieveParkingList(memberId, sessionId);
     const response = {
@@ -96,19 +96,17 @@ async function retrieveParkingList(memberId, sessionId) {
       }
       let parking = {
         parkingId,
-        parkingName: '',
-        cycleList: []
+        parkingName: rawParking.company_name,
+        cycleList: [],
+        lat: rawParking.shop_gps_lat,
+        lon: rawParking.shop_gps_lon,
       };
       const res = await axios.post(url.Parameter.Value, params, config);
       const html = res.data;
       if (html.indexOf('ログイン情報が削除されました') !== -1) throw 'session expired.'
       const $ = cheerio.load(html);
       // レンタル可能な自転車がない場合
-      if (!$('[class=park_info_inner_left]').children().get(0)) return {
-        parkingId,
-        parkingName: rawParking.company_name,
-        cycleList: []
-      };;
+      if (!$('[class=park_info_inner_left]').children().get(0)) return parking;
       // 自転車がある場合は処理を継続
       parking.parkingName = $('[class=park_info_inner_left]').children().get(0).next.data.substr(2);
 
@@ -145,6 +143,7 @@ async function retrieveParkingList(memberId, sessionId) {
     return await Promise.all(parkingList);
   }
   catch (error) {
+    console.log(error)
     throw error;
   }
 }
