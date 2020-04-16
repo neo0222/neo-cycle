@@ -39,7 +39,9 @@ export default {
             'roadmap'
           ]
         },
-        mapTypeControl: false
+        mapTypeControl: false,
+        streetViewControl: false,
+        zoomControl: false,
       },
       latitude: 0,
       longitude: 0,
