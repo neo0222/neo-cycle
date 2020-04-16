@@ -1,16 +1,30 @@
 <template>
   <div>
     <div class="map" ref="googleMap" />
+      <template :v-if="!!this.google && !!this.map">
+        <child-marker 
+          v-for="(parking,i) in parkingNearbyList"
+          :key="i"
+          :parking="parking" 
+          :google="google"
+          :map="map"
+        />
+      </template>
   </div>
 </template>
 
 <script>
 import GoogleMapsApiLoader from 'google-maps-api-loader';
-
-let map;
+import ChildMarker from './ChildMarker'
 
 export default {
   name: 'Map',
+  components: {
+    ChildMarker,
+  },
+  props: [
+    'parkingNearbyList',
+  ],
   data() {
     return {
       google: null,
