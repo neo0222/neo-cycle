@@ -45,12 +45,16 @@ export default {
       },
       latitude: 0,
       longitude: 0,
-      map: undefined
+      map: undefined,
+      mapCenter: {
+        lat: undefined,
+        lng: undefined,
+      }
     }
   },
   computed: {
     coord() {
-      return this.map.getCenter()
+      return this.map.getCenter().lat()
     }
   },
   async created() {
@@ -67,13 +71,15 @@ export default {
   },
   methods: {
     initializeMap() {
-      console.log(this.mapConfig)
       this.map = new this.google.maps.Map(this.$refs.googleMap, this.mapConfig);
-      console.log(this.map)
-      console.log(this.map.getBounds())
+      this.map.addListener( "dragend", this.updateCenter) ;
+    },
+    updateCenter() {
+      // TODO: implement me
+      console.log(this.map.getCenter().lat());
+      console.log(this.map.getCenter().lng());
     },
     success (position) {
-      console.log(position)
       this.mapConfig.center.lat = position.coords.latitude;
       this.mapConfig.center.lng = position.coords.longitude;
       this.initializeMap();
