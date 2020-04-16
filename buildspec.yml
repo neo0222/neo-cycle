@@ -48,6 +48,8 @@ phases:
   build:
     commands:
       - cd neo-cycle-client
+      - touch ./.env
+      - echo VUE_APP_GOOGLE_API_KEY=${VUE_APP_GOOGLE_API_KEY} >> ./.env
       - npm run build:${ENVIRONMENT_NAME}
   post_build:
     commands:
