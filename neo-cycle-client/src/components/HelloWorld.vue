@@ -25,7 +25,9 @@
       @terminateCancellation="terminateCancellation"
       @beginCancellation="beginCancellation"
       @makeReservation="makeReservation"/>
-    <parking-map v-show="radio4 !== 'Search from Fav. List'"/>
+    <parking-map
+      v-show="radio4 !== 'Search from Fav. List'"
+      :parkingNearbyList="parkingNearbyList"/>
     <el-dialog
       :visible.sync="isSessionTimeOutDialogVisible"
       title="Oops! Session expired."
@@ -69,6 +71,7 @@ export default {
       isSessionTimeOutDialogVisible: false,
       lastCancellationAttemptedDatetime: undefined,
       radio4: 'Search from Fav. List',
+      parkingNearbyList: [],
     }
   },
   async mounted() {
@@ -78,6 +81,7 @@ export default {
     try {
       await this.checkStatus();
       await this.retrieveParkingList();
+      await this.retrieveNearbyParkingList();
     }
     catch (error) {
       this.handleErrorResponse(this, error)
@@ -182,6 +186,15 @@ export default {
         })
       }
       setTimeout(this.retrieveParkingList, 10000)
+    },
+    async retrieveNearbyParkingList() {
+      const result = await api.retrieveNearbyParkingList(
+        sessionStorage.getItem('currentUserName'),
+        sessionStorage.getItem('sessionId')
+      );
+      for (const parking of result.parkingList) {
+        this.parkingNearbyList.push(parking);
+      }
     },
     async makeReservation(cycle) {
       const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Processing...'))
