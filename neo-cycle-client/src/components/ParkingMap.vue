@@ -53,7 +53,7 @@ export default {
       return this.map.getCenter()
     }
   },
-  async mounted() {
+  async created() {
     const options = {
       enableHighAccuracy: false,
       timeout: 6000,
