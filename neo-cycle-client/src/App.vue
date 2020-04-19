@@ -11,7 +11,6 @@ export default {
     isAuthenticated() {
      this.$cognito.isAuthenticated()
        .then(session => {
-         console.log(session)
          this.isAuthenticated = true
        })
        .catch(session => {

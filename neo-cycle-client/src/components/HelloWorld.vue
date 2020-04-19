@@ -96,8 +96,7 @@ export default {
       navigator.geolocation.getCurrentPosition(resolve, reject, getLocationOptions)
     })
     this.success(position)
-    console.log(process.env['VUE_APP_TEST'])
-    console.log(process.env['VUE_APP_GOOGLE_API_KEY'])
+    console.log(this.currentCoordinate)
     const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Laoding...'))
     const promises = [];
     promises.push(this.checkStatus())

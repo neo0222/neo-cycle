@@ -101,7 +101,6 @@ export default class Cognito {
       cognitoUser.authenticateUser(authenticationDetails, {
         onSuccess: async (result) => {
           try {
-            console.log(result)
             await this.createSpecificCredentials(result, cognitoUser)
             sessionStorage.setItem('currentUserName', username)
             result.status = 'SUCCESS'
@@ -114,7 +113,6 @@ export default class Cognito {
           reject(err)
         },
         newPasswordRequired: (userAttributes, requiredAttributes) => {
-          console.log('invoked')
           sessionStorage.setItem('requiredAttributes', requiredAttributes)
           const result = {
             status: 'PASSWORD_REQUIRED'
@@ -227,7 +225,6 @@ export default class Cognito {
   }
 
   async isAuthenticated() {
-    console.log(this.userPool)
     if (this.userPool == null) {
       const data = {
         UserPoolId: env.userPoolId,
@@ -244,14 +241,12 @@ export default class Cognito {
       }
 
       // それ以外の場合
-      console.log(JSON.parse(sessionStorage.getItem('storeStateCredentials')))
       const userData = {
         Username: sessionStorage.getItem('currentUserName'),
         Pool: this.userPool,
         Storage: sessionStorage,
       }
       let cognitoUser = JSON.parse(sessionStorage.getItem('storeStateCredentials')).cognitoUser;
-      console.log(cognitoUser)
       const session = cognitoUser.signInUserSession
       return new Promise(async (resolve, reject) => {
         if (!this.isSessionValid(session)) {
@@ -294,7 +289,6 @@ export default class Cognito {
   }
 
   isSessionValid(session) {
-    console.log(session)
     var now = Math.floor(new Date() / 1000);
     var adjusted = now - session.clockDrift;
     return adjusted < session.accessToken.payload.exp && adjusted < session.idToken.payload.exp;
