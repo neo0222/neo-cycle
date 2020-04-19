@@ -6,9 +6,19 @@
       </div>
       <div class="text item">
         <el-button
-          v-for="(cycle,i) in selectedParking.cycleList"
+          v-if="isReservedBikeExist"
+          type="danger"
+          plain
+          size="mini"
+          style="margin: 3px"
+          @click="$emit('cancelReservation')">
+          {{ reservedBike.cycleName }}
+        </el-button>
+        <el-button
+          v-for="(cycle,i) in unreservedCycleList"
           :key="i"
           :type="cycleButtonType(cycle.CycleName)"
+          :disabled="isCycleButtonDisabled(cycle.CycleName)"
           plain
           size="mini"
           style="margin: 3px"
@@ -35,14 +45,29 @@ export default {
     
   },
   computed: {
-
+    unreservedCycleList() {
+      return this.selectedParking.cycleList.filter((cycle) => {
+        return cycle.CycleName !== this.reservedBike.cycleName
+      })
+    },
+    isReservedBikeExist() {
+      return this.selectedParking.cycleList.some((cycle) => {
+        return cycle.CycleName === this.reservedBike.cycleName
+      })
+    }
   },
   methods: {
     cycleButtonType(cycleName) {
-      if (this.status === 'RESERVED' && this.reservedBike === cycleName) return 'danger'
+      if (this.status === 'RESERVED' && this.reservedBike.cycleName === cycleName) return 'danger'
       else return 'primary'
+    },
+    isCycleButtonDisabled(cycleName) {
+      return this.status === 'RESERVED' && this.reservedBike.cycleName !== cycleName
     }
   },
+  updated() {
+    
+  }
 }
 </script>
 

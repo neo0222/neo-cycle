@@ -7,7 +7,7 @@
       </el-radio-group>
     </div>
     <status-card
-      v-show="radio4 === 'Search from Fav. List'"
+      v-show="radio4 === 'Search from Fav. List' || status !== 'WAITING_FOR_RESERVATION'"
       :headerMessage="headerMessage" 
       :status="status"
       :reservedBike="reservedBike"
@@ -240,10 +240,10 @@ export default {
         this.reservedBike.cycleName = '';
         this.reservedBike.cyclePasscode = '';
         this.status = 'WAITING_FOR_RESERVATION';
-        loading.close()
         this.terminateProcessReservation();
         await this.retrieveParkingList();
         await this.retrieveNearbyParkingList();
+        loading.close()
       }
       catch (error) {
         loading.close()

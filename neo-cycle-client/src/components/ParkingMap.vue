@@ -15,7 +15,9 @@
       v-if="isParkingCardVisible"
       :selectedParking="selectedParking"
       @makeReservation="makeReservation"
-      :reservedBike="reservedBike"/>
+      @cancelReservation="cancelReservation"
+      :reservedBike="reservedBike"
+      :status="status"/>
   </div>
 </template>
 
@@ -61,19 +63,24 @@ export default {
         lng: undefined,
       },
       isParkingCardVisible: false,
-      selectedParking: undefined,
+      selectedParkingId: undefined,
       updatedUnixDatetime: undefined,
     }
   },
   computed: {
     coord() {
       return this.map.getCenter().lat()
-    }
+    },
+    selectedParking() {
+      return this.parkingNearbyList.find((parking) => {
+        return parking.parkingId === this.selectedParkingId
+      })
+    },
   },
   async created() {
     const options = {
       enableHighAccuracy: false,
-      timeout: 6000,
+      timeout: 60000,
       maximumAge: 0
     }
     this.google = await GoogleMapsApiLoader({
@@ -116,10 +123,13 @@ export default {
     },
     showParkingCard(parking) {
       this.isParkingCardVisible = true;
-      this.selectedParking = parking
+      this.selectedParkingId = parking.parkingId
     },
     makeReservation(cycle) {
       this.$emit('makeReservation', cycle)
+    },
+    async cancelReservation(cycle) {
+      await this.$emit('cancelReservation', cycle)
     },
   },
   watch: {
@@ -136,7 +146,7 @@ export default {
 <style scoped>
 .map {
   width: 96vw;
-  height: 65vh;
+  height: 40vh;
   margin: auto;
 }
 </style>
