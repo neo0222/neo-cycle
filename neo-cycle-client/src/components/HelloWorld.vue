@@ -56,6 +56,12 @@ import StatusCard from './StatusCard'
 import ParkingTableForReservation from './ParkingTableForReservation'
 import ParkingMap from './ParkingMap'
 
+const getLocationOptions = {
+  enableHighAccuracy: false,
+  timeout: 60000,
+  maximumAge: 0
+}
+
 export default {
   name: 'HelloWorld',
   components: {
@@ -86,6 +92,10 @@ export default {
     }
   },
   async mounted() {
+    const position = await new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, getLocationOptions)
+    })
+    this.success(position)
     console.log(process.env['VUE_APP_TEST'])
     console.log(process.env['VUE_APP_GOOGLE_API_KEY'])
     const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Laoding...'))
@@ -132,6 +142,9 @@ export default {
     }
   },
   methods: {
+    success (position) {
+      this.setCurrentCoordinate(position.coords.latitude, position.coords.longitude)
+    },
     load(tree, treeNode, resolve) {
       setTimeout(() => {
         resolve([
