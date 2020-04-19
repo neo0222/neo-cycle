@@ -90,9 +90,8 @@ export default {
     console.log(process.env['VUE_APP_GOOGLE_API_KEY'])
     const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Laoding...'))
     const promises = [];
-    promises.push(this.checkStatusWithRetry())
-    promises.push(this.retrieveParkingListWithRetry())
-    promises.push(this.retrieveNearbyParkingListWithRetry())
+    promises.push(this.checkStatus())
+    promises.push(this.retrieveParkingList())
     try {
       await Promise.all(promises)
     }
@@ -100,6 +99,9 @@ export default {
       this.handleErrorResponse(this, error)
     }
     loading.close()
+    this.checkStatusWithRetry()
+    this.retrieveParkingListWithRetry()
+    this.retrieveNearbyParkingListWithRetry()
   },
   computed: {
     headerMessage() {
@@ -147,7 +149,7 @@ export default {
     },
     async checkStatusWithRetry() {
       await this.checkStatus()
-      return setTimeout(this.checkStatus, 10000)
+      setTimeout(this.checkStatusWithRetry, 10000)
     },
     async checkStatus() {
       try {
@@ -175,7 +177,7 @@ export default {
     },
     async retrieveParkingListWithRetry() {
       await this.retrieveParkingList()
-      return setTimeout(this.retrieveParkingList, 10000)
+      setTimeout(this.retrieveParkingListWithRetry, 10000)
     },
     async retrieveParkingList() {
       // 予約処理中は取得しない
@@ -212,7 +214,7 @@ export default {
     },
     async retrieveNearbyParkingListWithRetry() {
       await this.retrieveNearbyParkingList()
-      return setTimeout(this.retrieveNearbyParkingList, 10000)
+      setTimeout(this.retrieveNearbyParkingListWithRetry, 10000)
     },
     async retrieveNearbyParkingList() {
       // 予約処理中は取得しない

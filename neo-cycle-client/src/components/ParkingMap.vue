@@ -97,17 +97,15 @@ export default {
       this.map.addListener( "dragend", this.updateCenter) ;
     },
     updateCenter() {
-      navigator.geolocation.getCurrentPosition(this.successUpdate, this.error, getLocationOptions)
+      this.$emit('setCurrentCoordinate', this.map.getCenter().lat(), this.map.getCenter().lng())
       this.$emit('retrieveNearbyParkingList')
     },
     success (position) {
       this.mapConfig.center.lat = position.coords.latitude;
       this.mapConfig.center.lng = position.coords.longitude;
       this.$emit('setCurrentCoordinate', position.coords.latitude, position.coords.longitude)
+      this.$emit('retrieveNearbyParkingList')
       this.initializeMap();
-    },
-    successUpdate (position) {
-      this.$emit('setCurrentCoordinate', position.coords.latitude, position.coords.longitude)
     },
     error (error) {
       console.log(error)
