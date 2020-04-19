@@ -124,6 +124,7 @@ export default {
     showParkingCard(parking) {
       this.isParkingCardVisible = true;
       this.selectedParkingId = parking.parkingId
+      console.log(parking)
     },
     makeReservation(cycle) {
       this.$emit('makeReservation', cycle)

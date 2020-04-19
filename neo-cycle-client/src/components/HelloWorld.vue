@@ -83,15 +83,16 @@ export default {
     console.log(process.env['VUE_APP_TEST'])
     console.log(process.env['VUE_APP_GOOGLE_API_KEY'])
     const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Laoding...'))
+    const promises = [];
+    promises.push(this.checkStatusWithRetry())
+    promises.push(this.retrieveParkingListWithRetry())
+    promises.push(this.retrieveNearbyParkingListWithRetry())
     try {
-      await this.checkStatus();
-      await this.retrieveParkingList();
-      await this.retrieveNearbyParkingList();
+      await Promise.all(promises)
     }
     catch (error) {
       this.handleErrorResponse(this, error)
     }
-    
     loading.close()
   },
   computed: {
@@ -138,6 +139,10 @@ export default {
         ])
       }, 1000)
     },
+    async checkStatusWithRetry() {
+      await this.checkStatus()
+      return setTimeout(this.checkStatus, 10000)
+    },
     async checkStatus() {
       try {
         const result = await api.checkStatus(
@@ -157,11 +162,14 @@ export default {
           this.reservedBike.cyclePasscode = ''
           this.reservedBike.cycleUseStartDatetime = ''
         }
-        setTimeout(this.checkStatus, 10000)
       }
       catch (error) {
         this.handleErrorResponse(this, error)
       }
+    },
+    async retrieveParkingListWithRetry() {
+      await this.retrieveParkingList()
+      return setTimeout(this.retrieveParkingList, 10000)
     },
     async retrieveParkingList() {
       // 予約処理中は取得しない
@@ -169,28 +177,36 @@ export default {
         setTimeout(this.retrieveParkingList, 10000)
         return
       }
-      const result = await api.retrieveParkingList(
-        sessionStorage.getItem('currentUserName'),
-        sessionStorage.getItem('sessionId')
-      );
-      this.tableData.length = 0;
-      for (const parking of result.parkingList) {
-        if (!parking.parkingName) continue
-        this.tableData.push({
-          id: parking.parkingId,
-          date: parking.parkingName,
-          name: parking.cycleList.length + '台',
-          children: parking.cycleList.map((cycle) => {
-            return {
-              id: cycle.CycleName,
-              date: cycle.CycleName,
-              name: '',
-              cycle: cycle,
-            }
+      try {
+        const result = await api.retrieveParkingList(
+          sessionStorage.getItem('currentUserName'),
+          sessionStorage.getItem('sessionId')
+        );
+        this.tableData.length = 0;
+        for (const parking of result.parkingList) {
+          if (!parking.parkingName) continue
+          this.tableData.push({
+            id: parking.parkingId,
+            date: parking.parkingName,
+            name: parking.cycleList.length + '台',
+            children: parking.cycleList.map((cycle) => {
+              return {
+                id: cycle.CycleName,
+                date: cycle.CycleName,
+                name: '',
+                cycle: cycle,
+              }
+            })
           })
-        })
+        }
       }
-      setTimeout(this.retrieveParkingList, 10000)
+      catch (error) {
+        this.handleErrorResponse(this, error)
+      }
+    },
+    async retrieveNearbyParkingListWithRetry() {
+      await this.retrieveNearbyParkingList()
+      return setTimeout(this.retrieveNearbyParkingList, 10000)
     },
     async retrieveNearbyParkingList() {
       // 予約処理中は取得しない
@@ -198,15 +214,19 @@ export default {
         setTimeout(this.retrieveNearbyParkingList, 10000)
         return
       }
-      const result = await api.retrieveNearbyParkingList(
-        sessionStorage.getItem('currentUserName'),
-        sessionStorage.getItem('sessionId')
-      );
-      this.parkingNearbyList.length = 0;
-      for (const parking of result.parkingList) {
-        this.parkingNearbyList.push(parking);
+      try {
+        const result = await api.retrieveNearbyParkingList(
+          sessionStorage.getItem('currentUserName'),
+          sessionStorage.getItem('sessionId')
+        );
+        this.parkingNearbyList.length = 0;
+        for (const parking of result.parkingList) {
+          this.parkingNearbyList.push(parking);
+        }
       }
-      setTimeout(this.retrieveNearbyParkingList, 10000)
+      catch (error) {
+        this.handleErrorResponse(this, error)
+      }
     },
     async makeReservation(cycle) {
       const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Processing...'))
@@ -241,8 +261,10 @@ export default {
         this.reservedBike.cyclePasscode = '';
         this.status = 'WAITING_FOR_RESERVATION';
         this.terminateProcessReservation();
-        await this.retrieveParkingList();
-        await this.retrieveNearbyParkingList();
+        const promises = []
+        promises.push(this.retrieveParkingList());
+        promises.push(this.retrieveNearbyParkingList());
+        await Promise.all(promises)
         loading.close()
       }
       catch (error) {
