@@ -3,11 +3,11 @@
     <div style="margin-bottom: 12px">
       <el-radio-group v-model="radio4" size="mini" fill="#67C23A">
         <el-radio-button label="Search from Fav. List"></el-radio-button>
-        <el-radio-button label="Search Neaby Parkings"></el-radio-button>
+        <el-radio-button label="Search Nearby Parkings"></el-radio-button>
       </el-radio-group>
     </div>
     <status-card
-      v-show="radio4 === 'Search from Fav. List' || status !== 'WAITING_FOR_RESERVATION'"
+      v-show="status !== '' && (radio4 === 'Search from Fav. List' || status !== 'WAITING_FOR_RESERVATION')"
       :headerMessage="headerMessage" 
       :status="status"
       :reservedBike="reservedBike"
@@ -83,7 +83,7 @@ export default {
       isCancellationBeenProcessing: false,
       isSessionTimeOutDialogVisible: false,
       lastCancellationAttemptedDatetime: undefined,
-      radio4: 'Search from Fav. List',
+      radio4: 'Search Nearby Parkings',
       parkingNearbyList: [],
       currentCoordinate: {
         lat: undefined,
