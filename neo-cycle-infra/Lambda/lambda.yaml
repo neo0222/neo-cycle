@@ -38,6 +38,7 @@ Resources:
         Fn::Sub: ${NameTag}-${EnvName}-RoleSessionMaintainerArn
       Runtime: nodejs12.x
       Timeout: 10
+      ReservedConcurrentExecutions: 10
 
   LambdaParkingRetriever:
     Type: AWS::Lambda::Function
@@ -55,6 +56,7 @@ Resources:
         Fn::Sub: ${NameTag}-${EnvName}-RoleParkingRetrieverArn
       Runtime: nodejs12.x
       Timeout: 10
+      ReservedConcurrentExecutions: 10
 
   LambdaReservationMaker:
     Type: AWS::Lambda::Function
@@ -69,6 +71,7 @@ Resources:
         Fn::Sub: ${NameTag}-${EnvName}-RoleReservationMakerArn
       Runtime: nodejs12.x
       Timeout: 10
+      ReservedConcurrentExecutions: 10
 
   LambdaReservationCanceller:
     Type: AWS::Lambda::Function
@@ -83,6 +86,7 @@ Resources:
         Fn::Sub: ${NameTag}-${EnvName}-RoleReservationCancellerArn
       Runtime: nodejs12.x
       Timeout: 10
+      ReservedConcurrentExecutions: 10
 
   LambdaStatusChecker:
     Type: AWS::Lambda::Function
@@ -97,6 +101,7 @@ Resources:
         Fn::Sub: ${NameTag}-${EnvName}-RoleStatusCheckerArn
       Runtime: nodejs12.x
       Timeout: 10
+      ReservedConcurrentExecutions: 10
 
   LambdaSessionCreator:
     Type: AWS::Lambda::Function
@@ -111,6 +116,8 @@ Resources:
         Fn::Sub: ${NameTag}-${EnvName}-RoleSessionCreatorArn
       Runtime: nodejs12.x
       Timeout: 10
+      ReservedConcurrentExecutions: 10
+      MemorySize: 3008
 
   LambdaParkingNearbyRetriever:
     Type: AWS::Lambda::Function
@@ -125,6 +132,8 @@ Resources:
         Fn::Sub: ${NameTag}-${EnvName}-RoleParkingNearbyRetrieverArn
       Runtime: nodejs12.x
       Timeout: 10
+      ReservedConcurrentExecutions: 10
+      MemorySize: 3008
   ######################################################
   # Rest API
   ######################################################
