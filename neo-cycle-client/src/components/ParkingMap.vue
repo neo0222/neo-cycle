@@ -4,26 +4,36 @@
       <template :v-if="!!this.google && !!this.map">
         <child-marker 
           v-for="(parking,i) in parkingNearbyList"
-          :key="i"
+          :key="i + updatedUnixDatetime"
           :parking="parking" 
           :google="google"
           :map="map"
+          @showParkingCard="showParkingCard"
         />
       </template>
+    <ParkingCard
+      v-if="isParkingCardVisible"
+      :selectedParking="selectedParking"
+      @makeReservation="makeReservation"
+      :reservedBike="reservedBike"/>
   </div>
 </template>
 
 <script>
 import GoogleMapsApiLoader from 'google-maps-api-loader';
 import ChildMarker from './ChildMarker'
+import ParkingCard from  './ParkingCard'
 
 export default {
   name: 'Map',
   components: {
     ChildMarker,
+    ParkingCard,
   },
   props: [
     'parkingNearbyList',
+    'reservedBike',
+    'status',
   ],
   data() {
     return {
@@ -49,7 +59,10 @@ export default {
       mapCenter: {
         lat: undefined,
         lng: undefined,
-      }
+      },
+      isParkingCardVisible: false,
+      selectedParking: undefined,
+      updatedUnixDatetime: undefined,
     }
   },
   computed: {
@@ -101,7 +114,22 @@ export default {
           break
       }
     },
-  }
+    showParkingCard(parking) {
+      this.isParkingCardVisible = true;
+      this.selectedParking = parking
+    },
+    makeReservation(cycle) {
+      this.$emit('makeReservation', cycle)
+    },
+  },
+  watch: {
+    'parkingNearbyList': {
+      handler: function(newVal) {
+        const now = new Date()
+        this.updatedUnixDatetime = now.getTime()
+      }
+    }
+  },
 }
 </script>
 

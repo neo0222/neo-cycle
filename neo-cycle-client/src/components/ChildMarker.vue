@@ -24,8 +24,8 @@ export default {
   },
   methods: {
     clickEventFunc() {
-      // TODO: implement me
       console.log('clicked')
+      this.$emit('showParkingCard', this.parking)
     },
   },
 }
