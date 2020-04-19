@@ -32,6 +32,8 @@
       @cancelReservation="cancelReservation"
       :reservedBike="reservedBike"
       :status="status"
+      @setCurrentCoordinate="setCurrentCoordinate"
+      @retrieveNearbyParkingList="retrieveNearbyParkingList"
       />
     <el-dialog
       :visible.sync="isSessionTimeOutDialogVisible"
@@ -77,6 +79,10 @@ export default {
       lastCancellationAttemptedDatetime: undefined,
       radio4: 'Search from Fav. List',
       parkingNearbyList: [],
+      currentCoordinate: {
+        lat: undefined,
+        lon: undefined,
+      }
     }
   },
   async mounted() {
@@ -217,7 +223,8 @@ export default {
       try {
         const result = await api.retrieveNearbyParkingList(
           sessionStorage.getItem('currentUserName'),
-          sessionStorage.getItem('sessionId')
+          sessionStorage.getItem('sessionId'),
+          this.currentCoordinate
         );
         this.parkingNearbyList.length = 0;
         for (const parking of result.parkingList) {
@@ -336,6 +343,10 @@ export default {
     closeSessionTimeOutDialog() {
       sessionStorage.clear();
       this.$router.replace('/login');
+    },
+    setCurrentCoordinate(lat, lon) {
+      this.currentCoordinate.lat = lat
+      this.currentCoordinate.lon = lon
     }
   },
 }

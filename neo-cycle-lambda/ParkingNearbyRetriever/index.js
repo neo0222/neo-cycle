@@ -19,8 +19,10 @@ exports.handler = async (event, context) => {
 async function main(event, context) {
   const memberId = JSON.parse(event.body).memberId;
   const sessionId = JSON.parse(event.body).sessionId;
+  const lat = JSON.parse(event.body).lat;
+  const lon = JSON.parse(event.body).lon;
   try {
-    const parkingList = await retrieveParkingList(memberId, sessionId);
+    const parkingList = await retrieveParkingList(memberId, sessionId, lat, lon);
     const response = {
       statusCode: 200,
       body: JSON.stringify({
@@ -46,7 +48,7 @@ async function main(event, context) {
   }
 }
 
-async function retrieveParkingList(memberId, sessionId) {
+async function retrieveParkingList(memberId, sessionId, lat, lon) {
   const url = await ssm.getParameter({
     Name: '/neo-cycle/php-url',
     WithDecryption: false,
@@ -64,8 +66,8 @@ async function retrieveParkingList(memberId, sessionId) {
   params.append('a_install_id', 'b2ebbd2ca7dbd8148f38be8d1f636466')
   params.append('a_window_id', 'CS01')
   params.append('act', 'shop_list')
-  params.append('a_lat', '35.661085')
-  params.append('a_lon', '139.721147')
+  params.append('a_lat', lat)
+  params.append('a_lon', lon)
   params.append('n_range', '2000')
   params.append('n_disable_coupon_sort', '1')
   params.append('n_limit', '30')

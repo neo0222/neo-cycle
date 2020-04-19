@@ -22,6 +22,13 @@
 </template>
 
 <script>
+
+const getLocationOptions = {
+  enableHighAccuracy: false,
+  timeout: 60000,
+  maximumAge: 0
+}
+
 import GoogleMapsApiLoader from 'google-maps-api-loader';
 import ChildMarker from './ChildMarker'
 import ParkingCard from  './ParkingCard'
@@ -78,15 +85,10 @@ export default {
     },
   },
   async created() {
-    const options = {
-      enableHighAccuracy: false,
-      timeout: 60000,
-      maximumAge: 0
-    }
     this.google = await GoogleMapsApiLoader({
       apiKey: process.env['VUE_APP_GOOGLE_API_KEY']
     });
-    navigator.geolocation.getCurrentPosition(this.success, this.error, options)
+    navigator.geolocation.getCurrentPosition(this.success, this.error, getLocationOptions)
     
   },
   methods: {
@@ -95,14 +97,17 @@ export default {
       this.map.addListener( "dragend", this.updateCenter) ;
     },
     updateCenter() {
-      // TODO: implement me
-      console.log(this.map.getCenter().lat());
-      console.log(this.map.getCenter().lng());
+      navigator.geolocation.getCurrentPosition(this.successUpdate, this.error, getLocationOptions)
+      this.$emit('retrieveNearbyParkingList')
     },
     success (position) {
       this.mapConfig.center.lat = position.coords.latitude;
       this.mapConfig.center.lng = position.coords.longitude;
+      this.$emit('setCurrentCoordinate', position.coords.latitude, position.coords.longitude)
       this.initializeMap();
+    },
+    successUpdate (position) {
+      this.$emit('setCurrentCoordinate', position.coords.latitude, position.coords.longitude)
     },
     error (error) {
       console.log(error)
