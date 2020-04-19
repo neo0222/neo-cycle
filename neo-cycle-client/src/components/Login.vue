@@ -66,8 +66,6 @@ export default {
         sessionStorage.setItem('sessionId', res.sessionId)
         try {
           const session = await this.$cognito.login(this.username, this.password)
-          console.log('end without error')
-          console.log(session)
           if (session.status === 'PASSWORD_REQUIRED') {
             loading.close()
             this.openUpdatePasswordDialog()
@@ -104,10 +102,8 @@ export default {
       }
       try {
         const result = await this.$cognito.updatePassword(params)
-        console.log('completed')
         this.closeUpdatePasswordDialog()
         loading.close()
-        console.log('closed dialog')
         this.$router.replace('/')
       }
       catch (error) {

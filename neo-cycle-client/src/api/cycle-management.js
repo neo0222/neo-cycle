@@ -25,3 +25,8 @@ export async function createSession(memberId, password) {
   const res = await axios.post(url + '/sessions/create', { memberId, password });
   return res.data
 }
+
+export async function retrieveNearbyParkingList(memberId, sessionId, coordinate) {
+  const res = await axios.post(url + '/parkings/nearby', { memberId, sessionId, lat: coordinate.lat, lon: coordinate.lon });
+  return res.data
+}

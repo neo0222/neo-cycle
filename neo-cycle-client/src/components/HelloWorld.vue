@@ -1,6 +1,13 @@
 <template>
   <div class="hello">
+    <div style="margin-bottom: 12px">
+      <el-radio-group v-model="radio4" size="mini" fill="#67C23A">
+        <el-radio-button label="Search from Fav. List"></el-radio-button>
+        <el-radio-button label="Search Neaby Parkings"></el-radio-button>
+      </el-radio-group>
+    </div>
     <status-card
+      v-show="radio4 === 'Search from Fav. List' || status !== 'WAITING_FOR_RESERVATION'"
       :headerMessage="headerMessage" 
       :status="status"
       :reservedBike="reservedBike"
@@ -10,6 +17,7 @@
       @terminateCancellation="terminateCancellation"
       @makeReservation="makeReservation" />
     <parking-table-for-reservation
+      v-show="radio4 === 'Search from Fav. List'"
       :tableData="tableData"
       :reservedBike="reservedBike"
       :status="status"
@@ -17,6 +25,16 @@
       @terminateCancellation="terminateCancellation"
       @beginCancellation="beginCancellation"
       @makeReservation="makeReservation"/>
+    <parking-map
+      v-show="radio4 !== 'Search from Fav. List'"
+      :parkingNearbyList="parkingNearbyList"
+      @makeReservation="makeReservation"
+      @cancelReservation="cancelReservation"
+      :reservedBike="reservedBike"
+      :status="status"
+      @setCurrentCoordinate="setCurrentCoordinate"
+      @retrieveNearbyParkingList="retrieveNearbyParkingList"
+      />
     <el-dialog
       :visible.sync="isSessionTimeOutDialogVisible"
       title="Oops! Session expired."
@@ -36,12 +54,20 @@ import api from '../api/index'
 
 import StatusCard from './StatusCard'
 import ParkingTableForReservation from './ParkingTableForReservation'
+import ParkingMap from './ParkingMap'
+
+const getLocationOptions = {
+  enableHighAccuracy: false,
+  timeout: 60000,
+  maximumAge: 0
+}
 
 export default {
   name: 'HelloWorld',
   components: {
     StatusCard,
     ParkingTableForReservation,
+    ParkingMap,
   },
   data () {
     return {
@@ -57,19 +83,34 @@ export default {
       isCancellationBeenProcessing: false,
       isSessionTimeOutDialogVisible: false,
       lastCancellationAttemptedDatetime: undefined,
+      radio4: 'Search from Fav. List',
+      parkingNearbyList: [],
+      currentCoordinate: {
+        lat: undefined,
+        lon: undefined,
+      }
     }
   },
   async mounted() {
+    const position = await new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, getLocationOptions)
+    })
+    this.success(position)
+    console.log(this.currentCoordinate)
     const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Laoding...'))
+    const promises = [];
+    promises.push(this.checkStatus())
+    promises.push(this.retrieveParkingList())
     try {
-      await this.checkStatus();
-      await this.retrieveParkingList();
+      await Promise.all(promises)
     }
     catch (error) {
       this.handleErrorResponse(this, error)
     }
-    
     loading.close()
+    this.checkStatusWithRetry()
+    this.retrieveParkingListWithRetry()
+    this.retrieveNearbyParkingListWithRetry()
   },
   computed: {
     headerMessage() {
@@ -100,6 +141,9 @@ export default {
     }
   },
   methods: {
+    success (position) {
+      this.setCurrentCoordinate(position.coords.latitude, position.coords.longitude)
+    },
     load(tree, treeNode, resolve) {
       setTimeout(() => {
         resolve([
@@ -114,6 +158,10 @@ export default {
           }
         ])
       }, 1000)
+    },
+    async checkStatusWithRetry() {
+      await this.checkStatus()
+      setTimeout(this.checkStatusWithRetry, 10000)
     },
     async checkStatus() {
       try {
@@ -134,11 +182,14 @@ export default {
           this.reservedBike.cyclePasscode = ''
           this.reservedBike.cycleUseStartDatetime = ''
         }
-        setTimeout(this.checkStatus, 10000)
       }
       catch (error) {
         this.handleErrorResponse(this, error)
       }
+    },
+    async retrieveParkingListWithRetry() {
+      await this.retrieveParkingList()
+      setTimeout(this.retrieveParkingListWithRetry, 10000)
     },
     async retrieveParkingList() {
       // 予約処理中は取得しない
@@ -146,28 +197,57 @@ export default {
         setTimeout(this.retrieveParkingList, 10000)
         return
       }
-      const result = await api.retrieveParkingList(
-        sessionStorage.getItem('currentUserName'),
-        sessionStorage.getItem('sessionId')
-      );
-      this.tableData.length = 0;
-      for (const parking of result.parkingList) {
-        if (!parking.parkingName) continue
-        this.tableData.push({
-          id: parking.parkingId,
-          date: parking.parkingName,
-          name: parking.cycleList.length + '台',
-          children: parking.cycleList.map((cycle) => {
-            return {
-              id: cycle.CycleName,
-              date: cycle.CycleName,
-              name: '',
-              cycle: cycle,
-            }
+      try {
+        const result = await api.retrieveParkingList(
+          sessionStorage.getItem('currentUserName'),
+          sessionStorage.getItem('sessionId')
+        );
+        this.tableData.length = 0;
+        for (const parking of result.parkingList) {
+          if (!parking.parkingName) continue
+          this.tableData.push({
+            id: parking.parkingId,
+            date: parking.parkingName,
+            name: parking.cycleList.length + '台',
+            children: parking.cycleList.map((cycle) => {
+              return {
+                id: cycle.CycleName,
+                date: cycle.CycleName,
+                name: '',
+                cycle: cycle,
+              }
+            })
           })
-        })
+        }
       }
-      setTimeout(this.retrieveParkingList, 10000)
+      catch (error) {
+        this.handleErrorResponse(this, error)
+      }
+    },
+    async retrieveNearbyParkingListWithRetry() {
+      await this.retrieveNearbyParkingList()
+      setTimeout(this.retrieveNearbyParkingListWithRetry, 10000)
+    },
+    async retrieveNearbyParkingList() {
+      // 予約処理中は取得しない
+      if (this.isReservationBeenProcessing) {
+        setTimeout(this.retrieveNearbyParkingList, 10000)
+        return
+      }
+      try {
+        const result = await api.retrieveNearbyParkingList(
+          sessionStorage.getItem('currentUserName'),
+          sessionStorage.getItem('sessionId'),
+          this.currentCoordinate
+        );
+        this.parkingNearbyList.length = 0;
+        for (const parking of result.parkingList) {
+          this.parkingNearbyList.push(parking);
+        }
+      }
+      catch (error) {
+        this.handleErrorResponse(this, error)
+      }
     },
     async makeReservation(cycle) {
       const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Processing...'))
@@ -201,9 +281,12 @@ export default {
         this.reservedBike.cycleName = '';
         this.reservedBike.cyclePasscode = '';
         this.status = 'WAITING_FOR_RESERVATION';
-        loading.close()
         this.terminateProcessReservation();
-        await this.retrieveParkingList();
+        const promises = []
+        promises.push(this.retrieveParkingList());
+        promises.push(this.retrieveNearbyParkingList());
+        await Promise.all(promises)
+        loading.close()
       }
       catch (error) {
         loading.close()
@@ -274,6 +357,10 @@ export default {
     closeSessionTimeOutDialog() {
       sessionStorage.clear();
       this.$router.replace('/login');
+    },
+    setCurrentCoordinate(lat, lon) {
+      this.currentCoordinate.lat = lat
+      this.currentCoordinate.lon = lon
     }
   },
 }

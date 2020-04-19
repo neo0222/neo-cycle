@@ -34,6 +34,10 @@ phases:
       - npm install
       - zip -r Deploy.zip ./
       - aws s3 mv ./Deploy.zip s3://neo-cycle-${ENVIRONMENT_NAME}-lambda/${CODEBUILD_BUILD_NUMBER}/SessionCreator/Deploy.zip
+      - cd ../ParkingNearbyRetriever
+      - npm install
+      - zip -r Deploy.zip ./
+      - aws s3 mv ./Deploy.zip s3://neo-cycle-${ENVIRONMENT_NAME}-lambda/${CODEBUILD_BUILD_NUMBER}/ParkingNearbyRetriever/Deploy.zip
       - cd ../../neo-cycle-infra
       - aws cloudformation deploy
           --stack-name neo-cycle-${ENVIRONMENT_NAME}-lambda
@@ -44,6 +48,8 @@ phases:
   build:
     commands:
       - cd neo-cycle-client
+      - touch ./.env
+      - echo VUE_APP_GOOGLE_API_KEY=${VUE_APP_GOOGLE_API_KEY} >> ./.env
       - npm run build:${ENVIRONMENT_NAME}
   post_build:
     commands:
