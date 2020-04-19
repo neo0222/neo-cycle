@@ -28,5 +28,8 @@ export default {
       this.$emit('showParkingCard', this.parking)
     },
   },
+  destroyed() {
+    this.marker.setMap(null)
+  }
 }
 </script>

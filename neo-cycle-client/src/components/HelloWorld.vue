@@ -27,7 +27,12 @@
       @makeReservation="makeReservation"/>
     <parking-map
       v-show="radio4 !== 'Search from Fav. List'"
-      :parkingNearbyList="parkingNearbyList"/>
+      :parkingNearbyList="parkingNearbyList"
+      @makeReservation="makeReservation"
+      @cancelReservation="cancelReservation"
+      :reservedBike="reservedBike"
+      :status="status"
+      />
     <el-dialog
       :visible.sync="isSessionTimeOutDialogVisible"
       title="Oops! Session expired."
@@ -188,13 +193,20 @@ export default {
       setTimeout(this.retrieveParkingList, 10000)
     },
     async retrieveNearbyParkingList() {
+      // 予約処理中は取得しない
+      if (this.isReservationBeenProcessing) {
+        setTimeout(this.retrieveNearbyParkingList, 10000)
+        return
+      }
       const result = await api.retrieveNearbyParkingList(
         sessionStorage.getItem('currentUserName'),
         sessionStorage.getItem('sessionId')
       );
+      this.parkingNearbyList.length = 0;
       for (const parking of result.parkingList) {
         this.parkingNearbyList.push(parking);
       }
+      setTimeout(this.retrieveNearbyParkingList, 10000)
     },
     async makeReservation(cycle) {
       const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Processing...'))
@@ -231,6 +243,7 @@ export default {
         loading.close()
         this.terminateProcessReservation();
         await this.retrieveParkingList();
+        await this.retrieveNearbyParkingList();
       }
       catch (error) {
         loading.close()
