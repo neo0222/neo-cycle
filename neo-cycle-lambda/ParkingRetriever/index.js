@@ -6,9 +6,9 @@ const ssm = new AWS.SSM();
 const axios = require('axios');
 const cheerio = require('cheerio');
 
-const sessionTableName = 'neo-cycle-SESSION';
+const envName = process.env.ENV_NAME;
+const userTableName = `neo-cycle-${envName}-USER`;
 const getInfoNum = 300;
-const parkingIdList = process.env['PARKING_IDS'].split(',');
 
 exports.handler = async (event, context) => {
   if (event.warmup) {
@@ -23,7 +23,8 @@ async function main(event, context) {
   const memberId = JSON.parse(event.body).memberId;
   const sessionId = JSON.parse(event.body).sessionId;
   try {
-    const parkingList = await retrieveParkingList(memberId, sessionId);
+    const savedParkingList = await retrievedSavedParkingList(memberId);
+    const parkingList = await retrieveParkingList(memberId, sessionId, savedParkingList);
     const response = {
       statusCode: 200,
       body: JSON.stringify({
@@ -48,15 +49,16 @@ async function main(event, context) {
   }
 }
 
-async function retrieveParkingList(memberId, sessionId) {
+async function retrieveParkingList(memberId, sessionId, savedParkingList) {
   const url = await ssm.getParameter({
     Name: '/neo-cycle/php-url',
     WithDecryption: false,
   }).promise();
   
   const parkingList = [];
-  for (const parkingId of parkingIdList) {
+  for (const savedParking of savedParkingList) {
     parkingList.push((async () => {
+      const parkingId = savedParking.parkingId;
       const params = new URLSearchParams()
       params.append('EventNo', 25701);
       params.append('SessionID', sessionId);
@@ -75,7 +77,7 @@ async function retrieveParkingList(memberId, sessionId) {
       }
       let parking = {
         parkingId,
-        parkingName: '',
+        parkingName: savedParking.parkingName,
         cycleList: []
       };
       const res = await axios.post(url.Parameter.Value, params, config);
@@ -85,7 +87,7 @@ async function retrieveParkingList(memberId, sessionId) {
       // レンタル可能な自転車がない場合
       if (!$('[class=park_info_inner_left]').children().get(0)) return {
         parkingId,
-        parkingName: '',
+        parkingName: savedParking.parkingName,
         cycleList: []
       };;
       // 自転車がある場合は処理を継続
@@ -125,5 +127,21 @@ async function retrieveParkingList(memberId, sessionId) {
   }
   catch (error) {
     throw error;
+  }
+}
+
+async function retrievedSavedParkingList(memberId) {
+  const params = {
+    TableName: userTableName,
+    Key: {
+      memberId: memberId
+    }
+  }
+  try {
+    const result = await docClient.get(params).promise();
+    return result.Item ? result.Item.favoriteParkingList : []; // ユーザ情報登録APIができたら空配列は返さない
+  }
+  catch (error) {
+    throw error
   }
 }
