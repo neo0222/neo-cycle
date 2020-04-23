@@ -48,7 +48,6 @@ Resources:
         S3Key: !Sub ${ObjectKeyPrefix}/ParkingRetriever/Deploy.zip
       Environment:
         Variables:
-          PARKING_IDS: 10124,10077,10507
           ENV_NAME: !Ref EnvName
       FunctionName: !Sub ${NameTag}-${EnvName}-ParkingRetriever
       Handler: index.handler

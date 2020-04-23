@@ -9,7 +9,6 @@ const cheerio = require('cheerio');
 const envName = process.env.ENV_NAME;
 const userTableName = `neo-cycle-${envName}-USER`;
 const getInfoNum = 300;
-const parkingIdList = process.env['PARKING_IDS'].split(',');
 
 exports.handler = async (event, context) => {
   if (event.warmup) {
