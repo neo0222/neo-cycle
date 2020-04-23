@@ -25,6 +25,26 @@
           @click="$emit('makeReservation', cycle)">
           {{ cycle.CycleName }}
         </el-button>
+        <div class="button">
+          <el-button
+            v-if="!isParkingFavorite"
+            slot="reference"
+            type="success"
+            :plain="false"
+            :style="{width: '258.48px'}"
+            @click="$emit('registerFavoriteParking', selectedParking.parkingId, selectedParking.parkingName)">
+            ADD to Favorite List
+          </el-button>
+          <el-button
+            v-if="isParkingFavorite"
+            slot="reference"
+            type="info"
+            :plain="true"
+            :style="{width: '258.48px'}"
+            @click="$emit('removeFavoriteParking', selectedParking.parkingId)">
+            REMOVE from Favorite List
+          </el-button>
+        </div>
       </div>
     </el-card>
   </div>
@@ -35,6 +55,7 @@ export default {
     'selectedParking',
     'reservedBike',
     'status',
+    'favoriteParkingList'
   ],
   data(){
     return {
@@ -53,6 +74,11 @@ export default {
     isReservedBikeExist() {
       return this.selectedParking.cycleList.some((cycle) => {
         return cycle.CycleName === this.reservedBike.cycleName
+      })
+    },
+    isParkingFavorite() {
+      return this.favoriteParkingList.some((favoriteParking) => {
+        return this.selectedParking.parkingId.toString() === favoriteParking.parkingId
       })
     }
   },
@@ -96,7 +122,7 @@ a {
 }
 
 .button {
-  margin-top: 10px;
+  margin-top: 20px;
 }
 
 .clearfix:before,
