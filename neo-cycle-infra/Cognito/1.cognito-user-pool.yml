@@ -13,6 +13,11 @@ Parameters:
       - dev
       - prod
     Description: Enter profile.
+  NameTag:
+    Type: String
+    Default: neo-cycle
+    AllowedValues:
+      - neo-cycle
 
 ######################################################
 # Mappings
@@ -50,6 +55,9 @@ Resources:
           TemporaryPasswordValidityDays: 7
       AutoVerifiedAttributes:
         - email
+      LambdaConfig:
+        PostConfirmation: !ImportValue
+          Fn::Sub: ${NameTag}-${EnvName}-LambdaUserInitializerArn
 
   NeoCycleUserPoolClient:
     Type: AWS::Cognito::UserPoolClient

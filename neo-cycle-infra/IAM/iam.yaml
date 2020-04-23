@@ -218,7 +218,26 @@ Resources:
             Action: sts:AssumeRole
             Principal:
               Service: lambda.amazonaws.com
-              
+
+  RoleUserInitializer:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub
+        - ${NameTag}-${EnvName}-user-initializer-role
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+      ManagedPolicyArns:
+        - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
+        - !Ref NeoCycleUserTablePutItemPolicy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: lambda.amazonaws.com              
 #################################
 # Outputs
 #################################
@@ -288,6 +307,16 @@ Outputs:
     Export:
       Name: !Sub
         - ${NameTag}-${EnvName}-RoleParkingNearbyRetrieverArn
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+
+  RoleUserInitializerArn:
+    Value: !GetAtt RoleUserInitializer.Arn
+    Export:
+      Name: !Sub
+        - ${NameTag}-${EnvName}-RoleUserInitializerArn
         - {
           NameTag: !FindInMap [ StackConfig, NameTag, Value ],
           EnvName: !Ref EnvName
