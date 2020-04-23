@@ -18,45 +18,34 @@ exports.handler = async (event, context) => {
 };
 
 async function main(event, context) {
-  const { memberId } = await getUserInfoFromSsm();
-  const sessionId = await getSessionId(memberId);
-  const { cycleName, cyclePasscode } = await makeReservation(memberId, sessionId, event);
-  if (event.CycleName !== cycleName) {throw new Error("unexpected error occurred.")}
-  const response = {
-    statusCode: 200,
-    body: {
-      cycleName,
-      cyclePasscode
-    },
-    headers: {
-        "Access-Control-Allow-Origin": '*'
-    }
-  };
-  return response;
-}
-
-async function getUserInfoFromSsm() {
-  const memberId = await ssm.getParameter({
-    Name: '/neo-cycle/memberId',
-    WithDecryption: false,
-  }).promise();
-  return { memberId: memberId.Parameter.Value };
-}
-
-async function getSessionId(memberId) {
-  const params = {
-    TableName: sessionTableName,
-    Key: {
-      'memberId': memberId
-    }
-  };
+  const memberId = JSON.parse(event.body).memberId;
+  const sessionId = JSON.parse(event.body).sessionId;
   try {
-    const response = await docClient.get(params).promise();
-    return response.Item.sessionId;
+    const { cycleName, cyclePasscode } = await makeReservation(memberId, sessionId, JSON.parse(event.body).cycle);
+    const response = {
+      statusCode: 200,
+      body: JSON.stringify({
+        cycleName,
+        cyclePasscode
+      }),
+      headers: {
+          "Access-Control-Allow-Origin": '*'
+      },
+      isBase64Encoded: false
+    };
+    return response;
   }
   catch (error) {
-    throw error;
+    return {
+      statusCode: 440,
+      body: JSON.stringify({message: 'session expired.'}),
+      headers: {
+          "Access-Control-Allow-Origin": '*'
+      },
+      isBase64Encoded: false
+    };
   }
+  
 }
 
 async function makeReservation(memberId, sessionId, request) {
@@ -88,7 +77,7 @@ async function makeReservation(memberId, sessionId, request) {
   try {
     const res = await axios.post(url.Parameter.Value, params, config);
     const html = res.data;
-    console.log(html)
+    if (html.indexOf('ログイン情報が削除されました') !== -1) throw 'session expired.'
     const $ = cheerio.load(html);
     // レンタル可能な自転車がない場合
     if (!$('[class=main_inner_wide]').children().get(0)) return;

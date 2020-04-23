@@ -1,0 +1,80 @@
+AWSTemplateFormatVersion: 2010-09-09
+######################################################
+# Parameters:
+######################################################
+Parameters:
+  S3HostingDomainName:
+    Type: String
+    Default: neo-cycle.com
+  EnvName:
+    Type: String
+    AllowedValues:
+      - dev
+      - prod
+    Description: Enter profile.
+
+######################################################
+# Mappings:
+######################################################
+Mappings:
+  StackConfig:
+    NameTag:
+      Value: neo-cycle
+
+######################################################
+# Resources
+######################################################
+Resources:
+  S3StatisHostingBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Sub
+        - ${EnvName}.${S3HostingDomainName}
+        - {
+          NameTag: !Ref S3HostingDomainName,
+          EnvName: !Ref EnvName
+        }
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      WebsiteConfiguration:
+        IndexDocument: index.html
+      # LifecycleConfiguration:
+      #   Rules:
+      #     - Id: !Join ['-', [!Ref 'BucketNameContents', 'Contents-LifeCycle']]
+      #       Status: Enabled
+      #       # バージョニングされているデータは180日経過したらS3 glacierに移行する
+      #       NoncurrentVersionTransition:
+      #           StorageClass: GLACIER
+      #           TransitionInDays: 180
+      #       # バージョニングされているデータは365日経過したら削除する
+      #       NoncurrentVersionExpirationInDays: 365
+
+  S3LambdaBucket:
+    Type: 'AWS::S3::Bucket'
+    Properties:
+      BucketName: !Sub
+        - ${NameTag}-${EnvName}-lambda
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+      VersioningConfiguration:
+        Status: Enabled
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256  
+      # LifecycleConfiguration:
+      #   Rules:
+      #     - Id: !Join ['-', [!Ref 'BucketNameContents', 'Contents-LifeCycle']]
+      #       Status: Enabled
+      #       # バージョニングされているデータは180日経過したらS3 glacierに移行する
+      #       NoncurrentVersionTransition:
+      #           StorageClass: GLACIER
+      #           TransitionInDays: 180
+      #       # バージョニングされているデータは365日経過したら削除する
+      #       NoncurrentVersionExpirationInDays: 365

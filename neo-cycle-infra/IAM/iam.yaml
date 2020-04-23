@@ -1,10 +1,29 @@
 AWSTemplateFormatVersion: "2010-09-09"
 
+######################################################
+# Parameters:
+######################################################
+Parameters:
+  EnvName:
+    Type: String
+    AllowedValues:
+      - dev
+      - prod
+    Description: Enter profile.
+
+######################################################
+# Mappings:
+######################################################
 Mappings:
   StackConfig:
     ManagedPolicyArns:
       AWSLambdaBasicExecutionRole: arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+    NameTag:
+      Value: neo-cycle
 
+######################################################
+# Resources:
+######################################################
 Resources:
   #-----------------------
   # ポリシー作成
@@ -56,7 +75,12 @@ Resources:
   RoleSessionMaintainer:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: role-session-maintainer
+      RoleName: !Sub
+        - ${NameTag}-${EnvName}-session-maintainer-role
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
       ManagedPolicyArns:
         - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
         - !Ref NeoCycleSessionTablePutItemPolicy
@@ -72,7 +96,12 @@ Resources:
   RoleParkingRetriever:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: role-parking-retriever
+      RoleName: !Sub
+        - ${NameTag}-${EnvName}-parking-retriever-role
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
       ManagedPolicyArns:
         - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
         - !Ref NeoCycleSessionTableGetItemPolicy
@@ -88,7 +117,12 @@ Resources:
   RoleReservationMaker:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: role-reservation-maker
+      RoleName: !Sub
+        - ${NameTag}-${EnvName}-reservation-maker-role
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
       ManagedPolicyArns:
         - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
         - !Ref NeoCycleSessionTableGetItemPolicy
@@ -104,7 +138,12 @@ Resources:
   RoleReservationCanceller:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: role-reservation-canceller
+      RoleName: !Sub
+        - ${NameTag}-${EnvName}-reservation-canceller-role
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
       ManagedPolicyArns:
         - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
         - !Ref NeoCycleSessionTableGetItemPolicy
@@ -120,7 +159,12 @@ Resources:
   RoleStatusChecker:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: role-status-checker
+      RoleName: !Sub
+        - ${NameTag}-${EnvName}-status-checker-role
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
       ManagedPolicyArns:
         - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
         - !Ref NeoCycleSessionTableGetItemPolicy
@@ -133,6 +177,46 @@ Resources:
             Principal:
               Service: lambda.amazonaws.com
 
+  RoleSessionCreator:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub
+        - ${NameTag}-${EnvName}-session-creator-role
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+      ManagedPolicyArns:
+        - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
+        - !Ref NeoCycleGetParameterPolicy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: lambda.amazonaws.com
+
+  RoleParkingNearbyRetriever:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub
+        - ${NameTag}-${EnvName}-parking-nearby-retriever-role
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+      ManagedPolicyArns:
+        - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
+        - !Ref NeoCycleGetParameterPolicy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: lambda.amazonaws.com
+              
 #################################
 # Outputs
 #################################
@@ -140,24 +224,69 @@ Outputs:
   RoleSessionMaintainerArn:
     Value: !GetAtt RoleSessionMaintainer.Arn
     Export:
-      Name: RoleSessionMaintainerArn
+      Name: !Sub
+        - ${NameTag}-${EnvName}-RoleSessionMaintainerArn
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
 
   RoleParkingRetrieverArn:
     Value: !GetAtt RoleParkingRetriever.Arn
     Export:
-      Name: RoleParkingRetrieverArn
+      Name: !Sub
+        - ${NameTag}-${EnvName}-RoleParkingRetrieverArn
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
 
   RoleReservationMakerArn:
     Value: !GetAtt RoleReservationMaker.Arn
     Export:
-      Name: RoleReservationMakerArn
+      Name: !Sub
+        - ${NameTag}-${EnvName}-RoleReservationMakerArn
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
 
   RoleReservationCancellerArn:
     Value: !GetAtt RoleReservationCanceller.Arn
     Export:
-      Name: RoleReservationCancellerArn
+      Name: !Sub
+        - ${NameTag}-${EnvName}-RoleReservationCancellerArn
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
 
   RoleStatusCheckerArn:
     Value: !GetAtt RoleStatusChecker.Arn
     Export:
-      Name: RoleStatusCheckerArn
+      Name: !Sub
+        - ${NameTag}-${EnvName}-RoleStatusCheckerArn
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+
+  RoleSessionCreatorArn:
+    Value: !GetAtt RoleSessionCreator.Arn
+    Export:
+      Name: !Sub
+        - ${NameTag}-${EnvName}-RoleSessionCreatorArn
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+      
+  RoleParkingNearbyRetrieverArn:
+    Value: !GetAtt RoleParkingNearbyRetriever.Arn
+    Export:
+      Name: !Sub
+        - ${NameTag}-${EnvName}-RoleParkingNearbyRetrieverArn
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }

@@ -6,7 +6,18 @@
 
 <script>
 export default {
-  name: 'App'
+  name: 'App',
+  methods: {
+    isAuthenticated() {
+     this.$cognito.isAuthenticated()
+       .then(session => {
+         this.isAuthenticated = true
+       })
+       .catch(session => {
+         this.isAuthenticated = false
+       })
+    },
+  }
 }
 </script>
 

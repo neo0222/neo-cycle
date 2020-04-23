@@ -1,0 +1,118 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Cognito User Pool
+
+######################################################
+# Parameters:
+######################################################
+Parameters:
+  EnvName:
+    Type: String
+    AllowedValues:
+      - dev
+      - prod
+    Description: Enter profile.
+
+######################################################
+# Mappings
+######################################################
+Mappings:
+  StackConfig:
+    NameTag:
+      Value: neo-cycle
+
+######################################################
+# Resources
+######################################################
+Resources:
+  NeoCycleCognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      AdminCreateUserConfig:
+        AllowAdminCreateUserOnly: false
+      AliasAttributes:
+        - email
+        - preferred_username
+      UserPoolName: !Sub
+        - ${NameTag}-${EnvName}-userpool
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: false
+          RequireNumbers: false
+          RequireSymbols: false
+          RequireUppercase: false
+          TemporaryPasswordValidityDays: 7
+      AutoVerifiedAttributes:
+        - email
+
+  NeoCycleUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+        ClientName: !Sub
+          - ${NameTag}-${EnvName}
+          - {
+            NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+            EnvName: !Ref EnvName
+          }
+        GenerateSecret: false
+        ExplicitAuthFlows:
+          - ALLOW_USER_SRP_AUTH
+          - ALLOW_CUSTOM_AUTH
+          - ALLOW_REFRESH_TOKEN_AUTH
+        ReadAttributes:
+          - nickname
+          - email
+          - name
+        RefreshTokenValidity: 30
+        UserPoolId: !Ref NeoCycleCognitoUserPool
+        WriteAttributes:
+          - nickname
+          - email
+          - name
+
+Outputs:
+  NeoCycleUserPoolId:
+    Value: !Ref NeoCycleCognitoUserPool
+    Export:
+      Name: !Sub
+        - ${NameTag}-${EnvName}-UserPoolId
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+
+  NeoCycleUserPoolProviderName:
+    Value: !GetAtt NeoCycleCognitoUserPool.ProviderName
+    Export:
+      Name: !Sub
+        - ${NameTag}-${EnvName}-UserPoolProviderName
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+  
+  NeoCycleUserPoolArn:
+    Value: !GetAtt NeoCycleCognitoUserPool.Arn
+    Export:
+      Name: !Sub
+        - ${NameTag}-${EnvName}-UserPoolArn
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+
+  NeoCycleAppClientId:
+    Value: !Ref NeoCycleUserPoolClient
+    Export:
+      Name: !Sub
+        - ${NameTag}-${EnvName}-AppClient
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }

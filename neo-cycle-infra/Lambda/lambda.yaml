@@ -9,6 +9,17 @@ Description: >
 Parameters:
   ObjectKeyPrefix:
     Type: String
+  NameTag:
+    Type: String
+    Default: neo-cycle
+    AllowedValues:
+      - neo-cycle
+  EnvName:
+    Type: String
+    AllowedValues:
+      - dev
+      - prod
+    Description: Enter profile.
 
 ######################################################
 # Resources
@@ -18,90 +29,631 @@ Resources:
     Type: AWS::Lambda::Function
     Properties:
       Code:
-        S3Bucket: neo-cycle-lambda
-        S3Key: !Sub
-          - ${ObjectKeyPrefix}/SessionMaintainer/Deploy.zip
-          - {
-            ObjectKeyPrefix: !Ref ObjectKeyPrefix
-          }
-      FunctionName: SessionMaintainer
+        S3Bucket: !Sub ${NameTag}-${EnvName}-lambda
+        S3Key: !Sub ${ObjectKeyPrefix}/SessionMaintainer/Deploy.zip
+      FunctionName: !Sub ${NameTag}-${EnvName}-SessionMaintainer
       Handler: index.handler
       ReservedConcurrentExecutions: 1
-      Role: !ImportValue RoleSessionMaintainerArn
+      Role: !ImportValue
+        Fn::Sub: ${NameTag}-${EnvName}-RoleSessionMaintainerArn
       Runtime: nodejs12.x
       Timeout: 10
+      ReservedConcurrentExecutions: 10
 
   LambdaParkingRetriever:
     Type: AWS::Lambda::Function
     Properties:
       Code:
-        S3Bucket: neo-cycle-lambda
-        S3Key: !Sub
-          - ${ObjectKeyPrefix}/ParkingRetriever/Deploy.zip
-          - {
-            ObjectKeyPrefix: !Ref ObjectKeyPrefix
-          }
+        S3Bucket: !Sub ${NameTag}-${EnvName}-lambda
+        S3Key: !Sub ${ObjectKeyPrefix}/ParkingRetriever/Deploy.zip
       Environment:
         Variables:
           PARKING_IDS: 10124,10077,10507
-      FunctionName: ParkingRetriever
+      FunctionName: !Sub ${NameTag}-${EnvName}-ParkingRetriever
       Handler: index.handler
       ReservedConcurrentExecutions: 1
-      Role: !ImportValue RoleParkingRetrieverArn
+      Role: !ImportValue
+        Fn::Sub: ${NameTag}-${EnvName}-RoleParkingRetrieverArn
       Runtime: nodejs12.x
       Timeout: 10
+      ReservedConcurrentExecutions: 10
 
   LambdaReservationMaker:
     Type: AWS::Lambda::Function
     Properties:
       Code:
-        S3Bucket: neo-cycle-lambda
-        S3Key: !Sub
-          - ${ObjectKeyPrefix}/ReservationMaker/Deploy.zip
-          - {
-            ObjectKeyPrefix: !Ref ObjectKeyPrefix
-          }
-      FunctionName: ReservationMaker
+        S3Bucket: !Sub ${NameTag}-${EnvName}-lambda
+        S3Key: !Sub ${ObjectKeyPrefix}/ReservationMaker/Deploy.zip
+      FunctionName: !Sub ${NameTag}-${EnvName}-ReservationMaker
       Handler: index.handler
       ReservedConcurrentExecutions: 1
-      Role: !ImportValue RoleReservationMakerArn
+      Role: !ImportValue
+        Fn::Sub: ${NameTag}-${EnvName}-RoleReservationMakerArn
       Runtime: nodejs12.x
       Timeout: 10
+      ReservedConcurrentExecutions: 10
 
   LambdaReservationCanceller:
     Type: AWS::Lambda::Function
     Properties:
       Code:
-        S3Bucket: neo-cycle-lambda
-        S3Key: !Sub
-          - ${ObjectKeyPrefix}/ReservationCanceller/Deploy.zip
-          - {
-            ObjectKeyPrefix: !Ref ObjectKeyPrefix
-          }
-      FunctionName: ReservationCanceller
+        S3Bucket: !Sub ${NameTag}-${EnvName}-lambda
+        S3Key: !Sub ${ObjectKeyPrefix}/ReservationCanceller/Deploy.zip
+      FunctionName: !Sub ${NameTag}-${EnvName}-ReservationCanceller
       Handler: index.handler
       ReservedConcurrentExecutions: 1
-      Role: !ImportValue RoleReservationCancellerArn
+      Role: !ImportValue
+        Fn::Sub: ${NameTag}-${EnvName}-RoleReservationCancellerArn
       Runtime: nodejs12.x
       Timeout: 10
+      ReservedConcurrentExecutions: 10
 
   LambdaStatusChecker:
     Type: AWS::Lambda::Function
     Properties:
       Code:
-        S3Bucket: neo-cycle-lambda
-        S3Key: !Sub
-          - ${ObjectKeyPrefix}/StatusChecker/Deploy.zip
-          - {
-            ObjectKeyPrefix: !Ref ObjectKeyPrefix
-          }
-      FunctionName: StatusChecker
+        S3Bucket: !Sub ${NameTag}-${EnvName}-lambda
+        S3Key: !Sub ${ObjectKeyPrefix}/StatusChecker/Deploy.zip
+      FunctionName: !Sub ${NameTag}-${EnvName}-StatusChecker
       Handler: index.handler
       ReservedConcurrentExecutions: 1
-      Role: !ImportValue RoleStatusCheckerArn
+      Role: !ImportValue
+        Fn::Sub: ${NameTag}-${EnvName}-RoleStatusCheckerArn
       Runtime: nodejs12.x
       Timeout: 10
+      ReservedConcurrentExecutions: 10
 
+  LambdaSessionCreator:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Sub ${NameTag}-${EnvName}-lambda
+        S3Key: !Sub ${ObjectKeyPrefix}/SessionCreator/Deploy.zip
+      FunctionName: !Sub ${NameTag}-${EnvName}-SessionCreator
+      Handler: index.handler
+      ReservedConcurrentExecutions: 1
+      Role: !ImportValue
+        Fn::Sub: ${NameTag}-${EnvName}-RoleSessionCreatorArn
+      Runtime: nodejs12.x
+      Timeout: 10
+      ReservedConcurrentExecutions: 10
+      MemorySize: 3008
+
+  LambdaParkingNearbyRetriever:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Sub ${NameTag}-${EnvName}-lambda
+        S3Key: !Sub ${ObjectKeyPrefix}/ParkingNearbyRetriever/Deploy.zip
+      FunctionName: !Sub ${NameTag}-${EnvName}-ParkingNearbyRetriever
+      Handler: index.handler
+      ReservedConcurrentExecutions: 1
+      Role: !ImportValue
+        Fn::Sub: ${NameTag}-${EnvName}-RoleParkingNearbyRetrieverArn
+      Runtime: nodejs12.x
+      Timeout: 10
+      ReservedConcurrentExecutions: 10
+      MemorySize: 3008
+  ######################################################
+  # Rest API
+  ######################################################
+  NeoCycleRestAPI:
+    Type: AWS::ApiGateway::RestApi
+    Properties:
+      Name: !Sub  ${NameTag}-${EnvName}-api-gateway
+      EndpointConfiguration:
+        Types:
+          - EDGE
+
+
+  ######################################################
+  # Parkings
+  #   - Resource
+  #     - path: /parkings
+  #   - Method
+  #     - POST
+  #     - OPTION(for enable CORS)
+  #   - Lambda Permission
+  ######################################################
+  ParkingsResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref NeoCycleRestAPI
+      ParentId: !GetAtt
+        - NeoCycleRestAPI
+        - RootResourceId
+      PathPart: parkings
+
+  ParkingsPostMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: POST
+      ResourceId: !Ref ParkingsResource
+      RestApiId: !Ref NeoCycleRestAPI
+      MethodResponses: 
+        - StatusCode: 200
+          ResponseParameters:
+            "method.response.header.Access-Control-Allow-Origin" : true
+        - StatusCode: 440
+          ResponseParameters:
+            "method.response.header.Access-Control-Allow-Origin" : true            
+      Integration:
+        Type: AWS_PROXY
+        Uri: !Sub arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/${LambdaParkingRetriever.Arn}/invocations
+        IntegrationHttpMethod: POST
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              'method.response.header.Access-Control-Allow-Origin' : "'*'" # 中身を一重引用符で囲う
+          - StatusCode: 440
+            ResponseParameters:
+              'method.response.header.Access-Control-Allow-Origin' : "'*'" # 中身を一重引用符で囲う
+    DependsOn: LambdaParkingsRegistererPermission
+
+  ParkingsOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      RestApiId:
+        Ref: NeoCycleRestAPI
+      ResourceId:
+        Ref: ParkingsResource
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+            method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
+            method.response.header.Access-Control-Allow-Origin: "'*'"
+          ResponseTemplates:
+            application/json: ''
+        PassthroughBehavior: WHEN_NO_MATCH
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        Type: MOCK
+      MethodResponses:
+      - StatusCode: 200
+        ResponseModels:
+          application/json: 'Empty'
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+    DependsOn: ParkingsResource
+
+  LambdaParkingsRegistererPermission:
+    Type: AWS::Lambda::Permission
+    Properties: 
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LambdaParkingRetriever
+      Principal: apigateway.amazonaws.com
+
+  ######################################################
+  # Parkings/Nearby
+  #   - Resource
+  #     - path: /parkings/nearby
+  #   - Method
+  #     - POST
+  #     - OPTION(for enable CORS)
+  #   - Lambda Permission
+  ######################################################
+  ParkingsNearbyResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref NeoCycleRestAPI
+      ParentId: !Ref ParkingsResource
+      PathPart: nearby
+
+  ParkingsNearbyPostMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: POST
+      ResourceId: !Ref ParkingsNearbyResource
+      RestApiId: !Ref NeoCycleRestAPI
+      MethodResponses: 
+        - StatusCode: 200
+          ResponseParameters:
+            "method.response.header.Access-Control-Allow-Origin" : true
+        - StatusCode: 440
+          ResponseParameters:
+            "method.response.header.Access-Control-Allow-Origin" : true            
+      Integration:
+        Type: AWS_PROXY
+        Uri: !Sub arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/${LambdaParkingNearbyRetriever.Arn}/invocations
+        IntegrationHttpMethod: POST
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              'method.response.header.Access-Control-Allow-Origin' : "'*'" # 中身を一重引用符で囲う
+          - StatusCode: 440
+            ResponseParameters:
+              'method.response.header.Access-Control-Allow-Origin' : "'*'" # 中身を一重引用符で囲う
+    DependsOn: LambdaParkingsNearbyRetrieverPermission
+
+  ParkingsNearbyOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      RestApiId:
+        Ref: NeoCycleRestAPI
+      ResourceId:
+        Ref: ParkingsNearbyResource
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+            method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
+            method.response.header.Access-Control-Allow-Origin: "'*'"
+          ResponseTemplates:
+            application/json: ''
+        PassthroughBehavior: WHEN_NO_MATCH
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        Type: MOCK
+      MethodResponses:
+      - StatusCode: 200
+        ResponseModels:
+          application/json: 'Empty'
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+    DependsOn: ParkingsNearbyResource
+
+  LambdaParkingsNearbyRetrieverPermission:
+    Type: AWS::Lambda::Permission
+    Properties: 
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LambdaParkingNearbyRetriever
+      Principal: apigateway.amazonaws.com
+
+  ######################################################
+  # Reservation
+  #   - Resource
+  #     - path: /reservation
+  #   - Method
+  #     - POST
+  #     - OPTION(for enable CORS)
+  #   - Lambda Permission
+  ######################################################
+  ReservationResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref NeoCycleRestAPI
+      ParentId: !GetAtt
+        - NeoCycleRestAPI
+        - RootResourceId
+      PathPart: reservation
+
+  ReservationPostMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: POST
+      ResourceId: !Ref ReservationResource
+      RestApiId: !Ref NeoCycleRestAPI
+      MethodResponses: 
+        - StatusCode: 200
+          ResponseParameters:
+            "method.response.header.Access-Control-Allow-Origin" : true
+        - StatusCode: 440
+          ResponseParameters:
+            "method.response.header.Access-Control-Allow-Origin" : true
+      Integration:
+        Type: AWS_PROXY
+        Uri: !Sub arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/${LambdaReservationMaker.Arn}/invocations
+        IntegrationHttpMethod: POST
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              'method.response.header.Access-Control-Allow-Origin' : "'*'" # 中身を一重引用符で囲う
+          - StatusCode: 440
+            ResponseParameters:
+              'method.response.header.Access-Control-Allow-Origin' : "'*'" # 中身を一重引用符で囲う
+    DependsOn: LambdaReservationMakerPermission
+
+  ReservationOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      RestApiId:
+        Ref: NeoCycleRestAPI
+      ResourceId:
+        Ref: ReservationResource
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+            method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
+            method.response.header.Access-Control-Allow-Origin: "'*'"
+          ResponseTemplates:
+            application/json: ''
+        PassthroughBehavior: WHEN_NO_MATCH
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        Type: MOCK
+      MethodResponses:
+      - StatusCode: 200
+        ResponseModels:
+          application/json: 'Empty'
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+    DependsOn: ReservationResource
+
+  LambdaReservationMakerPermission:
+    Type: AWS::Lambda::Permission
+    Properties: 
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LambdaReservationMaker
+      Principal: apigateway.amazonaws.com
+
+  ######################################################
+  # Cancellation
+  #   - Resource
+  #     - path: /cancellation
+  #   - Method
+  #     - POST
+  #     - OPTION(for enable CORS)
+  #   - Lambda Permission
+  ######################################################
+  CancellationResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref NeoCycleRestAPI
+      ParentId: !GetAtt
+        - NeoCycleRestAPI
+        - RootResourceId
+      PathPart: cancellation
+
+  CancellationPostMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: POST
+      ResourceId: !Ref CancellationResource
+      RestApiId: !Ref NeoCycleRestAPI
+      MethodResponses: 
+        - StatusCode: 200
+          ResponseParameters:
+            "method.response.header.Access-Control-Allow-Origin" : true
+        - StatusCode: 440
+          ResponseParameters:
+            "method.response.header.Access-Control-Allow-Origin" : true
+      Integration:
+        Type: AWS_PROXY
+        Uri: !Sub arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/${LambdaReservationCanceller.Arn}/invocations
+        IntegrationHttpMethod: POST
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              'method.response.header.Access-Control-Allow-Origin' : "'*'" # 中身を一重引用符で囲う
+          - StatusCode: 440
+            ResponseParameters:
+              'method.response.header.Access-Control-Allow-Origin' : "'*'" # 中身を一重引用符で囲う
+    DependsOn: LambdaReservationCancellerPermission
+
+  CancellationOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      RestApiId:
+        Ref: NeoCycleRestAPI
+      ResourceId:
+        Ref: CancellationResource
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+            method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
+            method.response.header.Access-Control-Allow-Origin: "'*'"
+          ResponseTemplates:
+            application/json: ''
+        PassthroughBehavior: WHEN_NO_MATCH
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        Type: MOCK
+      MethodResponses:
+      - StatusCode: 200
+        ResponseModels:
+          application/json: 'Empty'
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+    DependsOn: CancellationResource
+
+  LambdaReservationCancellerPermission:
+    Type: AWS::Lambda::Permission
+    Properties: 
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LambdaReservationCanceller
+      Principal: apigateway.amazonaws.com
+
+  ######################################################
+  # Status
+  #   - Resource
+  #     - path: /status
+  #   - Method
+  #     - POST
+  #     - OPTION(for enable CORS)
+  #   - Lambda Permission
+  ######################################################
+  StatusResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref NeoCycleRestAPI
+      ParentId: !GetAtt
+        - NeoCycleRestAPI
+        - RootResourceId
+      PathPart: status
+
+  StatusPostMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: POST
+      ResourceId: !Ref StatusResource
+      RestApiId: !Ref NeoCycleRestAPI
+      MethodResponses: 
+        - StatusCode: 200
+          ResponseParameters:
+            "method.response.header.Access-Control-Allow-Origin" : true
+        - StatusCode: 440
+          ResponseParameters:
+            "method.response.header.Access-Control-Allow-Origin" : true
+      Integration:
+        Type: AWS_PROXY
+        Uri: !Sub arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/${LambdaStatusChecker.Arn}/invocations
+        IntegrationHttpMethod: POST
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              'method.response.header.Access-Control-Allow-Origin' : "'*'" # 中身を一重引用符で囲う
+          - StatusCode: 440
+            ResponseParameters:
+              'method.response.header.Access-Control-Allow-Origin' : "'*'" # 中身を一重引用符で囲う
+    DependsOn: LambdaStatusCheckerPermission
+
+  StatusOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      RestApiId:
+        Ref: NeoCycleRestAPI
+      ResourceId:
+        Ref: StatusResource
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+            method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
+            method.response.header.Access-Control-Allow-Origin: "'*'"
+          ResponseTemplates:
+            application/json: ''
+        PassthroughBehavior: WHEN_NO_MATCH
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        Type: MOCK
+      MethodResponses:
+      - StatusCode: 200
+        ResponseModels:
+          application/json: 'Empty'
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+    DependsOn: StatusResource
+
+  LambdaStatusCheckerPermission:
+    Type: AWS::Lambda::Permission
+    Properties: 
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LambdaStatusChecker
+      Principal: apigateway.amazonaws.com
+
+  ######################################################
+  # SessionCreate
+  #   - Resource
+  #     - path: /sessions/create
+  #   - Method
+  #     - POST
+  #     - OPTION(for enable CORS)
+  #   - Lambda Permission
+  ######################################################
+  SessionResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref NeoCycleRestAPI
+      ParentId: !GetAtt
+        - NeoCycleRestAPI
+        - RootResourceId
+      PathPart: sessions
+
+  SessionCreateResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref NeoCycleRestAPI
+      ParentId: !Ref SessionResource
+      PathPart: create
+
+  SessionCreatePostMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: POST
+      ResourceId: !Ref SessionCreateResource
+      RestApiId: !Ref NeoCycleRestAPI
+      MethodResponses: 
+        - StatusCode: 200
+          ResponseParameters:
+            "method.response.header.Access-Control-Allow-Origin" : true
+        - StatusCode: 440
+          ResponseParameters:
+            "method.response.header.Access-Control-Allow-Origin" : true
+      Integration:
+        Type: AWS_PROXY
+        Uri: !Sub arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/${LambdaSessionCreator.Arn}/invocations
+        IntegrationHttpMethod: POST
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              'method.response.header.Access-Control-Allow-Origin' : "'*'" # 中身を一重引用符で囲う
+          - StatusCode: 440
+            ResponseParameters:
+              'method.response.header.Access-Control-Allow-Origin' : "'*'" # 中身を一重引用符で囲う
+    DependsOn: LambdaSessionCreatorPermission
+
+  SessionCreateOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      RestApiId:
+        Ref: NeoCycleRestAPI
+      ResourceId:
+        Ref: SessionCreateResource
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+            method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
+            method.response.header.Access-Control-Allow-Origin: "'*'"
+          ResponseTemplates:
+            application/json: ''
+        PassthroughBehavior: WHEN_NO_MATCH
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        Type: MOCK
+      MethodResponses:
+      - StatusCode: 200
+        ResponseModels:
+          application/json: 'Empty'
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+    DependsOn: SessionCreateResource
+
+  LambdaSessionCreatorPermission:
+    Type: AWS::Lambda::Permission
+    Properties: 
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LambdaSessionCreator
+      Principal: apigateway.amazonaws.com
 #################################
 # Outputs
 #################################
@@ -109,40 +661,56 @@ Outputs:
   LambdaSessionMaintainerArn:
     Value: !GetAtt LambdaSessionMaintainer.Arn
     Export:
-      Name: LambdaSessionMaintainerArn
+      Name: !Sub ${NameTag}-${EnvName}-LambdaSessionMaintainerArn
   LambdaSessionMaintainerFunctionName:
     Value: !Ref LambdaSessionMaintainer
     Export:
-      Name: LambdaSessionMaintainerFunctionName
+      Name: !Sub ${NameTag}-${EnvName}-LambdaSessionMaintainerFunctionName
   LambdaParkingRetrieverArn:
     Value: !GetAtt LambdaParkingRetriever.Arn
     Export:
-      Name: LambdaParkingRetrieverArn
+      Name: !Sub ${NameTag}-${EnvName}-LambdaParkingRetrieverArn
   LambdaParkingRetrieverFunctionName:
     Value: !Ref LambdaParkingRetriever
     Export:
-      Name: LambdaParkingRetrieverFunctionName
+      Name: !Sub ${NameTag}-${EnvName}-LambdaParkingRetrieverFunctionName
   LambdaReservationMakerArn:
     Value: !GetAtt LambdaReservationMaker.Arn
     Export:
-      Name: LambdaReservationMakerArn
+      Name: !Sub ${NameTag}-${EnvName}-LambdaReservationMakerArn
   LambdaReservationMakerFunctionName:
     Value: !Ref LambdaReservationMaker
     Export:
-      Name: LambdaReservationMakerFunctionName
+      Name: !Sub ${NameTag}-${EnvName}-LambdaReservationMakerFunctionName
   LambdaReservationCancellerArn:
     Value: !GetAtt LambdaReservationCanceller.Arn
     Export:
-      Name: LambdaReservationCancellerArn
+      Name: !Sub ${NameTag}-${EnvName}-LambdaReservationCancellerArn
   LambdaReservationCancellerFunctionName:
     Value: !Ref LambdaReservationCanceller
     Export:
-      Name: LambdaReservationCancellerFunctionName
+      Name: !Sub ${NameTag}-${EnvName}-LambdaReservationCancellerFunctionName
   LambdaStatusCheckerArn:
     Value: !GetAtt LambdaStatusChecker.Arn
     Export:
-      Name: LambdaStatusCheckerArn
+      Name: !Sub ${NameTag}-${EnvName}-LambdaStatusCheckerArn
   LambdaStatusCheckerName:
     Value: !Ref LambdaStatusChecker
     Export:
-      Name: LambdaStatusCheckerFunctionName
+      Name: !Sub ${NameTag}-${EnvName}-LambdaStatusCheckerFunctionName
+  LambdaSessionCreatorArn:
+    Value: !GetAtt LambdaSessionCreator.Arn
+    Export:
+      Name: !Sub ${NameTag}-${EnvName}-LambdaSessionCreatorArn
+  LambdaSessionCreatorrName:
+    Value: !Ref LambdaSessionCreator
+    Export:
+      Name: !Sub ${NameTag}-${EnvName}-LambdaSessionCreatorName
+  LambdaParkingNearbyRetrieverArn:
+    Value: !GetAtt LambdaParkingNearbyRetriever.Arn
+    Export:
+      Name: !Sub ${NameTag}-${EnvName}-LambdaSParkingNearbyRetrieverArn
+  LambdaSParkingNearbyRetrieverName:
+    Value: !Ref LambdaParkingNearbyRetriever
+    Export:
+      Name: !Sub ${NameTag}-${EnvName}-LambdaParkingNearbyRetrieverName

@@ -13,26 +13,34 @@ phases:
       - cd ./SessionMaintainer
       - npm install
       - zip -r Deploy.zip ./
-      - aws s3 mv ./Deploy.zip s3://neo-cycle-lambda/${CODEBUILD_BUILD_NUMBER}/SessionMaintainer/Deploy.zip
+      - aws s3 mv ./Deploy.zip s3://neo-cycle-${ENVIRONMENT_NAME}-lambda/${CODEBUILD_BUILD_NUMBER}/SessionMaintainer/Deploy.zip
       - cd ../ParkingRetriever
       - npm install
       - zip -r Deploy.zip ./
-      - aws s3 mv ./Deploy.zip s3://neo-cycle-lambda/${CODEBUILD_BUILD_NUMBER}/ParkingRetriever/Deploy.zip
+      - aws s3 mv ./Deploy.zip s3://neo-cycle-${ENVIRONMENT_NAME}-lambda/${CODEBUILD_BUILD_NUMBER}/ParkingRetriever/Deploy.zip
       - cd ../ReservationMaker
       - npm install
       - zip -r Deploy.zip ./
-      - aws s3 mv ./Deploy.zip s3://neo-cycle-lambda/${CODEBUILD_BUILD_NUMBER}/ReservationMaker/Deploy.zip
+      - aws s3 mv ./Deploy.zip s3://neo-cycle-${ENVIRONMENT_NAME}-lambda/${CODEBUILD_BUILD_NUMBER}/ReservationMaker/Deploy.zip
       - cd ../ReservationCanceller
       - npm install
       - zip -r Deploy.zip ./
-      - aws s3 mv ./Deploy.zip s3://neo-cycle-lambda/${CODEBUILD_BUILD_NUMBER}/ReservationCanceller/Deploy.zip
+      - aws s3 mv ./Deploy.zip s3://neo-cycle-${ENVIRONMENT_NAME}-lambda/${CODEBUILD_BUILD_NUMBER}/ReservationCanceller/Deploy.zip
       - cd ../StatusChecker
       - npm install
       - zip -r Deploy.zip ./
-      - aws s3 mv ./Deploy.zip s3://neo-cycle-lambda/${CODEBUILD_BUILD_NUMBER}/StatusChecker/Deploy.zip
+      - aws s3 mv ./Deploy.zip s3://neo-cycle-${ENVIRONMENT_NAME}-lambda/${CODEBUILD_BUILD_NUMBER}/StatusChecker/Deploy.zip
+      - cd ../SessionCreator
+      - npm install
+      - zip -r Deploy.zip ./
+      - aws s3 mv ./Deploy.zip s3://neo-cycle-${ENVIRONMENT_NAME}-lambda/${CODEBUILD_BUILD_NUMBER}/SessionCreator/Deploy.zip
+      - cd ../ParkingNearbyRetriever
+      - npm install
+      - zip -r Deploy.zip ./
+      - aws s3 mv ./Deploy.zip s3://neo-cycle-${ENVIRONMENT_NAME}-lambda/${CODEBUILD_BUILD_NUMBER}/ParkingNearbyRetriever/Deploy.zip
       - cd ../../neo-cycle-infra
       - aws cloudformation deploy
-          --stack-name neo-cycle-lambda
+          --stack-name neo-cycle-${ENVIRONMENT_NAME}-lambda
           --template-file Lambda/lambda.yaml
           --parameter-overrides ObjectKeyPrefix=${CODEBUILD_BUILD_NUMBER}
           --capabilities CAPABILITY_AUTO_EXPAND
@@ -40,7 +48,9 @@ phases:
   build:
     commands:
       - cd neo-cycle-client
-      - npm run build
+      - touch ./.env
+      - echo VUE_APP_GOOGLE_API_KEY=${VUE_APP_GOOGLE_API_KEY} >> ./.env
+      - npm run build:${ENVIRONMENT_NAME}
   post_build:
     commands:
       - tar cf /tmp/node_modules.tar node_modules

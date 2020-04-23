@@ -17,20 +17,20 @@ Parameters:
     Type: String
   S3Bucket:
     Type: String
-    Default: cycle.blog-neo.com
+    Default: prod.neo-cycle.com
+  GoogleApiKey:
+    Type: String
   NameTag:
     Type: String
     Default: neo-cycle
     AllowedValues:
       - neo-cycle
-
-######################################################
-# Mappings
-######################################################
-Mappings:
-  StackConfig:
-    NameTag:
-      Value: neo-cycle
+  EnvName:
+    Type: String
+    AllowedValues:
+      - dev
+      - prod
+    Description: Enter profile.
 
 ######################################################
 # Resources
@@ -48,8 +48,8 @@ Resources:
               - logs:CreateLogStream
               - logs:PutLogEvents
             Resource:
-              - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${NameTag}}-build
-              - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${NameTag}-build:*
+              - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${NameTag}-${EnvName}-build
+              - !Sub arn:aws:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codebuild/${NameTag}-${EnvName}-build:*
           - Effect: Allow
             Resource:
               - "*"
@@ -64,30 +64,36 @@ Resources:
               - "*"
             Action:
               - cloudformation:*
+              - apigateway:*
           - Effect: Allow
             Resource:
               - "*"
             Action:
-              - lambda:GetFunction
-              - lambda:CreateFunction
-              - lambda:PutFunctionConcurrency
-              - lambda:UpdateFunctionCode
-              - lambda:GetFunctionConfiguration
+              - lambda:*
           - Effect: Allow
             Resource:
               # RoleをアタッチするLambdaが増えるごとにここに追加していく
-              - !ImportValue RoleSessionMaintainerArn
-              - !ImportValue RoleParkingRetrieverArn
-              - !ImportValue RoleReservationMakerArn
-              - !ImportValue RoleReservationCancellerArn
-              - !ImportValue RoleStatusCheckerArn
+              - !ImportValue
+                Fn::Sub: ${NameTag}-${EnvName}-RoleSessionMaintainerArn
+              - !ImportValue
+                Fn::Sub: ${NameTag}-${EnvName}-RoleParkingRetrieverArn
+              - !ImportValue
+                Fn::Sub: ${NameTag}-${EnvName}-RoleReservationMakerArn
+              - !ImportValue
+                Fn::Sub: ${NameTag}-${EnvName}-RoleReservationCancellerArn
+              - !ImportValue
+                Fn::Sub: ${NameTag}-${EnvName}-RoleStatusCheckerArn
+              - !ImportValue
+                Fn::Sub: ${NameTag}-${EnvName}-RoleSessionCreatorArn
+              - !ImportValue
+                Fn::Sub: ${NameTag}-${EnvName}-RoleParkingNearbyRetrieverArn
             Action:
               - iam:PassRole
 
   RoleCodeBuildService:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub role-${NameTag}-codebuild
+      RoleName: !Sub role-${NameTag}-${EnvName}-codebuild
       ManagedPolicyArns:
         - !Ref CodeBuildBasePolicy
       AssumeRolePolicyDocument:
@@ -107,21 +113,22 @@ Resources:
         Type: CODEPIPELINE
       Environment:
         ComputeType: BUILD_GENERAL1_SMALL
+        EnvironmentVariables:
+          - Name: ENVIRONMENT_NAME
+            Value: !Ref EnvName
+          - Name: VUE_APP_GOOGLE_API_KEY
+            Value: !Ref GoogleApiKey
         Type: LINUX_CONTAINER
         Image: aws/codebuild/standard:2.0-1.13.0
       ServiceRole: !GetAtt RoleCodeBuildService.Arn
-      Name: !Sub
-        - ${NameTag}-build
-        - {
-          NameTag: !FindInMap [ StackConfig, NameTag, Value ]
-        }
+      Name: !Sub ${NameTag}-${EnvName}-build
       Source:
         Type: CODEPIPELINE
 
   CodePipelineServiceRole:
     Type: AWS::IAM::Role
     Properties:
-      RoleName: !Sub role-${NameTag}-code-pipeline
+      RoleName: !Sub role-${NameTag}-${EnvName}-code-pipeline
       Path: /
       AssumeRolePolicyDocument:
         Version: 2012-10-17
@@ -155,11 +162,7 @@ Resources:
   NeoCyclePipeline:
     Type: AWS::CodePipeline::Pipeline
     Properties:
-      Name: !Sub
-        - ${NameTag}
-        - {
-          NameTag: !FindInMap [ StackConfig, NameTag, Value ]
-        }
+      Name: !Sub ${NameTag}-${EnvName}-code-pipeline
       ArtifactStore:
         Type: S3
         Location: codepipeline-ap-northeast-1-299374294168

@@ -1,14 +1,11 @@
 const AWS = require('aws-sdk');
-const docClient = new AWS.DynamoDB.DocumentClient({
-  region: 'ap-northeast-1'
-});
-const ssm = new AWS.SSM();
-const axios = require('axios');
+const parser = require('fast-xml-parser');
+const axios = require("axios");
 const cheerio = require('cheerio');
 
-const sessionTableName = 'neo-cycle-SESSION';
+const ssm = new AWS.SSM();
+
 const getInfoNum = 300;
-const parkingIdList = process.env['PARKING_IDS'].split(',');
 
 exports.handler = async (event, context) => {
   if (event.warmup) {
@@ -22,8 +19,10 @@ exports.handler = async (event, context) => {
 async function main(event, context) {
   const memberId = JSON.parse(event.body).memberId;
   const sessionId = JSON.parse(event.body).sessionId;
+  const lat = JSON.parse(event.body).lat;
+  const lon = JSON.parse(event.body).lon;
   try {
-    const parkingList = await retrieveParkingList(memberId, sessionId);
+    const parkingList = await retrieveParkingList(memberId, sessionId, lat, lon);
     const response = {
       statusCode: 200,
       body: JSON.stringify({
@@ -37,6 +36,7 @@ async function main(event, context) {
     return response;
   }
   catch (error) {
+    console.log(error)
     return {
       statusCode: 440,
       body: JSON.stringify({message: 'session expired.'}),
@@ -48,15 +48,38 @@ async function main(event, context) {
   }
 }
 
-async function retrieveParkingList(memberId, sessionId) {
+async function retrieveParkingList(memberId, sessionId, lat, lon) {
   const url = await ssm.getParameter({
     Name: '/neo-cycle/php-url',
     WithDecryption: false,
   }).promise();
+
+  const imanaraUrl = 'https://imanara.jp/platformapi';
+  const params = new URLSearchParams();
+  params.append('n_platform', '1')
+  params.append('a_os_version', '13.3.1')
+  params.append('a_career_uid', '905bec8be9d12e0b7e6791ea27b9b41d')
+  params.append('a_shop_account_app_id', '37')
+  params.append('a_app_version', '1.6.4')
+  params.append('a_app_locale', 'ja_JP')
+  params.append('a_check_code', 'e97e1ccdf8c3c1bfa7db95c2927f9ace')
+  params.append('a_install_id', 'b2ebbd2ca7dbd8148f38be8d1f636466')
+  params.append('a_window_id', 'CS01')
+  params.append('act', 'shop_list')
+  params.append('a_lat', lat)
+  params.append('a_lon', lon)
+  params.append('n_range', '2000')
+  params.append('n_disable_coupon_sort', '1')
+  params.append('n_limit', '60')
+  params.append('n_offset', '0')
   
+  const res = await axios.post(imanaraUrl, params);
+  const rawParkingList = parser.parse(res.data).info.shop;
+      
   const parkingList = [];
-  for (const parkingId of parkingIdList) {
+  for (const rawParking of rawParkingList) {
     parkingList.push((async () => {
+      const parkingId = rawParking.tsc_cd;
       const params = new URLSearchParams()
       params.append('EventNo', 25701);
       params.append('SessionID', sessionId);
@@ -75,19 +98,17 @@ async function retrieveParkingList(memberId, sessionId) {
       }
       let parking = {
         parkingId,
-        parkingName: '',
-        cycleList: []
+        parkingName: rawParking.company_name,
+        cycleList: [],
+        lat: rawParking.shop_gps_lat,
+        lon: rawParking.shop_gps_lon,
       };
       const res = await axios.post(url.Parameter.Value, params, config);
       const html = res.data;
       if (html.indexOf('ログイン情報が削除されました') !== -1) throw 'session expired.'
       const $ = cheerio.load(html);
       // レンタル可能な自転車がない場合
-      if (!$('[class=park_info_inner_left]').children().get(0)) return {
-        parkingId,
-        parkingName: '',
-        cycleList: []
-      };;
+      if (!$('[class=park_info_inner_left]').children().get(0)) return parking;
       // 自転車がある場合は処理を継続
       parking.parkingName = $('[class=park_info_inner_left]').children().get(0).next.data.substr(2);
 
@@ -124,6 +145,7 @@ async function retrieveParkingList(memberId, sessionId) {
     return await Promise.all(parkingList);
   }
   catch (error) {
+    console.log(error)
     throw error;
   }
 }

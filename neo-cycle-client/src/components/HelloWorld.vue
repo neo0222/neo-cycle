@@ -1,119 +1,74 @@
 <template>
   <div class="hello">
-    <el-card class="box-card" :body-style="{height: '111px', margin: 'auto'}">
-      <div slot="header" class="clearfix">
-        <span>{{ headerMessage }}</span>
-      </div>
-      <div v-show="status !== 'WAITING_FOR_RESERVATION'" class="text item">
-        Cycle Name: {{ reservedBike.cycleName }}
-      </div>
-      <div v-show="status !== 'WAITING_FOR_RESERVATION'" class="text item">
-        Passcode: {{ reservedBike.cyclePasscode }}
-      </div>
-      <div v-show="status === 'IN_USE'" class="text item">
-        Use Start Time: {{ reservedBike.cycleUseStartDatetime }}
-      </div>
-      <div >
-        <el-popconfirm
-          confirmButtonText='Yes'
-          cancelButtonText='No, Thanks'
-          icon="el-icon-question"
-          iconColor="red"
-          title="Are you sure to cancel reservation?"
-          v-if="status === 'RESERVED'"
-          @onConfirm="cancelReservation()"
-          @onCancel="terminateCancellation">
-          <el-button
-            slot="reference"
-            type="danger"
-            plain>
-            Cancel Reservation
-          </el-button>
-        </el-popconfirm>
-      </div>
-      <div v-if="status === 'WAITING_FOR_RESERVATION'" class="button">
-        <el-button
-          slot="reference"
-          type="success"
-          :plain="isGoToOfficeButtonPlain"
-          :style="{width: '258.48px'}"
-          @click="makeReservation(favoritePort.children.length ? favoritePort.children[0].cycle : undefined)">
-          I WANNA GO TO OFFICE NOW
-        </el-button>
-      </div>
-      <div v-if="status === 'WAITING_FOR_RESERVATION'" class="button">
-        <el-button
-          slot="reference"
-          type="success"
-          :plain="isGoHomeButtonPlain"
-          @click="makeReservation(atagoPort.children.length ? atagoPort.children[0].cycle : undefined)">
-          I WANNA GO HOME RIGHT NOW
-        </el-button>
-      </div>
-    </el-card>
-    <el-table
-      :data="tableData"
-      ref="tableData"
-      :cell-style="{padding: '0', height: '40px'}"
-      style="width: 100%;margin-bottom: 20px;"
-      row-key="id"
-      @row-click="rowClicked"
-      border>
-      <el-table-column
-        prop="date"
-        label="Name"
-        width="282"
-        header-align="left">
-      </el-table-column>
-      <el-table-column
-        prop="name"
-        label="Bikes"
-        width="78"
-        header-align="left"
-        align="center">
-        <template
-          slot-scope="scope">
-          <p v-if="isRowParking(scope)">
-            {{scope.row.name}}
-          </p>
-          <el-popconfirm
-            confirmButtonText='Yes'
-            cancelButtonText='No, Thanks'
-            icon="el-icon-question"
-            iconColor="red"
-            title="Are you sure to cancel reservation?"
-            v-if="isRowReservedBike(scope)"
-            @onConfirm="cancelReservation()"
-            @onCancel="terminateCancellation">
-            <el-button
-              slot="reference"
-              type="danger"
-              plain
-              size="mini"
-              @click="beginCancellation">
-              取消
-            </el-button>
-          </el-popconfirm>
-          <el-button
-            v-if="isRowVacantBike(scope)"
-            :disabled="status !== 'WAITING_FOR_RESERVATION'"
-            @click="makeReservation(scope.row.cycle)"
-            type="primary"
-            plain
-            size="mini">
-            予約
-          </el-button>
-        </template>
-      </el-table-column>
-    </el-table>
+    <div style="margin-bottom: 12px">
+      <el-radio-group v-model="radio4" size="mini" fill="#67C23A">
+        <el-radio-button label="Search from Fav. List"></el-radio-button>
+        <el-radio-button label="Search Nearby Parkings"></el-radio-button>
+      </el-radio-group>
+    </div>
+    <status-card
+      v-show="status !== '' && (radio4 === 'Search from Fav. List' || status !== 'WAITING_FOR_RESERVATION')"
+      :headerMessage="headerMessage" 
+      :status="status"
+      :reservedBike="reservedBike"
+      :favoritePort="favoritePort"
+      :atagoPort="atagoPort"
+      @cancelReservation="cancelReservation"
+      @terminateCancellation="terminateCancellation"
+      @makeReservation="makeReservation" />
+    <parking-table-for-reservation
+      v-show="radio4 === 'Search from Fav. List'"
+      :tableData="tableData"
+      :reservedBike="reservedBike"
+      :status="status"
+      @cancelReservation="cancelReservation"
+      @terminateCancellation="terminateCancellation"
+      @beginCancellation="beginCancellation"
+      @makeReservation="makeReservation"/>
+    <parking-map
+      v-show="radio4 !== 'Search from Fav. List'"
+      :parkingNearbyList="parkingNearbyList"
+      @makeReservation="makeReservation"
+      @cancelReservation="cancelReservation"
+      :reservedBike="reservedBike"
+      :status="status"
+      @setCurrentCoordinate="setCurrentCoordinate"
+      @retrieveNearbyParkingList="retrieveNearbyParkingList"
+      />
+    <el-dialog
+      :visible.sync="isSessionTimeOutDialogVisible"
+      title="Oops! Session expired."
+      @close="closeSessionTimeOutDialog"
+      width="80%">
+      <el-row>
+        <div class="dialog-body">
+          Session expired. Please Log in again.
+        </div>
+      </el-row>
+    </el-dialog>
   </div>
 </template>
 
 <script>
 import api from '../api/index'
 
+import StatusCard from './StatusCard'
+import ParkingTableForReservation from './ParkingTableForReservation'
+import ParkingMap from './ParkingMap'
+
+const getLocationOptions = {
+  enableHighAccuracy: false,
+  timeout: 60000,
+  maximumAge: 0
+}
+
 export default {
   name: 'HelloWorld',
+  components: {
+    StatusCard,
+    ParkingTableForReservation,
+    ParkingMap,
+  },
   data () {
     return {
       msg: 'Welcome to Your Vue.js App',
@@ -126,14 +81,36 @@ export default {
       },
       isReservationBeenProcessing: false,
       isCancellationBeenProcessing: false,
-      isCancellationAttempted: false,
+      isSessionTimeOutDialogVisible: false,
+      lastCancellationAttemptedDatetime: undefined,
+      radio4: 'Search Nearby Parkings',
+      parkingNearbyList: [],
+      currentCoordinate: {
+        lat: undefined,
+        lon: undefined,
+      }
     }
   },
   async mounted() {
+    const position = await new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(resolve, reject, getLocationOptions)
+    })
+    this.success(position)
+    console.log(this.currentCoordinate)
     const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Laoding...'))
-    await this.checkStatus();
-    await this.retrieveParkingList();
+    const promises = [];
+    promises.push(this.checkStatus())
+    promises.push(this.retrieveParkingList())
+    try {
+      await Promise.all(promises)
+    }
+    catch (error) {
+      this.handleErrorResponse(this, error)
+    }
     loading.close()
+    this.checkStatusWithRetry()
+    this.retrieveParkingListWithRetry()
+    this.retrieveNearbyParkingListWithRetry()
   },
   computed: {
     headerMessage() {
@@ -164,6 +141,9 @@ export default {
     }
   },
   methods: {
+    success (position) {
+      this.setCurrentCoordinate(position.coords.latitude, position.coords.longitude)
+    },
     load(tree, treeNode, resolve) {
       setTimeout(() => {
         resolve([
@@ -179,22 +159,37 @@ export default {
         ])
       }, 1000)
     },
+    async checkStatusWithRetry() {
+      await this.checkStatus()
+      setTimeout(this.checkStatusWithRetry, 10000)
+    },
     async checkStatus() {
-      const result = await api.checkStatus();
-      this.status = result.status;
-      if (this.status === 'RESERVED') {
-        this.reservedBike.cycleName = result.detail.cycleName
-        this.reservedBike.cyclePasscode = result.detail.cyclePasscode
-      } else if (this.status === 'IN_USE') {
-        this.reservedBike.cycleName = result.detail.cycleName
-        this.reservedBike.cyclePasscode = result.detail.cyclePasscode
-        this.reservedBike.cycleUseStartDatetime = result.detail.cycleUseStartDatetime
-      } else {
-        this.reservedBike.cycleName = ''
-        this.reservedBike.cyclePasscode = ''
-        this.reservedBike.cycleUseStartDatetime = ''
+      try {
+        const result = await api.checkStatus(
+          sessionStorage.getItem('currentUserName'),
+          sessionStorage.getItem('sessionId')
+        );
+        this.status = result.status;
+        if (this.status === 'RESERVED') {
+          this.reservedBike.cycleName = result.detail.cycleName
+          this.reservedBike.cyclePasscode = result.detail.cyclePasscode
+        } else if (this.status === 'IN_USE') {
+          this.reservedBike.cycleName = result.detail.cycleName
+          this.reservedBike.cyclePasscode = result.detail.cyclePasscode
+          this.reservedBike.cycleUseStartDatetime = result.detail.cycleUseStartDatetime
+        } else {
+          this.reservedBike.cycleName = ''
+          this.reservedBike.cyclePasscode = ''
+          this.reservedBike.cycleUseStartDatetime = ''
+        }
       }
-      setTimeout(this.checkStatus, 10000)
+      catch (error) {
+        this.handleErrorResponse(this, error)
+      }
+    },
+    async retrieveParkingListWithRetry() {
+      await this.retrieveParkingList()
+      setTimeout(this.retrieveParkingListWithRetry, 10000)
     },
     async retrieveParkingList() {
       // 予約処理中は取得しない
@@ -202,47 +197,102 @@ export default {
         setTimeout(this.retrieveParkingList, 10000)
         return
       }
-      const result = await api.retrieveParkingList();
-      this.tableData.length = 0;
-      for (const parking of result.parkingList) {
-        if (!parking.parkingName) continue
-        this.tableData.push({
-          id: parking.parkingId,
-          date: parking.parkingName,
-          name: parking.cycleList.length + '台',
-          children: parking.cycleList.map((cycle) => {
-            return {
-              id: cycle.CycleName,
-              date: cycle.CycleName,
-              name: '',
-              cycle: cycle,
-            }
+      try {
+        const result = await api.retrieveParkingList(
+          sessionStorage.getItem('currentUserName'),
+          sessionStorage.getItem('sessionId')
+        );
+        this.tableData.length = 0;
+        for (const parking of result.parkingList) {
+          if (!parking.parkingName) continue
+          this.tableData.push({
+            id: parking.parkingId,
+            date: parking.parkingName,
+            name: parking.cycleList.length + '台',
+            children: parking.cycleList.map((cycle) => {
+              return {
+                id: cycle.CycleName,
+                date: cycle.CycleName,
+                name: '',
+                cycle: cycle,
+              }
+            })
           })
-        })
+        }
       }
-      setTimeout(this.retrieveParkingList, 10000)
+      catch (error) {
+        this.handleErrorResponse(this, error)
+      }
+    },
+    async retrieveNearbyParkingListWithRetry() {
+      await this.retrieveNearbyParkingList()
+      setTimeout(this.retrieveNearbyParkingListWithRetry, 10000)
+    },
+    async retrieveNearbyParkingList() {
+      // 予約処理中は取得しない
+      if (this.isReservationBeenProcessing) {
+        setTimeout(this.retrieveNearbyParkingList, 10000)
+        return
+      }
+      try {
+        const result = await api.retrieveNearbyParkingList(
+          sessionStorage.getItem('currentUserName'),
+          sessionStorage.getItem('sessionId'),
+          this.currentCoordinate
+        );
+        this.parkingNearbyList.length = 0;
+        for (const parking of result.parkingList) {
+          this.parkingNearbyList.push(parking);
+        }
+      }
+      catch (error) {
+        this.handleErrorResponse(this, error)
+      }
     },
     async makeReservation(cycle) {
       const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Processing...'))
       if (!cycle) return
-      this.beginProcessReservation();
-      const responseBody = await api.makeReservation(cycle);
-      this.reservedBike.cycleName = responseBody.cycleName;
-      this.reservedBike.cyclePasscode = responseBody.cyclePasscode;
-      this.status = 'RESERVED';
-      loading.close()
-      this.terminateProcessReservation();
+      try {
+        this.beginProcessReservation();
+        const responseBody = await api.makeReservation(
+          sessionStorage.getItem('currentUserName'),
+          sessionStorage.getItem('sessionId'),
+          cycle
+        );
+        this.reservedBike.cycleName = responseBody.cycleName;
+        this.reservedBike.cyclePasscode = responseBody.cyclePasscode;
+        this.status = 'RESERVED';
+        loading.close()
+        this.terminateProcessReservation();
+      }
+      catch (error) {
+        loading.close()
+        this.handleErrorResponse(this, error)
+      }
     },
     async cancelReservation(row) {
       const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Processing...'))
-      this.beginProcessReservation();
-      const responseBody = await api.cancelReservation();
-      this.reservedBike.cycleName = '';
-      this.reservedBike.cyclePasscode = '';
-      this.status = 'WAITING_FOR_RESERVATION';
-      loading.close()
-      this.terminateProcessReservation();
-      await this.retrieveParkingList();
+      try {
+        this.beginProcessReservation();
+        const responseBody = await api.cancelReservation(
+          sessionStorage.getItem('currentUserName'),
+          sessionStorage.getItem('sessionId')
+        );
+        this.reservedBike.cycleName = '';
+        this.reservedBike.cyclePasscode = '';
+        this.status = 'WAITING_FOR_RESERVATION';
+        this.terminateProcessReservation();
+        const promises = []
+        promises.push(this.retrieveParkingList());
+        promises.push(this.retrieveNearbyParkingList());
+        await Promise.all(promises)
+        loading.close()
+      }
+      catch (error) {
+        loading.close()
+        this.handleErrorResponse(this, error)
+      }
+
     },
     createFullScreenLoadingMaskOptionWithText(text) {
       return {
@@ -269,38 +319,50 @@ export default {
         return;
       }
       // 直近10秒以内に取消をしようとした形跡がある場合は予約処理は10秒延長
-      if (this.isCancellationAttempted) {
+      const now = new Date()
+      if (!this.lastCancellationAttemptedDatetime || now.getTime() - this.lastCancellationAttemptedDatetime.getTime() < 10000) {
         setTimeout(this.terminateProcessReservation, 10000)
         return
       }
-      setTimeout(() => {this.isReservationBeenProcessing = false}, 10000)
+      this.isReservationBeenProcessing = false
     },
     beginCancellation() {
       this.isCancellationBeenProcessing = true;
-      this.isCancellationAttempted = true;
     },
     terminateCancellation() {
       this.isCancellationBeenProcessing = false;
+      this.lastCancellationAttemptedDatetime = new Date();
     },
     deleteCancellationHistory() {
-      if (this.isCancellationBeenProcessing) {// 次の取消が動いていたら取消履歴の抹消は10秒待つ
-        setTimeout(this.deleteCancellationHistory, 0)
-        return
-      }
-      // 取消が新たに行われた形跡がなければ10秒後に消す
-      setTimeout(() => {this.isCancellationAttempted = false, this.terminateProcessReservation()}, 10000)
+      setTimeout(() => {
+        // 取消キャンセルボタン押下10秒後に以下処理が行われる
+        if (this.isCancellationBeenProcessing) {// 次の取消が動いていたら取消履歴の抹消は10秒待つ
+          setTimeout(this.deleteCancellationHistory, 10000)
+          return
+        }
+        // 取消が新たに行われた形跡がなければ消す
+        this.terminateProcessReservation()
+      }, 10000)
     },
     rowClicked(row) {
       this.$refs.tableData.toggleRowExpansion(row);
     },
-  },
-  watch: {
-    isCancellationBeenProcessing: function(newVal) {
-      if (!newVal) {
-        this.deleteCancellationHistory()
-      }
+    openSessionTimeoutDialog() {
+      // TODO: implement me.
+      this.isSessionTimeOutDialogVisible = true;
+    },
+    openErrorDialog(title, message) {
+
+    },
+    closeSessionTimeOutDialog() {
+      sessionStorage.clear();
+      this.$router.replace('/login');
+    },
+    setCurrentCoordinate(lat, lon) {
+      this.currentCoordinate.lat = lat
+      this.currentCoordinate.lon = lon
     }
-  }
+  },
 }
 </script>
 
