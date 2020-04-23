@@ -133,11 +133,13 @@ async function retrieveParkingList(memberId, sessionId, savedParkingList) {
 async function retrievedSavedParkingList(memberId) {
   const params = {
     TableName: userTableName,
-    Key: memberId
+    Key: {
+      memberId: memberId
+    }
   }
   try {
     const result = await docClient.get(params).promise();
-    return result.Item.favoriteParkingList;
+    return result.Item ? result.Item.favoriteParkingList : []; // ユーザ情報登録APIができたら空配列は返さない
   }
   catch (error) {
     throw error
