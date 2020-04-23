@@ -134,6 +134,24 @@ Resources:
       Timeout: 10
       ReservedConcurrentExecutions: 10
       MemorySize: 3008
+
+  LambdaUserInitializer:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Sub ${NameTag}-${EnvName}-lambda
+        S3Key: !Sub ${ObjectKeyPrefix}/UserInitializer/Deploy.zip
+      Environment:
+        Variables:
+          ENV_NAME: !Ref EnvName
+      FunctionName: !Sub ${NameTag}-${EnvName}-UserInitializer
+      Handler: index.handler
+      ReservedConcurrentExecutions: 1
+      Role: !ImportValue
+        Fn::Sub: ${NameTag}-${EnvName}-RoleUserInitializerArn
+      Runtime: nodejs12.x
+      Timeout: 10
+      ReservedConcurrentExecutions: 10
   ######################################################
   # Rest API
   ######################################################
@@ -714,3 +732,11 @@ Outputs:
     Value: !Ref LambdaParkingNearbyRetriever
     Export:
       Name: !Sub ${NameTag}-${EnvName}-LambdaParkingNearbyRetrieverName
+  LambdaUserInitializerArn:
+    Value: !GetAtt LambdaUserInitializer.Arn
+    Export:
+      Name: !Sub ${NameTag}-${EnvName}-LambdaUserInitializerArn
+  LambdaUserInitializerName:
+    Value: !Ref LambdaUserInitializer
+    Export:
+      Name: !Sub ${NameTag}-${EnvName}-LambdaUserInitializerName
