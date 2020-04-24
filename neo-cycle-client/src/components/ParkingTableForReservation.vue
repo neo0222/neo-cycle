@@ -8,13 +8,12 @@
     @row-click="rowClicked"
     border>
     <el-table-column
-      prop="date"
+      prop="name"
       label="Name"
       width="282"
       header-align="left">
     </el-table-column>
     <el-table-column
-      prop="name"
       label="Bikes"
       width="78"
       header-align="left"
@@ -22,7 +21,7 @@
       <template
         slot-scope="scope">
         <p v-if="isRowParking(scope)">
-          {{scope.row.name}}
+          {{scope.row.cycleCount}}
         </p>
         <el-popconfirm
           confirmButtonText='Yes'
@@ -68,13 +67,13 @@ export default {
       this.$refs.tableData.toggleRowExpansion(row);
     },
     isRowParking(scope) {
-      return scope.row.name !== ""
+      return scope.row.cycleCount !== ""
     },
     isRowReservedBike(scope) {
-      return scope.row.name === "" && scope.row.date === this.reservedBike.cycleName
+      return scope.row.cycleCount === "" && scope.row.name === this.reservedBike.name
     },
     isRowVacantBike(scope) {
-      return scope.row.name === "" && scope.row.date !== this.reservedBike.cycleName
+      return scope.row.cycleCount === "" && scope.row.name !== this.reservedBike.name
     },
   }
 }

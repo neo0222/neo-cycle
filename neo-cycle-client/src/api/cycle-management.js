@@ -30,3 +30,13 @@ export async function retrieveNearbyParkingList(memberId, sessionId, coordinate)
   const res = await axios.post(url + '/parkings/nearby', { memberId, sessionId, lat: coordinate.lat, lon: coordinate.lon });
   return res.data
 }
+
+export async function registerFavoriteParking(memberId, parkingId, parkingName) {
+  const res = await axios.post(url + '/parkings/registration', { memberId, parkingId, parkingName });
+  return res.data
+}
+
+export async function removeFavoriteParking(memberId, parkingId) {
+  const res = await axios.post(url + '/parkings/removal', { memberId, parkingId });
+  return res.data
+}

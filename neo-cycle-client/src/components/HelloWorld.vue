@@ -34,6 +34,9 @@
       :status="status"
       @setCurrentCoordinate="setCurrentCoordinate"
       @retrieveNearbyParkingList="retrieveNearbyParkingList"
+      :favoriteParkingList="favoriteParkingList"
+      @registerFavoriteParking="registerFavoriteParking"
+      @removeFavoriteParking="removeFavoriteParking"
       />
     <el-dialog
       :visible.sync="isSessionTimeOutDialogVisible"
@@ -138,6 +141,14 @@ export default {
     },
     isGoHomeButtonPlain() {
       return !this.isGoToOfficeButtonPlain
+    },
+    favoriteParkingList() {
+      return this.tableData.map((parking) => {
+        return {
+          parkingId: parking.id,
+          parkingName: parking.name
+        }
+      })
     }
   },
   methods: {
@@ -202,18 +213,17 @@ export default {
           sessionStorage.getItem('currentUserName'),
           sessionStorage.getItem('sessionId')
         );
-        this.tableData.length = 0;
+        this.tableData = [];
         for (const parking of result.parkingList) {
-          if (!parking.parkingName) continue
           this.tableData.push({
             id: parking.parkingId,
-            date: parking.parkingName,
-            name: parking.cycleList.length + '台',
+            name: parking.parkingName,
+            cycleCount: parking.cycleList.length + '台',
             children: parking.cycleList.map((cycle) => {
               return {
                 id: cycle.CycleName,
-                date: cycle.CycleName,
-                name: '',
+                name: cycle.CycleName,
+                cycleCount: '',
                 cycle: cycle,
               }
             })
@@ -293,6 +303,43 @@ export default {
         this.handleErrorResponse(this, error)
       }
 
+    },
+    async registerFavoriteParking(parkingId, parkingName) {
+      const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Processing...'))
+      try {
+        const responseBody = await api.registerFavoriteParking(
+          sessionStorage.getItem('currentUserName'),
+          parkingId,
+          parkingName
+        );
+        const promises = []
+        promises.push(this.retrieveParkingList());
+        promises.push(this.retrieveNearbyParkingList());
+        await Promise.all(promises)
+        loading.close()
+      }
+      catch (error) {
+        loading.close()
+        this.handleErrorResponse(this, error)
+      }
+    },
+    async removeFavoriteParking(parkingId) {
+      const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Processing...'))
+      try {
+        const responseBody = await api.removeFavoriteParking(
+          sessionStorage.getItem('currentUserName'),
+          parkingId
+        );
+        const promises = []
+        promises.push(this.retrieveParkingList());
+        promises.push(this.retrieveNearbyParkingList());
+        await Promise.all(promises)
+        loading.close()
+      }
+      catch (error) {
+        loading.close()
+        this.handleErrorResponse(this, error)
+      }
     },
     createFullScreenLoadingMaskOptionWithText(text) {
       return {
