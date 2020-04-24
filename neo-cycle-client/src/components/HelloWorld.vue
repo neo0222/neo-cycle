@@ -213,7 +213,7 @@ export default {
           sessionStorage.getItem('currentUserName'),
           sessionStorage.getItem('sessionId')
         );
-        this.tableData.length = 0;
+        this.tableData = [];
         for (const parking of result.parkingList) {
           this.tableData.push({
             id: parking.parkingId,

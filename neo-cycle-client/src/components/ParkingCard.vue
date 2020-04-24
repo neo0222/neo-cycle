@@ -78,7 +78,7 @@ export default {
     },
     isParkingFavorite() {
       return this.favoriteParkingList.some((favoriteParking) => {
-        return this.selectedParking.parkingId.toString() === favoriteParking.parkingId
+        return this.selectedParking.parkingId === favoriteParking.parkingId
       })
     }
   },
