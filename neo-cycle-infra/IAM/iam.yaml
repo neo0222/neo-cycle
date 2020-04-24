@@ -58,6 +58,19 @@ Resources:
             Resource:
               - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${NameTag}-${EnvName}-USER"
 
+  NeoCycleUserTableUpdateItemPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: authorize to update item in user dynamodb 
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:UpdateItem
+            Resource:
+              - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${NameTag}-${EnvName}-USER"
+
   NeoCycleGetParameterPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -238,6 +251,27 @@ Resources:
             Action: sts:AssumeRole
             Principal:
               Service: lambda.amazonaws.com              
+
+  RoleParkingRegisterer:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub
+        - ${NameTag}-${EnvName}-parking-registerer-role
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+      ManagedPolicyArns:
+        - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
+        - !Ref NeoCycleUserTableGetItemPolicy
+        - !Ref NeoCycleUserTableUpdateItemPolicy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: lambda.amazonaws.com    
 #################################
 # Outputs
 #################################
@@ -317,6 +351,16 @@ Outputs:
     Export:
       Name: !Sub
         - ${NameTag}-${EnvName}-RoleUserInitializerArn
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+
+  RoleParkingRegistererArn:
+    Value: !GetAtt RoleParkingRegisterer.Arn
+    Export:
+      Name: !Sub
+        - ${NameTag}-${EnvName}-RoleParkingRegistererArn
         - {
           NameTag: !FindInMap [ StackConfig, NameTag, Value ],
           EnvName: !Ref EnvName

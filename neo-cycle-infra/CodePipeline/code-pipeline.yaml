@@ -89,6 +89,8 @@ Resources:
                 Fn::Sub: ${NameTag}-${EnvName}-RoleParkingNearbyRetrieverArn
               - !ImportValue
                 Fn::Sub: ${NameTag}-${EnvName}-RoleUserInitializerArn
+              - !ImportValue
+                Fn::Sub: ${NameTag}-${EnvName}-RoleParkingRegistererArn
             Action:
               - iam:PassRole
 
