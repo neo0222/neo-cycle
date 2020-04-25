@@ -54,7 +54,7 @@ Resources:
       Environment:
         Variables:
           ENV_NAME: !Ref EnvName
-          SLACK_WEBHOOK_URL_FOR_LOGIN_MONITORING: !Ref SlackWebHookUrlForLoginMonitoring
+          SLACK_WEBHOOK_URL_FOR_LOGIN_MONITORING: !Ref SlackWebhookUrlForLoginMonitoring
       FunctionName: !Sub ${NameTag}-${EnvName}-UserMigrator
       Handler: index.handler
       ReservedConcurrentExecutions: 1
@@ -74,7 +74,7 @@ Resources:
       Environment:
         Variables:
           ENV_NAME: !Ref EnvName
-          SLACK_WEBHOOK_URL_FOR_LOGIN_MONITORING: !Ref SlackWebHookUrlForLoginMonitoring
+          SLACK_WEBHOOK_URL_FOR_LOGIN_MONITORING: !Ref SlackWebhookUrlForLoginMonitoring
       FunctionName: !Sub ${NameTag}-${EnvName}-PostAuthenticator
       Handler: index.handler
       ReservedConcurrentExecutions: 1
