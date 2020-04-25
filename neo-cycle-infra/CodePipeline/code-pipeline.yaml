@@ -84,8 +84,6 @@ Resources:
               - !ImportValue
                 Fn::Sub: ${NameTag}-${EnvName}-RoleStatusCheckerArn
               - !ImportValue
-                Fn::Sub: ${NameTag}-${EnvName}-RoleSessionCreatorArn
-              - !ImportValue
                 Fn::Sub: ${NameTag}-${EnvName}-RoleParkingNearbyRetrieverArn
               - !ImportValue
                 Fn::Sub: ${NameTag}-${EnvName}-RoleUserInitializerArn
