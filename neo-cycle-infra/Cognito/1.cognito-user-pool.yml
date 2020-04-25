@@ -60,6 +60,8 @@ Resources:
           Fn::Sub: ${NameTag}-${EnvName}-LambdaUserInitializerArn
         UserMigration: !ImportValue
           Fn::Sub: ${NameTag}-${EnvName}-LambdaUserMigratorArn
+        PreTokenGeneration: !ImportValue
+          Fn::Sub: ${NameTag}-${EnvName}-LambdaPostAuthenticatorArn
 
 
   NeoCycleUserPoolClient:

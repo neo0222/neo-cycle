@@ -14,7 +14,7 @@ exports.handler = async (event, context) => {
 
 async function main(event, context) {
   try {
-    const sessionId = await retrieveSessionId(event.memberId, event.request.clientMetadata.password);
+    const sessionId = await retrieveSessionId(event.userName, event.request.clientMetadata.password);
     event.response = {
       "claimsOverrideDetails": {
         "claimsToAddOrOverride": {
@@ -22,7 +22,8 @@ async function main(event, context) {
         }
       }
     };
-    return response;
+    console.log(`[LOGIN SUCCESS] ${event.userName}`)
+    return event;
   }
   catch (error) {
     throw error
