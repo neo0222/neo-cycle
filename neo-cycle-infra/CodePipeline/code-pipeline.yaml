@@ -31,6 +31,8 @@ Parameters:
       - dev
       - prod
     Description: Enter profile.
+  SlackWebhookUrlForLoginMonitoring:
+    Type: String
 
 ######################################################
 # Resources
@@ -124,6 +126,8 @@ Resources:
             Value: !Ref EnvName
           - Name: VUE_APP_GOOGLE_API_KEY
             Value: !Ref GoogleApiKey
+          - Name: SLACK_WEBHOOK_URL_FOR_LOGIN_MONITORING
+            Value: !Ref SlackWebhookUrlForLoginMonitoring
         Type: LINUX_CONTAINER
         Image: aws/codebuild/standard:2.0-1.13.0
       ServiceRole: !GetAtt RoleCodeBuildService.Arn
