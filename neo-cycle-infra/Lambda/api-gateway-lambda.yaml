@@ -894,6 +894,6 @@ Outputs:
     Export:
       Name: !Sub ${NameTag}-${EnvName}-LambdaParkingRegistererArn
   LambdaParkingRegistererName:
-    Value: !Ref LambdaUserInitializer
+    Value: !Ref LambdaParkingRegisterer
     Export:
       Name: !Sub ${NameTag}-${EnvName}-LambdaParkingRegistererName
