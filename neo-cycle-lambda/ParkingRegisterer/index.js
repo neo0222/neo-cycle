@@ -22,7 +22,7 @@ async function main(event, context) {
   }
   return {
     statusCode: 200,
-    body: JSON.stringify({ sessionId }),
+    body: JSON.stringify({}),
     headers: {
         "Access-Control-Allow-Origin": '*'
     },
@@ -87,6 +87,6 @@ async function getFavoriteParkingList(memberId) {
       memberId: memberId
     }
   };
-  const result = await docClient.get(params).promise;
+  const result = await docClient.get(params).promise();
   return result.Item ? result.Item.favoriteParkingList : [];
 }

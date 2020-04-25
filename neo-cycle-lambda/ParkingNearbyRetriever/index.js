@@ -76,6 +76,7 @@ async function retrieveParkingList(memberId, sessionId, lat, lon) {
   const res = await axios.post(imanaraUrl, params);
   const rawParkingList = parser.parse(res.data).info.shop;
       
+  const rawParkingList = parser.parse(res.data).info.shop ? parser.parse(res.data).info.shop : [];
   const parkingList = [];
   for (const rawParking of rawParkingList) {
     parkingList.push((async () => {
