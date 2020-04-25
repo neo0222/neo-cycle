@@ -43,6 +43,23 @@ Resources:
       Timeout: 10
       ReservedConcurrentExecutions: 10
 
+  LambdaUserMigrator:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Sub ${NameTag}-${EnvName}-lambda
+        S3Key: !Sub ${ObjectKeyPrefix}/UserMigrator/Deploy.zip
+      Environment:
+        Variables:
+          ENV_NAME: !Ref EnvName
+      FunctionName: !Sub ${NameTag}-${EnvName}-UserMigrator
+      Handler: index.handler
+      ReservedConcurrentExecutions: 1
+      Role: !ImportValue
+        Fn::Sub: ${NameTag}-${EnvName}-RoleUserMigratorArn
+      Runtime: nodejs12.x
+      Timeout: 10
+      ReservedConcurrentExecutions: 10
 #################################
 # Outputs
 #################################
@@ -55,3 +72,11 @@ Outputs:
     Value: !Ref LambdaUserInitializer
     Export:
       Name: !Sub ${NameTag}-${EnvName}-LambdaUserInitializerName
+  LambdaUserMigratorArn:
+    Value: !GetAtt LambdaUserMigrator.Arn
+    Export:
+      Name: !Sub ${NameTag}-${EnvName}-LambdaUserMigratorArn
+  LambdaUserMigratorName:
+    Value: !Ref LambdaUserMigrator
+    Export:
+      Name: !Sub ${NameTag}-${EnvName}-LambdaUserMigratorName

@@ -92,9 +92,13 @@ export default class Cognito {
       Storage: sessionStorage
     }
     const cognitoUser = new CognitoUser(userData)
+    cognitoUser.setAuthenticationFlowType('USER_PASSWORD_AUTH')
     const authenticationData = {
       Username: username,
-      Password: password
+      Password: password,
+      ClientMetadata: {
+        testmeta: 'testMeta'
+      }
     }
     const authenticationDetails = new AuthenticationDetails(authenticationData)
     return new Promise((resolve, reject) => {

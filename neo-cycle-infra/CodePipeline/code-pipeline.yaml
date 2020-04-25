@@ -91,6 +91,10 @@ Resources:
                 Fn::Sub: ${NameTag}-${EnvName}-RoleUserInitializerArn
               - !ImportValue
                 Fn::Sub: ${NameTag}-${EnvName}-RoleParkingRegistererArn
+              - !ImportValue
+                Fn::Sub: ${NameTag}-${EnvName}-RoleUserMigratorArn
+              - !ImportValue
+                Fn::Sub: ${NameTag}-${EnvName}-RolePostAuthenticatorArn
             Action:
               - iam:PassRole
 

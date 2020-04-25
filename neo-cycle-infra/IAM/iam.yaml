@@ -263,7 +263,7 @@ Resources:
         }
       ManagedPolicyArns:
         - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
-        - !Ref NeoCycleUserTableGetItemPolicy
+        - !Ref NeoCycleGetParameterPolicy
         - !Ref NeoCycleUserTableUpdateItemPolicy
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
@@ -271,7 +271,49 @@ Resources:
           - Effect: Allow
             Action: sts:AssumeRole
             Principal:
-              Service: lambda.amazonaws.com    
+              Service: lambda.amazonaws.com   
+
+  RoleUserMigrator:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub
+        - ${NameTag}-${EnvName}-user-migrator-role
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+      ManagedPolicyArns:
+        - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
+        - !Ref NeoCycleGetParameterPolicy
+        - !Ref NeoCycleUserTablePutItemPolicy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: lambda.amazonaws.com
+
+
+  RolePostAuthenticator:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub
+        - ${NameTag}-${EnvName}-post-authenticator-role
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+      ManagedPolicyArns:
+        - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
+        - !Ref NeoCycleGetParameterPolicy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: lambda.amazonaws.com 
 #################################
 # Outputs
 #################################
@@ -361,6 +403,26 @@ Outputs:
     Export:
       Name: !Sub
         - ${NameTag}-${EnvName}-RoleParkingRegistererArn
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+
+  RoleUserMigratorArn:
+    Value: !GetAtt RoleUserMigrator.Arn
+    Export:
+      Name: !Sub
+        - ${NameTag}-${EnvName}-RoleUserMigratorArn
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+
+  RolePostAuthenticatorArn:
+    Value: !GetAtt RolePostAuthenticator.Arn
+    Export:
+      Name: !Sub
+        - ${NameTag}-${EnvName}-RolePostAuthenticatorArn
         - {
           NameTag: !FindInMap [ StackConfig, NameTag, Value ],
           EnvName: !Ref EnvName
