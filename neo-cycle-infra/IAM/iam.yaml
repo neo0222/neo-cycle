@@ -245,6 +245,7 @@ Resources:
         - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
         - !Ref NeoCycleGetParameterPolicy
         - !Ref NeoCycleUserTableUpdateItemPolicy
+        - !Ref NeoCycleUserTableGetItemPolicy
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
