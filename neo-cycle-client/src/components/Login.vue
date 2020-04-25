@@ -14,9 +14,6 @@
         </el-form-item>
       </el-form>
       <el-button @click="login">Log in</el-button>
-    <p>Don't you have an account?
-      <router-link to="/signup">Create now</router-link>!!
-    </p>
     <el-dialog
       :visible.sync="isUpdatePasswordDialogShown"
       title="Update your password"
