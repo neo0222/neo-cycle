@@ -59,7 +59,7 @@ phases:
       - aws cloudformation deploy
           --stack-name neo-cycle-${ENVIRONMENT_NAME}-cognito-lambda
           --template-file Lambda/cognito-lambda.yaml
-          --parameter-overrides ObjectKeyPrefix=${CODEBUILD_BUILD_NUMBER} EnvName=${ENVIRONMENT_NAME}
+          --parameter-overrides ObjectKeyPrefix=${CODEBUILD_BUILD_NUMBER} EnvName=${ENVIRONMENT_NAME} SlackWebhookUrlForLoginMonitoring=${SLACK_WEBHOOK_URL_FOR_LOGIN_MONITORING}
           --capabilities CAPABILITY_AUTO_EXPAND
       - cd ..
   build:

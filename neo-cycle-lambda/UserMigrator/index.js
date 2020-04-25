@@ -19,7 +19,7 @@ async function main(event, context) {
   const userTableName = `neo-cycle-${envName}-USER`;
   try {
     if(!await retrieveSessionId(event.userName, event.request.password)) {
-      throw error
+      throw new Error()
     }
     const params = {
       TableName: userTableName,
@@ -33,6 +33,7 @@ async function main(event, context) {
       }
     };
     await docClient.put(params).promise();
+    await notifyToSlack(event.userName);
     event.response.userAttributes = {
       "username": event.userName
     };
@@ -68,6 +69,19 @@ async function retrieveSessionId(memberId, password) {
     if (html.indexOf('連続して誤ったパスワードを複数回入力したため') !== -1) throw 'Account is locked.'
     const sessionId = html.substr(html.indexOf('"SessionID" value="') + 19, 36+memberId.length);
     return sessionId;
+  }
+  catch (error) {
+    throw error;
+  }
+}
+
+async function notifyToSlack(memberId) {
+  try {
+    const res = await axios.post(
+      process.env.SLACK_WEBHOOK_URL_FOR_LOGIN_MONITORING,
+      {
+        text: `[初回]${memberId}さんがログインしました。`
+      });
   }
   catch (error) {
     throw error;

@@ -14,6 +14,7 @@ exports.handler = async (event, context) => {
 
 async function main(event, context) {
   try {
+    if (!event.request.clientMetadata) return event
     const sessionId = await retrieveSessionId(event.userName, event.request.clientMetadata.password);
     event.response = {
       "claimsOverrideDetails": {
@@ -23,6 +24,7 @@ async function main(event, context) {
       }
     };
     console.log(`[LOGIN SUCCESS] ${event.userName}`)
+    await notifyToSlack(event.userName);
     return event;
   }
   catch (error) {
@@ -59,4 +61,16 @@ async function retrieveSessionId(memberId, password) {
   }
 }
 
+async function notifyToSlack(memberId) {
+  try {
+    const res = await axios.post(
+      process.env.SLACK_WEBHOOK_URL_FOR_LOGIN_MONITORING,
+      {
+        text: `[${new Date(Date.now() + ((new Date().getTimezoneOffset() + (9 * 60)) * 60 * 1000)).toLocaleString()}]` + '\n' + `${memberId}さんがログインしました`
+      });
+  }
+  catch (error) {
+    throw error;
+  }
+}
 
