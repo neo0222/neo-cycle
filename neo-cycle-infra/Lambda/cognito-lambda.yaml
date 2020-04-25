@@ -20,7 +20,7 @@ Parameters:
       - dev
       - prod
     Description: Enter profile.
-  SlackWebHookUrlForLoginMonitoring:
+  SlackWebhookUrlForLoginMonitoring:
     Type: String
 
 ######################################################
