@@ -1,0 +1,59 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Amazon Certificate Manager
+
+######################################################
+# Parameters:
+######################################################
+Parameters:
+  DomainName:
+    Type: String
+    Default: 'neo-cycle.com'
+  EnvName:
+    Type: String
+    AllowedValues:
+      - dev
+      - prod
+  NameTag:
+    Type: String
+    Default: neo-cycle
+
+######################################################
+# Resources:
+###################################################### 
+Resources:
+  NeoCycleCloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties: 
+      DistributionConfig: 
+        Aliases: 
+          - !Sub ${EnvName}.${DomainName}
+        DefaultCacheBehavior:
+          DefaultTTL: 1
+          MaxTTL: 1
+          MinTTL: 1
+          SmoothStreaming: false
+          ForwardedValues:
+             QueryString: false
+          TargetOriginId: !Sub S3-${EnvName}.neo-cycle.com
+          ViewerProtocolPolicy: https-only
+        DefaultRootObject: index.html
+        Enabled: true
+        IPV6Enabled: false
+        Origins: 
+          - DomainName: !Sub ${EnvName}.neo-cycle.com.s3.amazonaws.com
+            Id: !Sub S3-${EnvName}.neo-cycle.com
+            S3OriginConfig: 
+              OriginAccessIdentity: !Sub origin-access-identity/cloudfront/${CloudFrontOriginAccessIdentity}
+        ViewerCertificate: 
+          AcmCertificateArn: !ImportValue
+            Fn::Sub: ${NameTag}-certificate
+          MinimumProtocolVersion: TLSv1.1_2016
+          SslSupportMethod: sni-only
+        HttpVersion: http2
+  
+  CloudFrontOriginAccessIdentity:
+    Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
+    Properties:
+      CloudFrontOriginAccessIdentityConfig:
+        Comment: neo-cycle-dev
