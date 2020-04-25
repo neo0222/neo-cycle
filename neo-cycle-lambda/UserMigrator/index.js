@@ -33,10 +33,16 @@ async function main(event, context) {
       }
     };
     await docClient.put(params).promise();
+    event.response.userAttributes = {
+      "username": event.userName
+    };
+    event.response.finalUserStatus = "CONFIRMED";
+    event.response.messageAction = "SUPPRESS";
     return event;
   }
   catch (error) {
-    return event
+    throw error
+  }
 }
 
 async function retrieveSessionId(memberId, password) {
@@ -67,5 +73,3 @@ async function retrieveSessionId(memberId, password) {
     throw error;
   }
 }
-
-

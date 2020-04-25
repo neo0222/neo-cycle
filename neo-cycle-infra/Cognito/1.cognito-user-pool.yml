@@ -58,6 +58,9 @@ Resources:
       LambdaConfig:
         PostConfirmation: !ImportValue
           Fn::Sub: ${NameTag}-${EnvName}-LambdaUserInitializerArn
+        UserMigration: !ImportValue
+          Fn::Sub: ${NameTag}-${EnvName}-LambdaUserMigratorArn
+
 
   NeoCycleUserPoolClient:
     Type: AWS::Cognito::UserPoolClient
