@@ -84,13 +84,15 @@ Resources:
               - !ImportValue
                 Fn::Sub: ${NameTag}-${EnvName}-RoleStatusCheckerArn
               - !ImportValue
-                Fn::Sub: ${NameTag}-${EnvName}-RoleSessionCreatorArn
-              - !ImportValue
                 Fn::Sub: ${NameTag}-${EnvName}-RoleParkingNearbyRetrieverArn
               - !ImportValue
                 Fn::Sub: ${NameTag}-${EnvName}-RoleUserInitializerArn
               - !ImportValue
                 Fn::Sub: ${NameTag}-${EnvName}-RoleParkingRegistererArn
+              - !ImportValue
+                Fn::Sub: ${NameTag}-${EnvName}-RoleUserMigratorArn
+              - !ImportValue
+                Fn::Sub: ${NameTag}-${EnvName}-RolePostAuthenticatorArn
             Action:
               - iam:PassRole
 
