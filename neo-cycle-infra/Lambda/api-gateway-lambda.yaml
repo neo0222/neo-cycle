@@ -766,14 +766,6 @@ Outputs:
     Value: !Ref LambdaStatusChecker
     Export:
       Name: !Sub ${NameTag}-${EnvName}-LambdaStatusCheckerFunctionName
-  LambdaSessionCreatorArn:
-    Value: !GetAtt LambdaSessionCreator.Arn
-    Export:
-      Name: !Sub ${NameTag}-${EnvName}-LambdaSessionCreatorArn
-  LambdaSessionCreatorrName:
-    Value: !Ref LambdaSessionCreator
-    Export:
-      Name: !Sub ${NameTag}-${EnvName}-LambdaSessionCreatorName
   LambdaParkingNearbyRetrieverArn:
     Value: !GetAtt LambdaParkingNearbyRetriever.Arn
     Export:
