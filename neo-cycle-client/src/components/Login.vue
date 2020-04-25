@@ -65,7 +65,7 @@ export default {
         const res = await api.createSession(this.username, this.password)
         sessionStorage.setItem('sessionId', res.sessionId)
         try {
-          const session = await this.$cognito.login(this.username, this.password)
+          const session = await this.$cognito.login(this.username, this.password, true)
           if (session.status === 'PASSWORD_REQUIRED') {
             loading.close()
             this.openUpdatePasswordDialog()
@@ -75,7 +75,29 @@ export default {
           this.$router.replace('/')
         }
         catch(error) {
-          this.handleLoginErrorResponse(this, error)
+          // 1回目のSRPログインで失敗
+          if (error.code !== 'UserNotFoundException') {
+            this.handleLoginErrorResponse(this, error)
+            loading.close()
+            return
+          }
+          // 平文パスワードログインを試す
+          try {
+            await this.$cognito.login(this.username, this.password, false)
+            // これが成功するのは初回ログインかつ認証情報が正しかった場合のみ
+            const session = await this.$cognito.login(this.username, this.password, true)
+            if (session.status === 'PASSWORD_REQUIRED') {
+              loading.close()
+              this.openUpdatePasswordDialog()
+              return
+            }
+            loading.close()
+            this.$router.replace('/')
+          }
+          catch (error) {
+            // 2回目のエラーはhandle
+            this.handleLoginErrorResponse(this, error)
+          }
         }
       }
       catch (error) {

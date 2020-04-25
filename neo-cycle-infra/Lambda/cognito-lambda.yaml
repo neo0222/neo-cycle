@@ -60,6 +60,25 @@ Resources:
       Runtime: nodejs12.x
       Timeout: 10
       ReservedConcurrentExecutions: 10
+
+
+  LambdaPostAuthenticator:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Sub ${NameTag}-${EnvName}-lambda
+        S3Key: !Sub ${ObjectKeyPrefix}/PostAuthenticator/Deploy.zip
+      Environment:
+        Variables:
+          ENV_NAME: !Ref EnvName
+      FunctionName: !Sub ${NameTag}-${EnvName}-PostAuthenticator
+      Handler: index.handler
+      ReservedConcurrentExecutions: 1
+      Role: !ImportValue
+        Fn::Sub: ${NameTag}-${EnvName}-RolePostAuthenticatorArn
+      Runtime: nodejs12.x
+      Timeout: 10
+      ReservedConcurrentExecutions: 10
 #################################
 # Outputs
 #################################
@@ -80,3 +99,11 @@ Outputs:
     Value: !Ref LambdaUserMigrator
     Export:
       Name: !Sub ${NameTag}-${EnvName}-LambdaUserMigratorName
+  LambdaPostAuthenticatorArn:
+    Value: !GetAtt LambdaPostAuthenticator.Arn
+    Export:
+      Name: !Sub ${NameTag}-${EnvName}-LambdaPostAuthenticatorArn
+  LambdaPostAuthenticatorName:
+    Value: !Ref LambdaPostAuthenticator
+    Export:
+      Name: !Sub ${NameTag}-${EnvName}-LambdaPostAuthenticatorName      
