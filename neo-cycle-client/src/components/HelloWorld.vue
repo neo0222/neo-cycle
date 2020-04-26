@@ -16,7 +16,8 @@
       :isParkingTableEditable="isParkingTableEditable"
       @makeParkingTableEditable="makeParkingTableEditable"
       @makeParkingTableUneditable="makeParkingTableUneditable"
-      @updateFavoriteParking="updateFavoriteParking"/>
+      @updateFavoriteParking="updateFavoriteParking"
+      @cancelReservation="cancelReservation"/>
     <parking-table-for-sorting
       v-if="isParkingTableEditable && radio4 === 'Search from Fav. List'"
       :tableData="tableData"

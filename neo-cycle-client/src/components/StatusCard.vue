@@ -37,6 +37,7 @@
         icon="el-icon-edit"
         :plain="false"
         :style="{width: '258.48px'}"
+        v-if="status === 'WAITING_FOR_RESERVATION'"
         @click="$emit('makeParkingTableEditable')">
         EDIT favorite parking list
       </el-button>
@@ -47,6 +48,7 @@
         type="info"
         :plain="true"
         :style="{width: '258.48px'}"
+        v-if="status === 'WAITING_FOR_RESERVATION'"
         @click="$emit('makeParkingTableUneditable')">
         QUIT to EDIT favorite list
       </el-button>
@@ -57,6 +59,7 @@
         type="success"
         :plain="true"
         :style="{width: '258.48px'}"
+        v-if="status === 'WAITING_FOR_RESERVATION'"
         @click="$emit('updateFavoriteParking')">
         CONFIRM to EDIT favorite list
       </el-button>
@@ -67,6 +70,7 @@
         type="info"
         icon="el-icon-setting"
         :plain="true"
+        v-if="status === 'WAITING_FOR_RESERVATION'"
         :style="{width: '258.48px'}">
         user settings
       </el-button>
