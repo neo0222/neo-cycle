@@ -17,7 +17,7 @@ Parameters:
     Type: String
   S3Bucket:
     Type: String
-    Default: prod.neo-cycle.com
+    Default: www.neo-cycle.com
   GoogleApiKey:
     Type: String
   NameTag:
