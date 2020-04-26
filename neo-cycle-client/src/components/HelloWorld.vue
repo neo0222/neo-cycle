@@ -108,6 +108,11 @@ export default {
       },
       isParkingTableEditable: false,
       tableDataForSorting: [],
+      timer: {
+        checkStatusTimerId: undefined,
+        retrieveParkingListTimerId: undefined,
+        retrieveNearbyParkingListTimerId: undefined,
+      }
     }
   },
   async mounted() {
@@ -171,24 +176,9 @@ export default {
     success (position) {
       this.setCurrentCoordinate(position.coords.latitude, position.coords.longitude)
     },
-    load(tree, treeNode, resolve) {
-      setTimeout(() => {
-        resolve([
-          {
-            id: 31,
-            date: '2016-05-01',
-            name: 'wangxiaohu'
-          }, {
-            id: 32,
-            date: '2016-05-01',
-            name: 'wangxiaohu'
-          }
-        ])
-      }, 1000)
-    },
     async checkStatusWithRetry() {
       await this.checkStatus()
-      setTimeout(this.checkStatusWithRetry, 10000)
+      this.timer.checkStatusTimerId = setTimeout(this.checkStatusWithRetry, 10000)
     },
     async checkStatus() {
       try {
@@ -216,7 +206,7 @@ export default {
     },
     async retrieveParkingListWithRetry() {
       await this.retrieveParkingList()
-      setTimeout(this.retrieveParkingListWithRetry, 10000)
+      this.timer.retrieveParkingListTimerId = setTimeout(this.retrieveParkingListWithRetry, 10000)
     },
     async retrieveParkingList() {
       // 予約処理中は取得しない
@@ -252,7 +242,7 @@ export default {
     },
     async retrieveNearbyParkingListWithRetry() {
       await this.retrieveNearbyParkingList()
-      setTimeout(this.retrieveNearbyParkingListWithRetry, 10000)
+      this.timer.retrieveNearbyParkingListTimerId = setTimeout(this.retrieveNearbyParkingListWithRetry, 10000)
     },
     async retrieveNearbyParkingList() {
       // 予約処理中は取得しない
@@ -467,6 +457,11 @@ export default {
       })
     }
   },
+  destroyed() {
+    for (let timerId in this.timer) {
+      window.clearTimeout( this.timer[timerId] )
+    }
+  }
 }
 </script>
 
