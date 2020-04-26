@@ -40,3 +40,8 @@ export async function removeFavoriteParking(memberId, parkingId) {
   const res = await axios.post(url + '/parkings/removal', { memberId, parkingId });
   return res.data
 }
+
+export async function updateFavoriteParking(memberId, favoriteParkingList) {
+  const res = await axios.post(url + '/parkings/update', { memberId, favoriteParkingList });
+  return res.data
+}

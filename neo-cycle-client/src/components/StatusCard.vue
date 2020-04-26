@@ -30,21 +30,45 @@
         </el-button>
       </el-popconfirm>
     </div>
-    <div v-if="status === 'WAITING_FOR_RESERVATION'" class="button">
+    <div v-if="!isParkingTableEditable" class="button">
       <el-button
         slot="reference"
         type="success"
+        icon="el-icon-edit"
         :plain="false"
-        :style="{width: '258.48px'}">
-        I WANNA GO TO OFFICE NOW
+        :style="{width: '258.48px'}"
+        @click="$emit('makeParkingTableEditable')">
+        EDIT favorite parking list
       </el-button>
     </div>
-    <div v-if="status === 'WAITING_FOR_RESERVATION'" class="button">
+    <div v-if="isParkingTableEditable" class="button">
+      <el-button
+        slot="reference"
+        type="info"
+        :plain="true"
+        :style="{width: '258.48px'}"
+        @click="$emit('makeParkingTableUneditable')">
+        QUIT to EDIT favorite list
+      </el-button>
+    </div>
+    <div v-if="isParkingTableEditable" class="button">
       <el-button
         slot="reference"
         type="success"
-        :plain="true">
-        I WANNA GO HOME RIGHT NOW
+        :plain="true"
+        :style="{width: '258.48px'}"
+        @click="$emit('updateFavoriteParking')">
+        CONFIRM to EDIT favorite list
+      </el-button>
+    </div>
+    <div v-if="!isParkingTableEditable" class="button">
+      <el-button
+        slot="reference"
+        type="info"
+        icon="el-icon-setting"
+        :plain="true"
+        :style="{width: '258.48px'}">
+        user settings
       </el-button>
     </div>
   </el-card>
@@ -58,6 +82,7 @@ export default {
     'reservedBike',
     'favoritePort',
     'atagoPort',
+    'isParkingTableEditable',
   ]
 }
 </script>
