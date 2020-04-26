@@ -50,6 +50,7 @@
       :favoriteParkingList="favoriteParkingList"
       @registerFavoriteParking="registerFavoriteParking"
       @removeFavoriteParking="removeFavoriteParking"
+      :isMounted="isMounted"
       />
     <el-dialog
       :visible.sync="isSessionTimeOutDialogVisible"
@@ -113,7 +114,8 @@ export default {
         checkStatusTimerId: undefined,
         retrieveParkingListTimerId: undefined,
         retrieveNearbyParkingListTimerId: undefined,
-      }
+      },
+      isMounted: false,
     }
   },
   async mounted() {
@@ -133,6 +135,7 @@ export default {
       this.handleErrorResponse(this, error)
     }
     loading.close()
+    this.isMounted = true
     this.checkStatusWithRetry()
     this.retrieveParkingListWithRetry()
     this.retrieveNearbyParkingListWithRetry()
