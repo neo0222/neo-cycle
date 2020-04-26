@@ -3,7 +3,10 @@
     <div style="margin-bottom: 12px">
       <el-radio-group v-model="radio4" size="mini" fill="#67C23A">
         <el-radio-button label="Search from Fav. List"></el-radio-button>
-        <el-radio-button label="Search Nearby Parkings"></el-radio-button>
+        <el-radio-button
+          :disabled="isSearchNearbyParkingsButtonDisabled"
+          label="Search Nearby Parkings">
+        </el-radio-button>
       </el-radio-group>
     </div>
     <status-card
@@ -174,7 +177,10 @@ export default {
           parkingName: parking.name
         }
       })
-    }
+    },
+    isSearchNearbyParkingsButtonDisabled() {
+      return this.isParkingTableEditable
+    },
   },
   methods: {
     success (position) {

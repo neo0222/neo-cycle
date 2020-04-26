@@ -74,6 +74,7 @@ export default {
       const tbody = document.querySelector('.el-table__body-wrapper tbody')
       const _this = this
       Sortable.create(tbody, {
+        delay: 200,
         onEnd({ newIndex, oldIndex }) {
           const currRow = _this.tableDataForSorting.splice(oldIndex, 1)[0]
           _this.tableDataForSorting.splice(newIndex, 0, currRow)
