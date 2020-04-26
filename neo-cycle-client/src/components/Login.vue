@@ -14,6 +14,13 @@
         </el-form-item>
       </el-form>
       <el-button @click="login">Log in</el-button>
+      <p v-if="isProductionLinkVisible">
+        <el-link
+          href="https://www.neo-cycle.com"
+          type="primary">
+          Click here for the production version!
+        </el-link>
+      </p>
     <el-dialog
       :visible.sync="isUpdatePasswordDialogShown"
       title="Update your password"
@@ -53,6 +60,9 @@ export default {
   computed: {
     isUpdatePasswordButtonDisabled() {
       return this.newPassword === ''
+    },
+    isProductionLinkVisible() {
+      return process.env.NODE_ENV === 'dev'
     }
   },
   methods: {
