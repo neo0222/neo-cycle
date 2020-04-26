@@ -13,11 +13,23 @@
       :reservedBike="reservedBike"
       :favoritePort="favoritePort"
       :atagoPort="atagoPort"
+      :isParkingTableEditable="isParkingTableEditable"
+      @makeParkingTableEditable="makeParkingTableEditable"
+      @makeParkingTableUneditable="makeParkingTableUneditable"
+      @updateFavoriteParking="updateFavoriteParking"/>
+    <parking-table-for-sorting
+      v-if="isParkingTableEditable && radio4 === 'Search from Fav. List'"
+      :tableData="tableData"
+      :tableDataForSorting="tableDataForSorting"
+      :reservedBike="reservedBike"
+      :status="status"
       @cancelReservation="cancelReservation"
       @terminateCancellation="terminateCancellation"
-      @makeReservation="makeReservation" />
+      @beginCancellation="beginCancellation"
+      @makeReservation="makeReservation"
+      @removeParking="removeParking"/>
     <parking-table-for-reservation
-      v-show="radio4 === 'Search from Fav. List'"
+      v-show="!isParkingTableEditable && radio4 === 'Search from Fav. List'"
       :tableData="tableData"
       :reservedBike="reservedBike"
       :status="status"
@@ -58,6 +70,7 @@ import api from '../api/index'
 import StatusCard from './StatusCard'
 import ParkingTableForReservation from './ParkingTableForReservation'
 import ParkingMap from './ParkingMap'
+import ParkingTableForSorting from './ParkingTableForSorting'
 
 const getLocationOptions = {
   enableHighAccuracy: false,
@@ -71,6 +84,7 @@ export default {
     StatusCard,
     ParkingTableForReservation,
     ParkingMap,
+    ParkingTableForSorting,
   },
   data () {
     return {
@@ -91,7 +105,9 @@ export default {
       currentCoordinate: {
         lat: undefined,
         lon: undefined,
-      }
+      },
+      isParkingTableEditable: false,
+      tableDataForSorting: [],
     }
   },
   async mounted() {
@@ -341,6 +357,30 @@ export default {
         this.handleErrorResponse(this, error)
       }
     },
+    async updateFavoriteParking() {
+      const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Processing...'))
+      try {
+        const responseBody = await api.updateFavoriteParking(
+          sessionStorage.getItem('currentUserName'),
+          this.tableDataForSorting.map((parking) => {
+            return {
+              parkingId: parking.id,
+              parkingName: parking.parkingName
+            }
+          })
+        );
+        const promises = []
+        promises.push(this.retrieveParkingList());
+        promises.push(this.retrieveNearbyParkingList());
+        await Promise.all(promises)
+        this.isParkingTableEditable = false
+        loading.close()
+      }
+      catch (error) {
+        loading.close()
+        this.handleErrorResponse(this, error)
+      }
+    },
     createFullScreenLoadingMaskOptionWithText(text) {
       return {
         lock: true,
@@ -408,6 +448,23 @@ export default {
     setCurrentCoordinate(lat, lon) {
       this.currentCoordinate.lat = lat
       this.currentCoordinate.lon = lon
+    },
+    makeParkingTableEditable() {
+      this.tableDataForSorting = this.tableData.map((parking) => {
+        return {
+          id: parking.id,
+          parkingName: parking.name,
+        }
+      })
+      this.isParkingTableEditable = true
+    },
+    makeParkingTableUneditable() {
+      this.isParkingTableEditable = false
+    },
+    removeParking(parkingId) {
+      this.tableDataForSorting = this.tableDataForSorting.filter((parking) => {
+        return parking.id !== parkingId
+      })
     }
   },
 }
