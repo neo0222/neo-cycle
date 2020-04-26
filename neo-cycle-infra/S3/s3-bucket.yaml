@@ -12,6 +12,8 @@ Parameters:
       - dev
       - prod
     Description: Enter profile.
+  SubDomain:
+    Type: String
 
 ######################################################
 # Mappings:
@@ -29,10 +31,10 @@ Resources:
     Type: 'AWS::S3::Bucket'
     Properties:
       BucketName: !Sub
-        - ${EnvName}.${S3HostingDomainName}
+        - ${SubDomain}.${S3HostingDomainName}
         - {
           NameTag: !Ref S3HostingDomainName,
-          EnvName: !Ref EnvName
+          SubDomain: !Ref SubDomain
         }
       VersioningConfiguration:
         Status: Enabled
