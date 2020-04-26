@@ -17,6 +17,8 @@ Parameters:
   NameTag:
     Type: String
     Default: neo-cycle
+  SubDomain:
+    Type: String
 
 ######################################################
 # Resources:
@@ -27,7 +29,7 @@ Resources:
     Properties: 
       DistributionConfig: 
         Aliases: 
-          - !Sub ${EnvName}.${DomainName}
+          - !Sub ${SubDomain}.${DomainName}
         DefaultCacheBehavior:
           DefaultTTL: 1
           MaxTTL: 1
@@ -35,14 +37,14 @@ Resources:
           SmoothStreaming: false
           ForwardedValues:
              QueryString: false
-          TargetOriginId: !Sub S3-${EnvName}.neo-cycle.com
+          TargetOriginId: !Sub S3-${SubDomain}.neo-cycle.com
           ViewerProtocolPolicy: https-only
         DefaultRootObject: index.html
         Enabled: true
         IPV6Enabled: false
         Origins: 
-          - DomainName: !Sub ${EnvName}.neo-cycle.com.s3.amazonaws.com
-            Id: !Sub S3-${EnvName}.neo-cycle.com
+          - DomainName: !Sub ${SubDomain}.neo-cycle.com.s3.amazonaws.com
+            Id: !Sub S3-${SubDomain}.neo-cycle.com
             S3OriginConfig: 
               OriginAccessIdentity: !Sub origin-access-identity/cloudfront/${CloudFrontOriginAccessIdentity}
         ViewerCertificate: 
@@ -56,4 +58,4 @@ Resources:
     Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
     Properties:
       CloudFrontOriginAccessIdentityConfig:
-        Comment: neo-cycle-dev
+        Comment: !Ref neo-cycle-${EnvName}
