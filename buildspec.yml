@@ -54,7 +54,7 @@ phases:
       - aws cloudformation deploy
           --stack-name neo-cycle-${ENVIRONMENT_NAME}-lambda
           --template-file Lambda/api-gateway-lambda.yaml
-          --parameter-overrides ObjectKeyPrefix=${CODEBUILD_BUILD_NUMBER}
+          --parameter-overrides ObjectKeyPrefix=${CODEBUILD_BUILD_NUMBER} EnvName=${ENVIRONMENT_NAME}
           --capabilities CAPABILITY_AUTO_EXPAND
       - aws cloudformation deploy
           --stack-name neo-cycle-${ENVIRONMENT_NAME}-cognito-lambda
