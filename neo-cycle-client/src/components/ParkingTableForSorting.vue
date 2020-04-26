@@ -1,71 +1,63 @@
 <template>
   <el-table
-    :data="tableData"
-    ref="tableData"
+    class="sort-table"
+    :data="tableDataForSorting"
+    ref="tableDataForSorting"
     :cell-style="{padding: '0', height: '40px'}"
     style="width: 100%;margin-bottom: 20px;"
     row-key="id"
-    @row-click="rowClicked"
     border>
     <el-table-column
-      prop="name"
+      prop="parkingName"
       label="Name"
-      width="282"
+      width="250"
       header-align="left">
     </el-table-column>
     <el-table-column
-      label="Bikes"
-      width="78"
+      label="Operation"
+      width="96"
       header-align="left"
       align="center">
       <template
         slot-scope="scope">
-        <p v-if="isRowParking(scope)">
-          {{scope.row.cycleCount}}
-        </p>
         <el-popconfirm
           confirmButtonText='Yes'
           cancelButtonText='No, Thanks'
           icon="el-icon-question"
           iconColor="red"
           title="Are you sure to cancel reservation?"
-          v-if="isRowReservedBike(scope)"
-          @onConfirm="$emit('cancelReservation')"
-          @onCancel="$emit('terminateCancellation')">
+          @onConfirm="$emit('removeParking', scope.row.id)">
           <el-button
             slot="reference"
             type="danger"
             plain
-            size="mini"
-            @click="$emit('beginCancellation')">
-            取消
+            size="mini">
+            delete
           </el-button>
         </el-popconfirm>
-        <el-button
-          v-if="isRowVacantBike(scope)"
-          :disabled="status !== 'WAITING_FOR_RESERVATION'"
-          @click="$emit('makeReservation', scope.row.cycle)"
-          type="primary"
-          plain
-          size="mini">
-          予約
-        </el-button>
       </template>
     </el-table-column>
   </el-table>
 </template>
 
 <script>
+import Sortable from 'sortablejs'
+
 export default {
   props: [
     'tableData',
     'reservedBike',
     'status',
+    'tableDataForSorting',
   ],
+  mounted() {
+    document.body.ondrop = function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+    };
+    this.rowDrop()
+  },
   methods: {
-    rowClicked(row) {
-      this.$refs.tableData.toggleRowExpansion(row);
-    },
     isRowParking(scope) {
       return scope.row.cycleCount !== ""
     },
@@ -74,6 +66,19 @@ export default {
     },
     isRowVacantBike(scope) {
       return scope.row.cycleCount === "" && scope.row.name !== this.reservedBike.name
+    },
+    getRowKey(row){
+      return row.parkingId
+    },
+    rowDrop() {
+      const tbody = document.querySelector('.el-table__body-wrapper tbody')
+      const _this = this
+      Sortable.create(tbody, {
+        onEnd({ newIndex, oldIndex }) {
+          const currRow = _this.tableDataForSorting.splice(oldIndex, 1)[0]
+          _this.tableDataForSorting.splice(newIndex, 0, currRow)
+        }
+      })
     },
   }
 }

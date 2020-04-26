@@ -10,7 +10,11 @@ Parameters:
       - dev
       - prod
     Description: Enter profile.
-
+  NameTag:
+    Type: String
+    Default: neo-cycle
+    AllowedValues:
+      - neo-cycle
 ######################################################
 # Mappings:
 ######################################################
@@ -28,10 +32,10 @@ Resources:
   #-----------------------
   # ポリシー作成
   #-----------------------
-  NeoCycleSessionTablePutItemPolicy:
+  NeoCycleUserTablePutItemPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      Description: authorize to put item into session dynamodb 
+      Description: authorize to put item into user dynamodb 
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -39,12 +43,12 @@ Resources:
             Action:
               - dynamodb:PutItem
             Resource:
-              - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/neo-cycle-SESSION"
+              - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${NameTag}-${EnvName}-USER"
 
-  NeoCycleSessionTableGetItemPolicy:
+  NeoCycleUserTableGetItemPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
-      Description: authorize to get item from session dynamodb 
+      Description: authorize to get item from user dynamodb 
       PolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -52,7 +56,20 @@ Resources:
             Action:
               - dynamodb:GetItem
             Resource:
-              - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/neo-cycle-SESSION"
+              - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${NameTag}-${EnvName}-USER"
+
+  NeoCycleUserTableUpdateItemPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: authorize to update item in user dynamodb 
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:UpdateItem
+            Resource:
+              - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${NameTag}-${EnvName}-USER"
 
   NeoCycleGetParameterPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -65,8 +82,6 @@ Resources:
             Action:
               - ssm:getParameter
             Resource:
-              - arn:aws:ssm:ap-northeast-1:010660485109:parameter/neo-cycle/memberId
-              - arn:aws:ssm:ap-northeast-1:010660485109:parameter/neo-cycle/password
               - arn:aws:ssm:ap-northeast-1:010660485109:parameter/neo-cycle/php-url
 
   #-----------------------
@@ -83,7 +98,7 @@ Resources:
         }
       ManagedPolicyArns:
         - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
-        - !Ref NeoCycleSessionTablePutItemPolicy
+        - !Ref NeoCycleUserTablePutItemPolicy
         - !Ref NeoCycleGetParameterPolicy
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
@@ -104,7 +119,7 @@ Resources:
         }
       ManagedPolicyArns:
         - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
-        - !Ref NeoCycleSessionTableGetItemPolicy
+        - !Ref NeoCycleUserTableGetItemPolicy
         - !Ref NeoCycleGetParameterPolicy
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
@@ -125,7 +140,7 @@ Resources:
         }
       ManagedPolicyArns:
         - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
-        - !Ref NeoCycleSessionTableGetItemPolicy
+        - !Ref NeoCycleUserTableGetItemPolicy
         - !Ref NeoCycleGetParameterPolicy
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
@@ -146,7 +161,7 @@ Resources:
         }
       ManagedPolicyArns:
         - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
-        - !Ref NeoCycleSessionTableGetItemPolicy
+        - !Ref NeoCycleUserTableGetItemPolicy
         - !Ref NeoCycleGetParameterPolicy
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
@@ -167,27 +182,7 @@ Resources:
         }
       ManagedPolicyArns:
         - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
-        - !Ref NeoCycleSessionTableGetItemPolicy
-        - !Ref NeoCycleGetParameterPolicy
-      AssumeRolePolicyDocument:
-        Version: "2012-10-17"
-        Statement:
-          - Effect: Allow
-            Action: sts:AssumeRole
-            Principal:
-              Service: lambda.amazonaws.com
-
-  RoleSessionCreator:
-    Type: AWS::IAM::Role
-    Properties:
-      RoleName: !Sub
-        - ${NameTag}-${EnvName}-session-creator-role
-        - {
-          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
-          EnvName: !Ref EnvName
-        }
-      ManagedPolicyArns:
-        - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
+        - !Ref NeoCycleUserTableGetItemPolicy
         - !Ref NeoCycleGetParameterPolicy
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
@@ -216,7 +211,90 @@ Resources:
             Action: sts:AssumeRole
             Principal:
               Service: lambda.amazonaws.com
-              
+
+  RoleUserInitializer:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub
+        - ${NameTag}-${EnvName}-user-initializer-role
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+      ManagedPolicyArns:
+        - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
+        - !Ref NeoCycleUserTablePutItemPolicy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: lambda.amazonaws.com              
+
+  RoleParkingRegisterer:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub
+        - ${NameTag}-${EnvName}-parking-registerer-role
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+      ManagedPolicyArns:
+        - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
+        - !Ref NeoCycleGetParameterPolicy
+        - !Ref NeoCycleUserTableUpdateItemPolicy
+        - !Ref NeoCycleUserTableGetItemPolicy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: lambda.amazonaws.com   
+
+  RoleUserMigrator:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub
+        - ${NameTag}-${EnvName}-user-migrator-role
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+      ManagedPolicyArns:
+        - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
+        - !Ref NeoCycleGetParameterPolicy
+        - !Ref NeoCycleUserTablePutItemPolicy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: lambda.amazonaws.com
+
+
+  RolePostAuthenticator:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub
+        - ${NameTag}-${EnvName}-post-authenticator-role
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+      ManagedPolicyArns:
+        - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
+        - !Ref NeoCycleGetParameterPolicy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: lambda.amazonaws.com 
 #################################
 # Outputs
 #################################
@@ -270,22 +348,52 @@ Outputs:
           NameTag: !FindInMap [ StackConfig, NameTag, Value ],
           EnvName: !Ref EnvName
         }
-
-  RoleSessionCreatorArn:
-    Value: !GetAtt RoleSessionCreator.Arn
-    Export:
-      Name: !Sub
-        - ${NameTag}-${EnvName}-RoleSessionCreatorArn
-        - {
-          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
-          EnvName: !Ref EnvName
-        }
       
   RoleParkingNearbyRetrieverArn:
     Value: !GetAtt RoleParkingNearbyRetriever.Arn
     Export:
       Name: !Sub
         - ${NameTag}-${EnvName}-RoleParkingNearbyRetrieverArn
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+
+  RoleUserInitializerArn:
+    Value: !GetAtt RoleUserInitializer.Arn
+    Export:
+      Name: !Sub
+        - ${NameTag}-${EnvName}-RoleUserInitializerArn
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+
+  RoleParkingRegistererArn:
+    Value: !GetAtt RoleParkingRegisterer.Arn
+    Export:
+      Name: !Sub
+        - ${NameTag}-${EnvName}-RoleParkingRegistererArn
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+
+  RoleUserMigratorArn:
+    Value: !GetAtt RoleUserMigrator.Arn
+    Export:
+      Name: !Sub
+        - ${NameTag}-${EnvName}-RoleUserMigratorArn
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+
+  RolePostAuthenticatorArn:
+    Value: !GetAtt RolePostAuthenticator.Arn
+    Export:
+      Name: !Sub
+        - ${NameTag}-${EnvName}-RolePostAuthenticatorArn
         - {
           NameTag: !FindInMap [ StackConfig, NameTag, Value ],
           EnvName: !Ref EnvName

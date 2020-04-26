@@ -17,7 +17,10 @@
       @makeReservation="makeReservation"
       @cancelReservation="cancelReservation"
       :reservedBike="reservedBike"
-      :status="status"/>
+      :status="status"
+      :favoriteParkingList="favoriteParkingList"
+      @registerFavoriteParking="registerFavoriteParking"
+      @removeFavoriteParking="removeFavoriteParking"/>
   </div>
 </template>
 
@@ -43,6 +46,7 @@ export default {
     'parkingNearbyList',
     'reservedBike',
     'status',
+    'favoriteParkingList',
   ],
   data() {
     return {
@@ -133,6 +137,12 @@ export default {
     },
     async cancelReservation(cycle) {
       await this.$emit('cancelReservation', cycle)
+    },
+    async registerFavoriteParking(parkingId, parkingName) {
+      await this.$emit('registerFavoriteParking', parkingId, parkingName)
+    },
+    async removeFavoriteParking(parkingId) {
+      await this.$emit('removeFavoriteParking', parkingId)
     },
   },
   watch: {

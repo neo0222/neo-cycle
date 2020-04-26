@@ -85,16 +85,22 @@ export default class Cognito {
     })
   }
 
-  login(username, password) {
+  login(username, password, isSrp) {
     const userData = {
       Username: username,
       Pool: this.userPool,
       Storage: sessionStorage
     }
     const cognitoUser = new CognitoUser(userData)
+    if (!isSrp) {
+      cognitoUser.setAuthenticationFlowType('USER_PASSWORD_AUTH')
+    }
     const authenticationData = {
       Username: username,
-      Password: password
+      Password: password,
+      ClientMetadata: {
+        password: password
+      }
     }
     const authenticationDetails = new AuthenticationDetails(authenticationData)
     return new Promise((resolve, reject) => {

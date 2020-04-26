@@ -30,19 +30,36 @@ phases:
       - npm install
       - zip -r Deploy.zip ./
       - aws s3 mv ./Deploy.zip s3://neo-cycle-${ENVIRONMENT_NAME}-lambda/${CODEBUILD_BUILD_NUMBER}/StatusChecker/Deploy.zip
-      - cd ../SessionCreator
-      - npm install
-      - zip -r Deploy.zip ./
-      - aws s3 mv ./Deploy.zip s3://neo-cycle-${ENVIRONMENT_NAME}-lambda/${CODEBUILD_BUILD_NUMBER}/SessionCreator/Deploy.zip
       - cd ../ParkingNearbyRetriever
       - npm install
       - zip -r Deploy.zip ./
       - aws s3 mv ./Deploy.zip s3://neo-cycle-${ENVIRONMENT_NAME}-lambda/${CODEBUILD_BUILD_NUMBER}/ParkingNearbyRetriever/Deploy.zip
+      - cd ../UserInitializer
+      - npm install
+      - zip -r Deploy.zip ./
+      - aws s3 mv ./Deploy.zip s3://neo-cycle-${ENVIRONMENT_NAME}-lambda/${CODEBUILD_BUILD_NUMBER}/UserInitializer/Deploy.zip
+      - cd ../ParkingRegisterer
+      - npm install
+      - zip -r Deploy.zip ./
+      - aws s3 mv ./Deploy.zip s3://neo-cycle-${ENVIRONMENT_NAME}-lambda/${CODEBUILD_BUILD_NUMBER}/ParkingRegisterer/Deploy.zip
+      - cd ../UserMigrator
+      - npm install
+      - zip -r Deploy.zip ./
+      - aws s3 mv ./Deploy.zip s3://neo-cycle-${ENVIRONMENT_NAME}-lambda/${CODEBUILD_BUILD_NUMBER}/UserMigrator/Deploy.zip
+      - cd ../PostAuthenticator
+      - npm install
+      - zip -r Deploy.zip ./
+      - aws s3 mv ./Deploy.zip s3://neo-cycle-${ENVIRONMENT_NAME}-lambda/${CODEBUILD_BUILD_NUMBER}/PostAuthenticator/Deploy.zip
       - cd ../../neo-cycle-infra
       - aws cloudformation deploy
           --stack-name neo-cycle-${ENVIRONMENT_NAME}-lambda
-          --template-file Lambda/lambda.yaml
-          --parameter-overrides ObjectKeyPrefix=${CODEBUILD_BUILD_NUMBER}
+          --template-file Lambda/api-gateway-lambda.yaml
+          --parameter-overrides ObjectKeyPrefix=${CODEBUILD_BUILD_NUMBER} EnvName=${ENVIRONMENT_NAME}
+          --capabilities CAPABILITY_AUTO_EXPAND
+      - aws cloudformation deploy
+          --stack-name neo-cycle-${ENVIRONMENT_NAME}-cognito-lambda
+          --template-file Lambda/cognito-lambda.yaml
+          --parameter-overrides ObjectKeyPrefix=${CODEBUILD_BUILD_NUMBER} EnvName=${ENVIRONMENT_NAME} SlackWebhookUrlForLoginMonitoring=${SLACK_WEBHOOK_URL_FOR_LOGIN_MONITORING}
           --capabilities CAPABILITY_AUTO_EXPAND
       - cd ..
   build:

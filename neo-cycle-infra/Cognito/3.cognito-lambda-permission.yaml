@@ -1,0 +1,54 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Cognito User Pool
+
+######################################################
+# Parameters:
+######################################################
+Parameters:
+  EnvName:
+    Type: String
+    AllowedValues:
+      - dev
+      - prod
+    Description: Enter profile.
+  NameTag:
+    Type: String
+    Default: neo-cycle
+    AllowedValues:
+      - neo-cycle
+
+######################################################
+# Resources
+######################################################
+Resources:
+  LambdaPostConfirmationPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !ImportValue
+        Fn::Sub: ${NameTag}-${EnvName}-LambdaUserInitializerName
+      Principal: cognito-idp.amazonaws.com
+      SourceArn: !ImportValue
+        Fn::Sub: ${NameTag}-${EnvName}-UserPoolArn
+
+  LambdaPreTokenGenerationPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !ImportValue
+        Fn::Sub: ${NameTag}-${EnvName}-LambdaPostAuthenticatorName
+      Principal: cognito-idp.amazonaws.com
+      SourceArn: !ImportValue
+        Fn::Sub: ${NameTag}-${EnvName}-UserPoolArn
+
+  LambdaUserMigrationPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !ImportValue
+        Fn::Sub: ${NameTag}-${EnvName}-LambdaUserMigratorName
+      Principal: cognito-idp.amazonaws.com
+      SourceArn: !ImportValue
+        Fn::Sub: ${NameTag}-${EnvName}-UserPoolArn

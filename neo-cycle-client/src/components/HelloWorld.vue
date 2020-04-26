@@ -13,11 +13,24 @@
       :reservedBike="reservedBike"
       :favoritePort="favoritePort"
       :atagoPort="atagoPort"
+      :isParkingTableEditable="isParkingTableEditable"
+      @makeParkingTableEditable="makeParkingTableEditable"
+      @makeParkingTableUneditable="makeParkingTableUneditable"
+      @updateFavoriteParking="updateFavoriteParking"
+      @cancelReservation="cancelReservation"/>
+    <parking-table-for-sorting
+      v-if="isParkingTableEditable && radio4 === 'Search from Fav. List'"
+      :tableData="tableData"
+      :tableDataForSorting="tableDataForSorting"
+      :reservedBike="reservedBike"
+      :status="status"
       @cancelReservation="cancelReservation"
       @terminateCancellation="terminateCancellation"
-      @makeReservation="makeReservation" />
+      @beginCancellation="beginCancellation"
+      @makeReservation="makeReservation"
+      @removeParking="removeParking"/>
     <parking-table-for-reservation
-      v-show="radio4 === 'Search from Fav. List'"
+      v-show="!isParkingTableEditable && radio4 === 'Search from Fav. List'"
       :tableData="tableData"
       :reservedBike="reservedBike"
       :status="status"
@@ -34,6 +47,9 @@
       :status="status"
       @setCurrentCoordinate="setCurrentCoordinate"
       @retrieveNearbyParkingList="retrieveNearbyParkingList"
+      :favoriteParkingList="favoriteParkingList"
+      @registerFavoriteParking="registerFavoriteParking"
+      @removeFavoriteParking="removeFavoriteParking"
       />
     <el-dialog
       :visible.sync="isSessionTimeOutDialogVisible"
@@ -55,6 +71,7 @@ import api from '../api/index'
 import StatusCard from './StatusCard'
 import ParkingTableForReservation from './ParkingTableForReservation'
 import ParkingMap from './ParkingMap'
+import ParkingTableForSorting from './ParkingTableForSorting'
 
 const getLocationOptions = {
   enableHighAccuracy: false,
@@ -68,6 +85,7 @@ export default {
     StatusCard,
     ParkingTableForReservation,
     ParkingMap,
+    ParkingTableForSorting,
   },
   data () {
     return {
@@ -88,6 +106,13 @@ export default {
       currentCoordinate: {
         lat: undefined,
         lon: undefined,
+      },
+      isParkingTableEditable: false,
+      tableDataForSorting: [],
+      timer: {
+        checkStatusTimerId: undefined,
+        retrieveParkingListTimerId: undefined,
+        retrieveNearbyParkingListTimerId: undefined,
       }
     }
   },
@@ -138,30 +163,23 @@ export default {
     },
     isGoHomeButtonPlain() {
       return !this.isGoToOfficeButtonPlain
+    },
+    favoriteParkingList() {
+      return this.tableData.map((parking) => {
+        return {
+          parkingId: parking.id,
+          parkingName: parking.name
+        }
+      })
     }
   },
   methods: {
     success (position) {
       this.setCurrentCoordinate(position.coords.latitude, position.coords.longitude)
     },
-    load(tree, treeNode, resolve) {
-      setTimeout(() => {
-        resolve([
-          {
-            id: 31,
-            date: '2016-05-01',
-            name: 'wangxiaohu'
-          }, {
-            id: 32,
-            date: '2016-05-01',
-            name: 'wangxiaohu'
-          }
-        ])
-      }, 1000)
-    },
     async checkStatusWithRetry() {
       await this.checkStatus()
-      setTimeout(this.checkStatusWithRetry, 10000)
+      this.timer.checkStatusTimerId = setTimeout(this.checkStatusWithRetry, 10000)
     },
     async checkStatus() {
       try {
@@ -189,7 +207,7 @@ export default {
     },
     async retrieveParkingListWithRetry() {
       await this.retrieveParkingList()
-      setTimeout(this.retrieveParkingListWithRetry, 10000)
+      this.timer.retrieveParkingListTimerId = setTimeout(this.retrieveParkingListWithRetry, 10000)
     },
     async retrieveParkingList() {
       // 予約処理中は取得しない
@@ -202,18 +220,17 @@ export default {
           sessionStorage.getItem('currentUserName'),
           sessionStorage.getItem('sessionId')
         );
-        this.tableData.length = 0;
+        this.tableData = [];
         for (const parking of result.parkingList) {
-          if (!parking.parkingName) continue
           this.tableData.push({
             id: parking.parkingId,
-            date: parking.parkingName,
-            name: parking.cycleList.length + '台',
+            name: parking.parkingName,
+            cycleCount: parking.cycleList.length + '台',
             children: parking.cycleList.map((cycle) => {
               return {
                 id: cycle.CycleName,
-                date: cycle.CycleName,
-                name: '',
+                name: cycle.CycleName,
+                cycleCount: '',
                 cycle: cycle,
               }
             })
@@ -226,7 +243,7 @@ export default {
     },
     async retrieveNearbyParkingListWithRetry() {
       await this.retrieveNearbyParkingList()
-      setTimeout(this.retrieveNearbyParkingListWithRetry, 10000)
+      this.timer.retrieveNearbyParkingListTimerId = setTimeout(this.retrieveNearbyParkingListWithRetry, 10000)
     },
     async retrieveNearbyParkingList() {
       // 予約処理中は取得しない
@@ -293,6 +310,67 @@ export default {
         this.handleErrorResponse(this, error)
       }
 
+    },
+    async registerFavoriteParking(parkingId, parkingName) {
+      const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Processing...'))
+      try {
+        const responseBody = await api.registerFavoriteParking(
+          sessionStorage.getItem('currentUserName'),
+          parkingId,
+          parkingName
+        );
+        const promises = []
+        promises.push(this.retrieveParkingList());
+        promises.push(this.retrieveNearbyParkingList());
+        await Promise.all(promises)
+        loading.close()
+      }
+      catch (error) {
+        loading.close()
+        this.handleErrorResponse(this, error)
+      }
+    },
+    async removeFavoriteParking(parkingId) {
+      const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Processing...'))
+      try {
+        const responseBody = await api.removeFavoriteParking(
+          sessionStorage.getItem('currentUserName'),
+          parkingId
+        );
+        const promises = []
+        promises.push(this.retrieveParkingList());
+        promises.push(this.retrieveNearbyParkingList());
+        await Promise.all(promises)
+        loading.close()
+      }
+      catch (error) {
+        loading.close()
+        this.handleErrorResponse(this, error)
+      }
+    },
+    async updateFavoriteParking() {
+      const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Processing...'))
+      try {
+        const responseBody = await api.updateFavoriteParking(
+          sessionStorage.getItem('currentUserName'),
+          this.tableDataForSorting.map((parking) => {
+            return {
+              parkingId: parking.id,
+              parkingName: parking.parkingName
+            }
+          })
+        );
+        const promises = []
+        promises.push(this.retrieveParkingList());
+        promises.push(this.retrieveNearbyParkingList());
+        await Promise.all(promises)
+        this.isParkingTableEditable = false
+        loading.close()
+      }
+      catch (error) {
+        loading.close()
+        this.handleErrorResponse(this, error)
+      }
     },
     createFullScreenLoadingMaskOptionWithText(text) {
       return {
@@ -361,8 +439,30 @@ export default {
     setCurrentCoordinate(lat, lon) {
       this.currentCoordinate.lat = lat
       this.currentCoordinate.lon = lon
+    },
+    makeParkingTableEditable() {
+      this.tableDataForSorting = this.tableData.map((parking) => {
+        return {
+          id: parking.id,
+          parkingName: parking.name,
+        }
+      })
+      this.isParkingTableEditable = true
+    },
+    makeParkingTableUneditable() {
+      this.isParkingTableEditable = false
+    },
+    removeParking(parkingId) {
+      this.tableDataForSorting = this.tableDataForSorting.filter((parking) => {
+        return parking.id !== parkingId
+      })
     }
   },
+  destroyed() {
+    for (let timerId in this.timer) {
+      window.clearTimeout( this.timer[timerId] )
+    }
+  }
 }
 </script>
 

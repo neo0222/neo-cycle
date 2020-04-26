@@ -17,7 +17,7 @@ Parameters:
     Type: String
   S3Bucket:
     Type: String
-    Default: prod.neo-cycle.com
+    Default: www.neo-cycle.com
   GoogleApiKey:
     Type: String
   NameTag:
@@ -31,6 +31,8 @@ Parameters:
       - dev
       - prod
     Description: Enter profile.
+  SlackWebhookUrlForLoginMonitoring:
+    Type: String
 
 ######################################################
 # Resources
@@ -84,9 +86,15 @@ Resources:
               - !ImportValue
                 Fn::Sub: ${NameTag}-${EnvName}-RoleStatusCheckerArn
               - !ImportValue
-                Fn::Sub: ${NameTag}-${EnvName}-RoleSessionCreatorArn
-              - !ImportValue
                 Fn::Sub: ${NameTag}-${EnvName}-RoleParkingNearbyRetrieverArn
+              - !ImportValue
+                Fn::Sub: ${NameTag}-${EnvName}-RoleUserInitializerArn
+              - !ImportValue
+                Fn::Sub: ${NameTag}-${EnvName}-RoleParkingRegistererArn
+              - !ImportValue
+                Fn::Sub: ${NameTag}-${EnvName}-RoleUserMigratorArn
+              - !ImportValue
+                Fn::Sub: ${NameTag}-${EnvName}-RolePostAuthenticatorArn
             Action:
               - iam:PassRole
 
@@ -118,6 +126,8 @@ Resources:
             Value: !Ref EnvName
           - Name: VUE_APP_GOOGLE_API_KEY
             Value: !Ref GoogleApiKey
+          - Name: SLACK_WEBHOOK_URL_FOR_LOGIN_MONITORING
+            Value: !Ref SlackWebhookUrlForLoginMonitoring
         Type: LINUX_CONTAINER
         Image: aws/codebuild/standard:2.0-1.13.0
       ServiceRole: !GetAtt RoleCodeBuildService.Arn

@@ -15,28 +15,34 @@ exports.handler = async (event, context) => {
 };
 
 async function main(event, context) {
-  const body = JSON.parse(event.body);
+  const envName = process.env.ENV_NAME;
+  const userTableName = `neo-cycle-${envName}-USER`;
   try {
-    const sessionId = await retrieveSessionId(body.memberId, body.password);
-    const response = {
-      statusCode: 200,
-      body: JSON.stringify({ sessionId }),
-      headers: {
-          "Access-Control-Allow-Origin": '*'
-      },
-      isBase64Encoded: false
+    if(!await retrieveSessionId(event.userName, event.request.password)) {
+      throw new Error()
+    }
+    const params = {
+      TableName: userTableName,
+      Item: {
+        memberId: event.userName,
+        favoriteParkingList: [],
+        settingMap: {
+          language: 'en',
+          defaultDisplay: 'map'
+        }
+      }
     };
-    return response;
+    await docClient.put(params).promise();
+    await notifyToSlack(event.userName);
+    event.response.userAttributes = {
+      "username": event.userName
+    };
+    event.response.finalUserStatus = "CONFIRMED";
+    event.response.messageAction = "SUPPRESS";
+    return event;
   }
   catch (error) {
-    return {
-      statusCode: 440,
-      body: JSON.stringify({message: error}),
-      headers: {
-          "Access-Control-Allow-Origin": '*'
-      },
-      isBase64Encoded: false
-    };
+    throw error
   }
 }
 
@@ -69,4 +75,15 @@ async function retrieveSessionId(memberId, password) {
   }
 }
 
-
+async function notifyToSlack(memberId) {
+  try {
+    const res = await axios.post(
+      process.env.SLACK_WEBHOOK_URL_FOR_LOGIN_MONITORING,
+      {
+        text: `[初回]${memberId}さんがログインしました。`
+      });
+  }
+  catch (error) {
+    throw error;
+  }
+}

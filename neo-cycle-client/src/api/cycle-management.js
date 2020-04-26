@@ -1,6 +1,6 @@
 const axios = require('axios');
 import env from '../environment/index'
-const url = 'https://zn2vxjwu4d.execute-api.ap-northeast-1.amazonaws.com/dev';
+const url = env.invokeUrl;
 
 export async function retrieveParkingList(memberId, sessionId) {
   const res = await axios.post(url + '/parkings', { memberId, sessionId });
@@ -28,5 +28,20 @@ export async function createSession(memberId, password) {
 
 export async function retrieveNearbyParkingList(memberId, sessionId, coordinate) {
   const res = await axios.post(url + '/parkings/nearby', { memberId, sessionId, lat: coordinate.lat, lon: coordinate.lon });
+  return res.data
+}
+
+export async function registerFavoriteParking(memberId, parkingId, parkingName) {
+  const res = await axios.post(url + '/parkings/registration', { memberId, parkingId, parkingName });
+  return res.data
+}
+
+export async function removeFavoriteParking(memberId, parkingId) {
+  const res = await axios.post(url + '/parkings/removal', { memberId, parkingId });
+  return res.data
+}
+
+export async function updateFavoriteParking(memberId, favoriteParkingList) {
+  const res = await axios.post(url + '/parkings/update', { memberId, favoriteParkingList });
   return res.data
 }

@@ -1,0 +1,30 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  Amazon Certificate Manager
+
+######################################################
+# Parameters:
+######################################################
+Parameters:
+  DomainName:
+    Type: String
+    Default: '*.neo-cycle.com'
+  NameTag:
+    Type: String
+    Default: neo-cycle
+
+######################################################
+# Resource:
+###################################################### 
+Resources:
+  NeoCycleCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties: 
+      DomainName: !Ref DomainName
+      ValidationMethod: DNS
+
+Outputs:
+  NeoCycleCertificateArn:
+    Value: !Ref NeoCycleCertificate
+    Export:
+      Name: !Sub ${NameTag}-certificate

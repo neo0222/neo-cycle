@@ -70,12 +70,11 @@ async function retrieveParkingList(memberId, sessionId, lat, lon) {
   params.append('a_lon', lon)
   params.append('n_range', '2000')
   params.append('n_disable_coupon_sort', '1')
-  params.append('n_limit', '60')
+  params.append('n_limit', '40')
   params.append('n_offset', '0')
   
   const res = await axios.post(imanaraUrl, params);
-  const rawParkingList = parser.parse(res.data).info.shop;
-      
+  const rawParkingList = parser.parse(res.data).info.shop ? parser.parse(res.data).info.shop : [];
   const parkingList = [];
   for (const rawParking of rawParkingList) {
     parkingList.push((async () => {
