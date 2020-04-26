@@ -17,8 +17,10 @@ async function main(event, context) {
   const body = JSON.parse(event.body);
   if (event.resource === "/parkings/registration") {
     await registerFavoriteParking(body.memberId, body.parkingId, body.parkingName)
-  } else {
+  } else if (event.resource === "/parkings/removal") {
     await removeFavoriteParking(body.memberId, body.parkingId)
+  } else {
+    await updateFavoriteParking(body.memberId, body.favoriteParkingList)
   }
   return {
     statusCode: 200,
@@ -69,6 +71,28 @@ async function removeFavoriteParking(memberId, parkingId) {
       ':favoriteParkingList': currentFavoriteParkingList.filter((parking) => {
         return parking.parkingId !== parkingId
       })
+    },
+    UpdateExpression: 'SET #favoriteParkingList = :favoriteParkingList'
+  };
+  try {
+    await docClient.update(params).promise();
+  }
+  catch (error) {
+    throw error
+  }
+}
+
+async function updateFavoriteParking(memberId, favoriteParkingList) {
+  const params = {
+    TableName: userTableName,
+    Key:{
+      memberId : memberId
+    },
+    ExpressionAttributeNames: {
+      '#favoriteParkingList': 'favoriteParkingList'
+    },
+    ExpressionAttributeValues: {
+      ':favoriteParkingList': favoriteParkingList
     },
     UpdateExpression: 'SET #favoriteParkingList = :favoriteParkingList'
   };
