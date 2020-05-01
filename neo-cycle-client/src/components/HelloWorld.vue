@@ -139,9 +139,9 @@ export default {
     }
     loading.close()
     this.isMounted = true
-    this.checkStatusWithRetry()
-    this.retrieveParkingListWithRetry()
-    this.retrieveNearbyParkingListWithRetry()
+    // this.checkStatusWithRetry()
+    // this.retrieveParkingListWithRetry()
+    // this.retrieveNearbyParkingListWithRetry()
   },
   computed: {
     headerMessage() {
