@@ -133,9 +133,9 @@ export default {
       this.handleErrorResponse(this, error)
     }
     loading.close()
-    this.checkStatusWithRetry()
-    this.retrieveParkingListWithRetry()
-    this.retrieveNearbyParkingListWithRetry()
+    // this.checkStatusWithRetry()
+    // this.retrieveParkingListWithRetry()
+    // this.retrieveNearbyParkingListWithRetry()
   },
   computed: {
     headerMessage() {
