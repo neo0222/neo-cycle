@@ -1,13 +1,14 @@
 <template>
   <div>
     <div class="map" ref="googleMap" />
-      <template :v-if="!!this.google && !!this.map">
+      <template v-if="!!this.google && !!this.map && isMounted">
         <child-marker 
           v-for="(parking,i) in parkingNearbyList"
           :key="i + updatedUnixDatetime"
           :parking="parking" 
           :google="google"
           :map="map"
+          :isParkingFavorite="isParkingFavorite(parking.parkingId)"
           @showParkingCard="showParkingCard"
         />
       </template>
@@ -47,6 +48,7 @@ export default {
     'reservedBike',
     'status',
     'favoriteParkingList',
+    'isMounted'
   ],
   data() {
     return {
@@ -144,13 +146,26 @@ export default {
     async removeFavoriteParking(parkingId) {
       await this.$emit('removeFavoriteParking', parkingId)
     },
+    isParkingFavorite(parkingId) {
+      return this.favoriteParkingList.some((parking) => {
+        return parking.parkingId === parkingId
+      })
+    }
   },
   watch: {
     'parkingNearbyList': {
       handler: function(newVal) {
         const now = new Date()
         this.updatedUnixDatetime = now.getTime()
-      }
+      },
+      deep: true,
+    },
+    'favoriteParkingList': {
+      handler: function(newVal) {
+        const now = new Date()
+        this.updatedUnixDatetime = now.getTime()
+      },
+      deep: true,
     }
   },
 }
