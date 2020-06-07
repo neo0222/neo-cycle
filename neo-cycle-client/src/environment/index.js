@@ -20,4 +20,12 @@ export default class Environment {
   static get clientId() {
     return config.ClientId
   }
+
+  static get retryLimitMs() {
+    return config.RetryLimitMs
+  }
+  
+  static get retryIntervalMs() {
+    return config.RetryIntervalMs
+  }
 }
