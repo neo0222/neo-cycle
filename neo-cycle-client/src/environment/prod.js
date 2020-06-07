@@ -5,7 +5,7 @@ const config = {
   IdentityPoolId: 'ap-northeast-1:c0d89b7f-4bc5-401a-8491-08d6b6a4b5be',
   InvokeUrl: 'https://iz7snyhj34.execute-api.ap-northeast-1.amazonaws.com/prod',
   policyArn: '',
-  RetryLimitMs: 40000,
+  RetryLimitMs: 120000,
   RetryIntervalMs: 10000
 }
 
