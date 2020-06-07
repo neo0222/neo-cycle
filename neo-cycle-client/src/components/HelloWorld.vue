@@ -71,6 +71,7 @@
 
 <script>
 import api from '../api/index'
+import env from '../environment/index'
 
 import StatusCard from './StatusCard'
 import ParkingTableForReservation from './ParkingTableForReservation'
@@ -82,6 +83,9 @@ const getLocationOptions = {
   timeout: 60000,
   maximumAge: 0
 }
+
+const retryLimitMs = env.retryLimitMs
+const retryIntervalMs = env.retryIntervalMs
 
 export default {
   name: 'HelloWorld',
@@ -139,9 +143,10 @@ export default {
     }
     loading.close()
     this.isMounted = true
-    // this.checkStatusWithRetry()
-    // this.retrieveParkingListWithRetry()
-    // this.retrieveNearbyParkingListWithRetry()
+    this.checkStatusWithRetry()
+    this.retrieveParkingListWithRetry()
+    this.retrieveNearbyParkingListWithRetry()
+    setTimeout(this.terminateRetry, retryLimitMs)
   },
   computed: {
     headerMessage() {
@@ -188,7 +193,7 @@ export default {
     },
     async checkStatusWithRetry() {
       await this.checkStatus()
-      this.timer.checkStatusTimerId = setTimeout(this.checkStatusWithRetry, 10000)
+      this.timer.checkStatusTimerId = setTimeout(this.checkStatusWithRetry, retryIntervalMs)
     },
     async checkStatus() {
       try {
@@ -216,12 +221,12 @@ export default {
     },
     async retrieveParkingListWithRetry() {
       await this.retrieveParkingList()
-      this.timer.retrieveParkingListTimerId = setTimeout(this.retrieveParkingListWithRetry, 10000)
+      this.timer.retrieveParkingListTimerId = setTimeout(this.retrieveParkingListWithRetry, retryIntervalMs)
     },
     async retrieveParkingList() {
       // 予約処理中は取得しない
       if (this.isReservationBeenProcessing) {
-        setTimeout(this.retrieveParkingList, 10000)
+        setTimeout(this.retrieveParkingList, retryIntervalMs)
         return
       }
       try {
@@ -252,12 +257,12 @@ export default {
     },
     async retrieveNearbyParkingListWithRetry() {
       await this.retrieveNearbyParkingList()
-      this.timer.retrieveNearbyParkingListTimerId = setTimeout(this.retrieveNearbyParkingListWithRetry, 10000)
+      this.timer.retrieveNearbyParkingListTimerId = setTimeout(this.retrieveNearbyParkingListWithRetry, retryIntervalMs)
     },
     async retrieveNearbyParkingList() {
       // 予約処理中は取得しない
       if (this.isReservationBeenProcessing) {
-        setTimeout(this.retrieveNearbyParkingList, 10000)
+        setTimeout(this.retrieveNearbyParkingList, retryIntervalMs)
         return
       }
       try {
@@ -408,7 +413,7 @@ export default {
       // 直近10秒以内に取消をしようとした形跡がある場合は予約処理は10秒延長
       const now = new Date()
       if (!this.lastCancellationAttemptedDatetime || now.getTime() - this.lastCancellationAttemptedDatetime.getTime() < 10000) {
-        setTimeout(this.terminateProcessReservation, 10000)
+        setTimeout(this.terminateProcessReservation, retryIntervalMs)
         return
       }
       this.isReservationBeenProcessing = false
@@ -429,7 +434,7 @@ export default {
         }
         // 取消が新たに行われた形跡がなければ消す
         this.terminateProcessReservation()
-      }, 10000)
+      }, retryIntervalMs)
     },
     rowClicked(row) {
       this.$refs.tableData.toggleRowExpansion(row);
@@ -465,12 +470,15 @@ export default {
       this.tableDataForSorting = this.tableDataForSorting.filter((parking) => {
         return parking.id !== parkingId
       })
-    }
+    },
+    terminateRetry() {
+      for (let timerId in this.timer) {
+        window.clearTimeout( this.timer[timerId] )
+      }
+    },
   },
   destroyed() {
-    for (let timerId in this.timer) {
-      window.clearTimeout( this.timer[timerId] )
-    }
+    this.terminateRetry()
   }
 }
 </script>
