@@ -3,15 +3,15 @@
     <el-main>
       <router-view/>
     </el-main>
-    <el-footer>
+    <el-footer v-if="isFooterVisible">
         <div class="footer-internal">
-          <el-button type="text" style="font-size:30px; width: 29vw;">
+          <el-button type="text" style="font-size:30px; width: 29vw; margin: 0px;">
             <i class="el-icon-tickets"></i>
           </el-button>
-          <el-button type="text" style="font-size:30px; width: 29vw;">
+          <el-button type="text" style="font-size:30px; width: 29vw; margin: 0px;">
             <i class="el-icon-map-location"></i>
           </el-button>
-          <el-button type="text" style="font-size:30px; width: 29vw;">
+          <el-button type="text" style="font-size:30px; width: 29vw; margin: 0px;">
             <i class="el-icon-setting"></i>
           </el-button>
         </div>
@@ -32,7 +32,12 @@ export default {
          this.isAuthenticated = false
        })
     },
-  }
+  },
+  computed: {
+    isFooterVisible() {
+      return this.$route.path !== '/login'
+    }
+  },
 }
 </script>
 
