@@ -4,7 +4,7 @@
     :data="tableDataForSorting"
     ref="tableDataForSorting"
     :cell-style="{padding: '0', height: '40px'}"
-    style="width: 100%;margin-bottom: 20px;"
+    style="width: 100%;margin-bottom: 60px;"
     row-key="id"
     border>
     <el-table-column
