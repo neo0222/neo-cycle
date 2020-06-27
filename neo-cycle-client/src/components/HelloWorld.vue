@@ -1,16 +1,7 @@
 <template>
   <div class="hello">
-    <div style="margin-bottom: 12px">
-      <el-radio-group v-model="radio4" size="mini" fill="#67C23A">
-        <el-radio-button label="Search from Fav. List"></el-radio-button>
-        <el-radio-button
-          :disabled="isSearchNearbyParkingsButtonDisabled"
-          label="Search Nearby Parkings">
-        </el-radio-button>
-      </el-radio-group>
-    </div>
     <status-card
-      v-show="status !== '' && (radio4 === 'Search from Fav. List' || status !== 'WAITING_FOR_RESERVATION')"
+      v-show="status !== '' && (currentPage === 'Search from Fav. List' || status !== 'WAITING_FOR_RESERVATION')"
       :headerMessage="headerMessage" 
       :status="status"
       :reservedBike="reservedBike"
@@ -22,7 +13,7 @@
       @updateFavoriteParking="updateFavoriteParking"
       @cancelReservation="cancelReservation"/>
     <parking-table-for-sorting
-      v-if="isParkingTableEditable && radio4 === 'Search from Fav. List'"
+      v-if="isParkingTableEditable && currentPage === 'Search from Fav. List'"
       :tableData="tableData"
       :tableDataForSorting="tableDataForSorting"
       :reservedBike="reservedBike"
@@ -33,7 +24,7 @@
       @makeReservation="makeReservation"
       @removeParking="removeParking"/>
     <parking-table-for-reservation
-      v-show="!isParkingTableEditable && radio4 === 'Search from Fav. List'"
+      v-show="!isParkingTableEditable && currentPage === 'Search from Fav. List'"
       :tableData="tableData"
       :reservedBike="reservedBike"
       :status="status"
@@ -42,7 +33,7 @@
       @beginCancellation="beginCancellation"
       @makeReservation="makeReservation"/>
     <parking-map
-      v-show="radio4 !== 'Search from Fav. List'"
+      v-show="currentPage !== 'Search from Fav. List'"
       :parkingNearbyList="parkingNearbyList"
       @makeReservation="makeReservation"
       @cancelReservation="cancelReservation"
@@ -130,7 +121,6 @@ export default {
       navigator.geolocation.getCurrentPosition(resolve, reject, getLocationOptions)
     })
     this.success(position)
-    console.log(this.currentCoordinate)
     const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Laoding...'))
     const promises = [];
     promises.push(this.checkStatus())
@@ -186,6 +176,9 @@ export default {
     isSearchNearbyParkingsButtonDisabled() {
       return this.isParkingTableEditable
     },
+    currentPage() {
+      return this.$parent.$parent.currentPage ? this.$parent.$parent.currentPage : 'Search from Fav. List'
+    }
   },
   methods: {
     success (position) {
@@ -523,5 +516,9 @@ a {
 
 .box-card {
   width: 100%;
+}
+
+.hello {
+  width: 96vw;
 }
 </style>

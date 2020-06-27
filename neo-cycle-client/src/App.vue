@@ -5,10 +5,10 @@
     </el-main>
     <el-footer v-if="isFooterVisible">
         <div class="footer-internal">
-          <el-button type="text" style="font-size:30px; width: 29vw; margin: 0px;">
+          <el-button type="text" style="font-size:30px; width: 29vw; margin: 0px;" @click="selectPage('Search from Fav. List')">
             <i class="el-icon-tickets"></i>
           </el-button>
-          <el-button type="text" style="font-size:30px; width: 29vw; margin: 0px;">
+          <el-button type="text" style="font-size:30px; width: 29vw; margin: 0px;" @click="selectPage('Search Nearby Parkings')">
             <i class="el-icon-map-location"></i>
           </el-button>
           <el-button type="text" style="font-size:30px; width: 29vw; margin: 0px;">
@@ -22,6 +22,11 @@
 <script>
 export default {
   name: 'App',
+  data() {
+    return {
+      currentPage: 'Search from Fav. List'
+    }
+  },
   methods: {
     isAuthenticated() {
      this.$cognito.isAuthenticated()
@@ -32,6 +37,9 @@ export default {
          this.isAuthenticated = false
        })
     },
+    selectPage(page) {
+      this.currentPage = page
+    }
   },
   computed: {
     isFooterVisible() {
