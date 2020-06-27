@@ -11,9 +11,17 @@
           <el-button type="text" style="font-size:30px; width: 29vw; margin: 0px;" @click="selectPage('Search Nearby Parkings')">
             <i class="el-icon-map-location"></i>
           </el-button>
-          <el-button type="text" style="font-size:30px; width: 29vw; margin: 0px;">
-            <i class="el-icon-setting"></i>
-          </el-button>
+          <el-popover
+            placement="top"
+            width="50vw"
+            trigger="click">
+            <el-table :data="gridData" @row-click="handleOperation">
+              <el-table-column property="operation" label="Settings"></el-table-column>
+            </el-table>
+            <el-button slot="reference" type="text" style="font-size:30px; width: 29vw; margin: 0px;">
+              <i class="el-icon-setting"></i>
+            </el-button>
+          </el-popover>
         </div>
     </el-footer>
   </div>
@@ -24,7 +32,10 @@ export default {
   name: 'App',
   data() {
     return {
-      currentPage: 'Search from Fav. List'
+      currentPage: 'Search from Fav. List',
+      gridData: [{
+        operation: 'logout',
+      },]
     }
   },
   methods: {
@@ -39,7 +50,17 @@ export default {
     },
     selectPage(page) {
       this.currentPage = page
-    }
+    },
+    handleOperation(row) {
+      const operation = row.operation
+      if (operation === 'logout') {
+        this.logout()
+      }
+    },
+    logout() {
+      this.$cognito.logout()
+      this.$router.replace('/login')
+    },
   },
   computed: {
     isFooterVisible() {

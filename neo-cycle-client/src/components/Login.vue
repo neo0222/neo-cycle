@@ -150,6 +150,7 @@ export default {
 
 .login {
   width: 96vw;
+  padding-top: 60px;
 }
 
 </style>
