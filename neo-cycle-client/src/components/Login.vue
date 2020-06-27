@@ -145,3 +145,11 @@ export default {
   }
 }
 </script>
+
+<style scoped>
+
+.login {
+  width: 96vw;
+}
+
+</style>
