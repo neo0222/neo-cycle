@@ -15,10 +15,8 @@
     <ParkingCard
       v-if="isParkingCardVisible"
       :selectedParking="selectedParking"
-      :reservedBike="reservedBike"
       :status="status"
-      :favoriteParkingList="favoriteParkingList"
-      @removeFavoriteParking="removeFavoriteParking"/>
+      :favoriteParkingList="favoriteParkingList"/>
   </div>
 </template>
 
@@ -85,9 +83,6 @@ export default {
     },
     status() {
       return this.$store.getters['bicycle/status']
-    },
-    reservedBike() {
-      return this.$store.getters['bicycle/reservedBike']
     },
     parkingNearbyList() {
       return this.$store.getters['bicycle/parkingNearbyList']

@@ -12,8 +12,6 @@
     <parking-map
       v-show="currentPage !== 'Search from Fav. List'"
       :favoriteParkingList="favoriteParkingList"
-      @registerFavoriteParking="registerFavoriteParking"
-      @removeFavoriteParking="removeFavoriteParking"
       :isMounted="isMounted"
       />
     <el-dialog

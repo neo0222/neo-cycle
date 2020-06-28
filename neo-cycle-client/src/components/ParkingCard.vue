@@ -41,7 +41,7 @@
             type="info"
             :plain="true"
             :style="{width: '258.48px'}"
-            @click="$emit('removeFavoriteParking', selectedParking.parkingId)">
+            @click="removeFavoriteParking(selectedParking.parkingId)">
             REMOVE from Favorite List
           </el-button>
         </div>
@@ -53,7 +53,6 @@
 export default {
   props: [
     'selectedParking',
-    'reservedBike',
     'status',
     'favoriteParkingList'
   ],
@@ -80,7 +79,10 @@ export default {
       return this.favoriteParkingList.some((favoriteParking) => {
         return this.selectedParking.parkingId === favoriteParking.parkingId
       })
-    }
+    },
+    reservedBike() {
+      return this.$store.getters['bicycle/reservedBike']
+    },
   },
   methods: {
     cycleButtonType(cycleName) {
@@ -104,6 +106,12 @@ export default {
         vue: this,
         parkingId,
         parkingName,
+      })
+    },
+    async removeFavoriteParking(parkingId) {
+      await this.$store.dispatch('bicycle/removeFavoriteParking', {
+        vue: this,
+        parkingId,
       })
     },
     createFullScreenLoadingMaskOptionWithText(text) {
