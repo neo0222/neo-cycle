@@ -10,6 +10,7 @@ const state = {
   isCancellationBeenProcessing: false,
   lastCancellationAttemptedDatetime: undefined,
   isParkingTableEditable: false,
+  isParkingCardVisible: false,
 }
 
 const getters = {
@@ -24,6 +25,9 @@ const getters = {
   },
   isParkingTableEditable(state) {
     return state.isParkingTableEditable
+  },
+  isParkingCardVisible(store) {
+    return state.isParkingCardVisible
   },
 }
 const mutations = {
@@ -47,6 +51,12 @@ const mutations = {
   },
   unableParkingTableForSortingVisible(state) {
     state.isParkingTableEditable = false
+  },
+  enableParkingCardVisible(state) {
+    state.isParkingCardVisible = true
+  },
+  unableParkingCardVisible(state) {
+    state.isParkingCardVisible = false
   },
 }
 

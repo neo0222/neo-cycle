@@ -9,14 +9,10 @@
           :google="google"
           :map="map"
           :isParkingFavorite="isParkingFavorite(parking.parkingId)"
-          @showParkingCard="showParkingCard"
         />
       </template>
     <ParkingCard
-      v-if="isParkingCardVisible"
-      :selectedParking="selectedParking"
-      :status="status"
-      :favoriteParkingList="favoriteParkingList"/>
+      v-if="isParkingCardVisible"/>
   </div>
 </template>
 
@@ -39,7 +35,6 @@ export default {
     ParkingCard,
   },
   props: [
-    'favoriteParkingList',
     'isMounted'
   ],
   data() {
@@ -67,7 +62,6 @@ export default {
         lat: undefined,
         lng: undefined,
       },
-      isParkingCardVisible: false,
       selectedParkingId: undefined,
       updatedUnixDatetime: undefined,
     }
@@ -89,6 +83,12 @@ export default {
     },
     isReservationBeenProcessing() {
       return this.$store.getters['bicycle/isReservationBeenProcessing']
+    },
+    favoriteParkingList() {
+      return this.$store.getters['bicycle/favoriteParkingList']
+    },
+    isParkingCardVisible() {
+      return this.$store.getters['displayController/isParkingCardVisible']
     },
   },
   async created() {
@@ -136,10 +136,6 @@ export default {
           alert('現在位置が取得できませんでした')
           break
       }
-    },
-    showParkingCard(parking) {
-      this.isParkingCardVisible = true;
-      this.selectedParkingId = parking.parkingId
     },
     async registerFavoriteParking(parkingId, parkingName) {
       await this.$emit('registerFavoriteParking', parkingId, parkingName)

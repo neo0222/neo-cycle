@@ -51,11 +51,6 @@
 </template>
 <script>
 export default {
-  props: [
-    'selectedParking',
-    'status',
-    'favoriteParkingList'
-  ],
   data(){
     return {
       headerMessage: 'ポート詳細'
@@ -82,6 +77,15 @@ export default {
     },
     reservedBike() {
       return this.$store.getters['bicycle/reservedBike']
+    },
+    status() {
+      return this.$store.getters['bicycle/status']
+    },
+    favoriteParkingList() {
+      return this.$store.getters['bicycle/favoriteParkingList']
+    },
+    selectedParking() {
+      return this.$store.getters['bicycle/selectedParking']
     },
   },
   methods: {

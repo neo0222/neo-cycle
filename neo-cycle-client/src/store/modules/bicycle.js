@@ -9,15 +9,15 @@ const state = {
   reservedBike: undefined,
   tableData: [],
   parkingNearbyList: [],
-  favoriteParkingList: [],
   currentCoordinate: {
     lat: undefined,
     lon: undefined,
   },
-  parkingNearbyList: [],
   isAcceptedUpdatingParkingList: true,
   lastCancellationAttemptedDatetime: undefined,
   tableDataForSorting: [],
+  selectedParking: undefined,
+  cycleListMap: {},
 }
 
 const getters = {
@@ -34,7 +34,10 @@ const getters = {
     return state.currentCoordinate
   },
   parkingNearbyList(state) {
-    return state.parkingNearbyList
+    return state.parkingNearbyList.map((nearbyParking) => {
+      nearbyParking.cycleList = state.cycleListMap[nearbyParking.parkingId] ? state.cycleListMap[nearbyParking.parkingId] : []
+      return nearbyParking
+    })
   },
   isAcceptedUpdatingParkingList(state) {
     return state.isAcceptedUpdatingParkingList
@@ -44,6 +47,18 @@ const getters = {
   },
   tableDataForSorting(state) {
     return state.tableDataForSorting
+  },
+  favoriteParkingList(state) {
+    return state.tableData.map((parking) => {
+      return {
+        parkingId: parking.id,
+        parkingName: parking.name
+      }
+    })
+  },
+  selectedParking(state) {
+    state.selectedParking.cycleList = state.cycleListMap[state.selectedParking.parkingId] ? state.cycleListMap[state.selectedParking.parkingId] : []
+    return state.selectedParking
   },
 }
 
@@ -76,6 +91,10 @@ const mutations = {
         })
       })
     }
+    state.cycleListMap = {}
+    payload.parkingList.forEach((parking) => {
+      state.cycleListMap[parking.parkingId] = parking.cycleList
+    })
   },
   resetTableData(state) {
     state.tableData.length = 0
@@ -121,6 +140,11 @@ const mutations = {
   removeParking(state, payload) {
     state.tableDataForSorting = state.tableDataForSorting.filter((parking) => {
       return parking.id !== payload.parkingId
+    })
+  },
+  selectParking(state, payload) {
+    state.selectedParking = state.parkingNearbyList.find((parking) => {
+      return parking.parkingId === payload.parkingId
     })
   },
 }
