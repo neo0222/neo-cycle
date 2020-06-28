@@ -44,7 +44,6 @@ export default {
     ParkingCard,
   },
   props: [
-    'parkingNearbyList',
     'favoriteParkingList',
     'isMounted'
   ],
@@ -93,6 +92,12 @@ export default {
     reservedBike() {
       return this.$store.getters['bicycle/reservedBike']
     },
+    parkingNearbyList() {
+      return this.$store.getters['bicycle/parkingNearbyList']
+    },
+    isReservationBeenProcessing() {
+      return this.$store.getters['bicycle/isReservationBeenProcessing']
+    },
   },
   async created() {
     this.google = await GoogleMapsApiLoader({
@@ -106,15 +111,21 @@ export default {
       this.map = new this.google.maps.Map(this.$refs.googleMap, this.mapConfig);
       this.map.addListener( "dragend", this.updateCenter) ;
     },
-    updateCenter() {
-      this.$emit('setCurrentCoordinate', this.map.getCenter().lat(), this.map.getCenter().lng())
-      this.$emit('retrieveNearbyParkingList')
+    async updateCenter() {
+      this.$store.commit('bicycle/setCurrentCoordinate', { lat: this.map.getCenter().lat(), lon: this.map.getCenter().lng() })
+      await this.$store.dispatch('bicycle/retrieveNearbyParkingList', {
+        vue: this,
+        isReservationBeenProcessing: this.isReservationBeenProcessing,
+      })
     },
-    success (position) {
+    async success (position) {
       this.mapConfig.center.lat = position.coords.latitude;
       this.mapConfig.center.lng = position.coords.longitude;
-      this.$emit('setCurrentCoordinate', position.coords.latitude, position.coords.longitude)
-      this.$emit('retrieveNearbyParkingList')
+      this.$store.commit('bicycle/setCurrentCoordinate', { lat: position.coords.latitude, lon: position.coords.longitude })
+      await this.$store.dispatch('bicycle/retrieveNearbyParkingList', {
+        vue: this,
+        isReservationBeenProcessing: this.isReservationBeenProcessing,
+      })
       this.initializeMap();
     },
     error (error) {

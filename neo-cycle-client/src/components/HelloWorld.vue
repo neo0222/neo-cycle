@@ -26,10 +26,8 @@
       @makeReservation="makeReservation"/>
     <parking-map
       v-show="currentPage !== 'Search from Fav. List'"
-      :parkingNearbyList="parkingNearbyList"
       @makeReservation="makeReservation"
       @cancelReservation="cancelReservation"
-      @setCurrentCoordinate="setCurrentCoordinate"
       @retrieveNearbyParkingList="retrieveNearbyParkingList"
       :favoriteParkingList="favoriteParkingList"
       @registerFavoriteParking="registerFavoriteParking"
@@ -79,16 +77,10 @@ export default {
   data () {
     return {
       msg: 'Welcome to Your Vue.js App',
-      isReservationBeenProcessing: false,
       isCancellationBeenProcessing: false,
       isSessionTimeOutDialogVisible: false,
       lastCancellationAttemptedDatetime: undefined,
       radio4: 'Search Nearby Parkings',
-      parkingNearbyList: [],
-      currentCoordinate: {
-        lat: undefined,
-        lon: undefined,
-      },
       isParkingTableEditable: false,
       tableDataForSorting: [],
       timer: {
@@ -171,10 +163,13 @@ export default {
     tableData() {
       return this.$store.getters['bicycle/tableData']
     },
+    isReservationBeenProcessing() {
+      return this.$store.getters['bicycle/isReservationBeenProcessing']
+    },
   },
   methods: {
     success (position) {
-      this.setCurrentCoordinate(position.coords.latitude, position.coords.longitude)
+      this.$store.commit('bicycle/setCurrentCoordinate', { lat: position.coords.latitude, lon: position.coords.longitude })
     },
     async checkStatusWithRetry() {
       await this.checkStatus()
@@ -198,31 +193,16 @@ export default {
       this.timer.retrieveNearbyParkingListTimerId = setTimeout(this.retrieveNearbyParkingListWithRetry, retryIntervalMs)
     },
     async retrieveNearbyParkingList() {
-      // 予約処理中は取得しない
-      if (this.isReservationBeenProcessing) {
-        setTimeout(this.retrieveNearbyParkingList, retryIntervalMs)
-        return
-      }
-      try {
-        const result = await api.retrieveNearbyParkingList(
-          sessionStorage.getItem('currentUserName'),
-          sessionStorage.getItem('sessionId'),
-          this.currentCoordinate
-        );
-        this.parkingNearbyList.length = 0;
-        for (const parking of result.parkingList) {
-          this.parkingNearbyList.push(parking);
-        }
-      }
-      catch (error) {
-        this.handleErrorResponse(this, error)
-      }
+      await this.$store.dispatch('bicycle/retrieveNearbyParkingList', {
+        vue: this,
+        isReservationBeenProcessing: this.isReservationBeenProcessing,
+      })
     },
     async makeReservation(cycle) {
       const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Processing...'))
       if (!cycle) return
       try {
-        this.beginProcessReservation();
+        this.$store.commit('bicycle/beginReservation')
         const responseBody = await api.makeReservation(
           sessionStorage.getItem('currentUserName'),
           sessionStorage.getItem('sessionId'),
@@ -340,12 +320,9 @@ export default {
     isRowVacantBike(scope) {
       return scope.row.name === "" && scope.row.date !== this.reservedBike.cycleName
     },
-    beginProcessReservation() {
-      this.isReservationBeenProcessing = true
-    },
     terminateProcessReservation() {
       if (this.status !== 'RESERVED') {
-        this.isReservationBeenProcessing = false
+        this.$store.commit('terminateReservation')
         return;
       }
       // 直近10秒以内に取消をしようとした形跡がある場合は予約処理は10秒延長
@@ -354,7 +331,7 @@ export default {
         setTimeout(this.terminateProcessReservation, retryIntervalMs)
         return
       }
-      this.isReservationBeenProcessing = false
+      this.$store.commit('terminateReservation')
     },
     beginCancellation() {
       this.isCancellationBeenProcessing = true;
@@ -387,10 +364,6 @@ export default {
     closeSessionTimeOutDialog() {
       sessionStorage.clear();
       this.$router.replace('/login');
-    },
-    setCurrentCoordinate(lat, lon) {
-      this.currentCoordinate.lat = lat
-      this.currentCoordinate.lon = lon
     },
     makeParkingTableEditable() {
       this.tableDataForSorting = this.tableData.map((parking) => {

@@ -10,7 +10,11 @@ const state = {
   tableData: [],
   parkingNearbyList: [],
   favoriteParkingList: [],
-
+  currentCoordinate: {
+    lat: undefined,
+    lon: undefined,
+  },
+  parkingNearbyList: [],
 }
 
 const getters = {
@@ -22,6 +26,12 @@ const getters = {
   },
   tableData(state) {
     return state.tableData
+  },
+  currentCoordinate(state) {
+    return state.currentCoordinate
+  },
+  parkingNearbyList(state) {
+    return state.parkingNearbyList
   },
 }
 
@@ -51,7 +61,19 @@ const mutations = {
   },
   resetTableData(state) {
     state.tableData.length = 0
-  }
+  },
+  setCurrentCoordinate(state, payload) {
+    state.currentCoordinate.lat = payload.lat
+    state.currentCoordinate.lon = payload.lon
+  },
+  updateParkingNearbyList(state, payload) {
+    for (const parking of payload.parkingList) {
+      state.parkingNearbyList.push(parking);
+    }
+  },
+  resetParkingNearbyList(state) {
+    state.parkingNearbyList.length = 0
+  },
 }
 
 
@@ -95,6 +117,25 @@ const actions = {
       );
       commit('resetTableData')
       commit('updateTableData', { parkingList: result.parkingList })
+    }
+    catch (error) {
+      payload.vue.handleErrorResponse(payload.vue, error)
+    }
+  },
+  async retrieveNearbyParkingList({ commit, getters }, payload) {
+    // 予約処理中は取得しない
+    if (payload.isReservationBeenProcessing) {
+      setTimeout(dispatch('retrieveNearbyParkingList', payload), retryIntervalMs)
+      return
+    }
+    try {
+      const result = await api.retrieveNearbyParkingList(
+        sessionStorage.getItem('currentUserName'),
+        sessionStorage.getItem('sessionId'),
+        getters.currentCoordinate,
+      );
+      commit('resetParkingNearbyList')
+      commit('updateParkingNearbyList', { parkingList: result.parkingList })
     }
     catch (error) {
       payload.vue.handleErrorResponse(payload.vue, error)
