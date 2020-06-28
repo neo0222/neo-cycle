@@ -11,7 +11,7 @@
           plain
           size="mini"
           style="margin: 3px"
-          @click="$emit('cancelReservation')">
+          @click="cancelReservation">
           {{ reservedBike.cycleName }}
         </el-button>
         <el-button
@@ -22,7 +22,7 @@
           plain
           size="mini"
           style="margin: 3px"
-          @click="$emit('makeReservation', cycle)">
+          @click="makeReservation(cycle)">
           {{ cycle.CycleName }}
         </el-button>
         <div class="button">
@@ -32,7 +32,7 @@
             type="success"
             :plain="false"
             :style="{width: '258.48px'}"
-            @click="$emit('registerFavoriteParking', selectedParking.parkingId, selectedParking.parkingName)">
+            @click="registerFavoriteParking(selectedParking.parkingId, selectedParking.parkingName)">
             ADD to Favorite List
           </el-button>
           <el-button
@@ -41,7 +41,7 @@
             type="info"
             :plain="true"
             :style="{width: '258.48px'}"
-            @click="$emit('removeFavoriteParking', selectedParking.parkingId)">
+            @click="removeFavoriteParking(selectedParking.parkingId)">
             REMOVE from Favorite List
           </el-button>
         </div>
@@ -51,12 +51,6 @@
 </template>
 <script>
 export default {
-  props: [
-    'selectedParking',
-    'reservedBike',
-    'status',
-    'favoriteParkingList'
-  ],
   data(){
     return {
       headerMessage: 'ポート詳細'
@@ -80,7 +74,19 @@ export default {
       return this.favoriteParkingList.some((favoriteParking) => {
         return this.selectedParking.parkingId === favoriteParking.parkingId
       })
-    }
+    },
+    reservedBike() {
+      return this.$store.getters['bicycle/reservedBike']
+    },
+    status() {
+      return this.$store.getters['bicycle/status']
+    },
+    favoriteParkingList() {
+      return this.$store.getters['bicycle/favoriteParkingList']
+    },
+    selectedParking() {
+      return this.$store.getters['bicycle/selectedParking']
+    },
   },
   methods: {
     cycleButtonType(cycleName) {
@@ -89,7 +95,36 @@ export default {
     },
     isCycleButtonDisabled(cycleName) {
       return this.status === 'RESERVED' && this.reservedBike.cycleName !== cycleName
-    }
+    },
+    async makeReservation(cycle) {
+      await this.$store.dispatch('bicycle/makeReservation', {
+        vue: this,
+        cycle,
+      })
+    },
+    async cancelReservation() {
+      await this.$store.dispatch('bicycle/cancelReservation', { vue: this })
+    },
+    async registerFavoriteParking(parkingId, parkingName) {
+      await this.$store.dispatch('bicycle/registerFavoriteParking', {
+        vue: this,
+        parkingId,
+        parkingName,
+      })
+    },
+    async removeFavoriteParking(parkingId) {
+      await this.$store.dispatch('bicycle/removeFavoriteParking', {
+        vue: this,
+        parkingId,
+      })
+    },
+    createFullScreenLoadingMaskOptionWithText(text) {
+      return {
+        lock: true,
+        text: text,
+        background: 'rgba(208, 208, 208, 0.7)'
+      }
+    },
   },
   updated() {
     

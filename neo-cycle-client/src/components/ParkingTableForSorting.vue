@@ -25,7 +25,7 @@
           icon="el-icon-question"
           iconColor="red"
           title="Are you sure to cancel reservation?"
-          @onConfirm="$emit('removeParking', scope.row.id)">
+          @onConfirm="removeParking(scope.row.id)">
           <el-button
             slot="reference"
             type="danger"
@@ -43,12 +43,6 @@
 import Sortable from 'sortablejs'
 
 export default {
-  props: [
-    'tableData',
-    'reservedBike',
-    'status',
-    'tableDataForSorting',
-  ],
   mounted() {
     document.body.ondrop = function (event) {
       event.preventDefault();
@@ -80,7 +74,24 @@ export default {
         }
       })
     },
-  }
+    removeParking(parkingId) {
+      this.$store.commit('bicycle/removeParking', { parkingId })
+    },
+  },
+  computed: {
+    status() {
+      return this.$store.getters['bicycle/status']
+    },
+    reservedBike() {
+      return this.$store.getters['bicycle/reservedBike']
+    },
+    tableData() {
+      return this.$store.getters['bicycle/tableData']
+    },
+    tableDataForSorting() {
+      return this.$store.getters['bicycle/tableDataForSorting']
+    }
+  },
 }
 </script>
 

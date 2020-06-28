@@ -9,19 +9,10 @@
           :google="google"
           :map="map"
           :isParkingFavorite="isParkingFavorite(parking.parkingId)"
-          @showParkingCard="showParkingCard"
         />
       </template>
     <ParkingCard
-      v-if="isParkingCardVisible"
-      :selectedParking="selectedParking"
-      @makeReservation="makeReservation"
-      @cancelReservation="cancelReservation"
-      :reservedBike="reservedBike"
-      :status="status"
-      :favoriteParkingList="favoriteParkingList"
-      @registerFavoriteParking="registerFavoriteParking"
-      @removeFavoriteParking="removeFavoriteParking"/>
+      v-if="isParkingCardVisible"/>
   </div>
 </template>
 
@@ -44,10 +35,6 @@ export default {
     ParkingCard,
   },
   props: [
-    'parkingNearbyList',
-    'reservedBike',
-    'status',
-    'favoriteParkingList',
     'isMounted'
   ],
   data() {
@@ -75,7 +62,6 @@ export default {
         lat: undefined,
         lng: undefined,
       },
-      isParkingCardVisible: false,
       selectedParkingId: undefined,
       updatedUnixDatetime: undefined,
     }
@@ -88,6 +74,21 @@ export default {
       return this.parkingNearbyList.find((parking) => {
         return parking.parkingId === this.selectedParkingId
       })
+    },
+    status() {
+      return this.$store.getters['bicycle/status']
+    },
+    parkingNearbyList() {
+      return this.$store.getters['bicycle/parkingNearbyList']
+    },
+    isReservationBeenProcessing() {
+      return this.$store.getters['bicycle/isReservationBeenProcessing']
+    },
+    favoriteParkingList() {
+      return this.$store.getters['bicycle/favoriteParkingList']
+    },
+    isParkingCardVisible() {
+      return this.$store.getters['displayController/isParkingCardVisible']
     },
   },
   async created() {
@@ -102,15 +103,21 @@ export default {
       this.map = new this.google.maps.Map(this.$refs.googleMap, this.mapConfig);
       this.map.addListener( "dragend", this.updateCenter) ;
     },
-    updateCenter() {
-      this.$emit('setCurrentCoordinate', this.map.getCenter().lat(), this.map.getCenter().lng())
-      this.$emit('retrieveNearbyParkingList')
+    async updateCenter() {
+      this.$store.commit('bicycle/setCurrentCoordinate', { lat: this.map.getCenter().lat(), lon: this.map.getCenter().lng() })
+      await this.$store.dispatch('bicycle/retrieveNearbyParkingList', {
+        vue: this,
+        isReservationBeenProcessing: this.isReservationBeenProcessing,
+      })
     },
-    success (position) {
+    async success (position) {
       this.mapConfig.center.lat = position.coords.latitude;
       this.mapConfig.center.lng = position.coords.longitude;
-      this.$emit('setCurrentCoordinate', position.coords.latitude, position.coords.longitude)
-      this.$emit('retrieveNearbyParkingList')
+      this.$store.commit('bicycle/setCurrentCoordinate', { lat: position.coords.latitude, lon: position.coords.longitude })
+      await this.$store.dispatch('bicycle/retrieveNearbyParkingList', {
+        vue: this,
+        isReservationBeenProcessing: this.isReservationBeenProcessing,
+      })
       this.initializeMap();
     },
     error (error) {
@@ -130,16 +137,6 @@ export default {
           break
       }
     },
-    showParkingCard(parking) {
-      this.isParkingCardVisible = true;
-      this.selectedParkingId = parking.parkingId
-    },
-    makeReservation(cycle) {
-      this.$emit('makeReservation', cycle)
-    },
-    async cancelReservation(cycle) {
-      await this.$emit('cancelReservation', cycle)
-    },
     async registerFavoriteParking(parkingId, parkingName) {
       await this.$emit('registerFavoriteParking', parkingId, parkingName)
     },
@@ -150,7 +147,7 @@ export default {
       return this.favoriteParkingList.some((parking) => {
         return parking.parkingId === parkingId
       })
-    }
+    },
   },
   watch: {
     'parkingNearbyList': {
