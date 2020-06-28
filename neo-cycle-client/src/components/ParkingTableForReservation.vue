@@ -76,7 +76,7 @@ export default {
       })
     },
     async cancelReservation() {
-      await this.$store.dispatch('cancelReservation', { vue: this })
+      await this.$store.dispatch('bicycle/cancelReservation', { vue: this })
     },
     beginCancellation() {
       this.$store.commit('bicycle/recordCancellationAttempt')
