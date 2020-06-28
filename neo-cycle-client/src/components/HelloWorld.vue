@@ -117,11 +117,11 @@ export default {
     }
   },
   async mounted() {
+    const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Laoding...'))
     const position = await new Promise((resolve, reject) => {
       navigator.geolocation.getCurrentPosition(resolve, reject, getLocationOptions)
     })
     this.success(position)
-    const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Laoding...'))
     const promises = [];
     promises.push(this.checkStatus())
     promises.push(this.retrieveParkingList())
