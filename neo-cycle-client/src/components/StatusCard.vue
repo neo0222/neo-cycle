@@ -21,7 +21,7 @@
         title="Are you sure to cancel reservation?"
         v-if="status === 'RESERVED'"
         @onConfirm="cancelReservation"
-        @onCancel="$emit('terminateCancellation')">
+        @onCancel="recordLastQuitToCancellationAttempt">
         <el-button
           slot="reference"
           type="danger"
@@ -120,6 +120,9 @@ export default {
     },
     openErrorDialog(title, message) {
       console.log(title, message)
+    },
+    recordLastQuitToCancellationAttempt() {
+      this.$store.commit('bicycle/recordLastQuitToCancellationAttempt')
     },
   }
 }

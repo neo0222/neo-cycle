@@ -25,7 +25,7 @@
           icon="el-icon-question"
           iconColor="red"
           title="Are you sure to cancel reservation?"
-          @onConfirm="$emit('removeParking', scope.row.id)">
+          @onConfirm="removeParking(scope.row.id)">
           <el-button
             slot="reference"
             type="danger"
@@ -73,6 +73,9 @@ export default {
           _this.tableDataForSorting.splice(newIndex, 0, currRow)
         }
       })
+    },
+    removeParking(parkingId) {
+      this.$store.commit('bicycle/removeParking', { parkingId })
     },
   },
   computed: {

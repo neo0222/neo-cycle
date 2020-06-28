@@ -6,8 +6,7 @@
       :favoritePort="favoritePort"
       :atagoPort="atagoPort"/>
     <parking-table-for-sorting
-      v-if="isParkingTableEditable && currentPage === 'Search from Fav. List'"
-      @removeParking="removeParking"/>
+      v-if="isParkingTableEditable && currentPage === 'Search from Fav. List'"/>
     <parking-table-for-reservation
       v-show="!isParkingTableEditable && currentPage === 'Search from Fav. List'"/>
     <parking-map

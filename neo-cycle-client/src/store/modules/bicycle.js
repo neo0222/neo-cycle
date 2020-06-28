@@ -118,6 +118,11 @@ const mutations = {
   resetTableDataForSorting(state) {
     state.tableDataForSorting = []
   },
+  removeParking(state, payload) {
+    state.tableDataForSorting = state.tableDataForSorting.filter((parking) => {
+      return parking.id !== payload.parkingId
+    })
+  },
 }
 
 
