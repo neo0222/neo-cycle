@@ -519,6 +519,6 @@ a {
 }
 
 .hello {
-  width: 96vw;
+  width: 95vw;
 }
 </style>

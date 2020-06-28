@@ -3,14 +3,13 @@
     :data="tableData"
     ref="tableData"
     :cell-style="{padding: '0', height: '40px'}"
-    style="width: 100%;margin-bottom: 60px;"
+    style="width: 100%;margin-bottom: 60px; font-size: 13.5px;"
     row-key="id"
     @row-click="rowClicked"
     border>
     <el-table-column
       prop="name"
       label="Name"
-      width="282"
       header-align="left">
     </el-table-column>
     <el-table-column
