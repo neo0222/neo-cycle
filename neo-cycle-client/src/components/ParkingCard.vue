@@ -32,7 +32,7 @@
             type="success"
             :plain="false"
             :style="{width: '258.48px'}"
-            @click="$emit('registerFavoriteParking', selectedParking.parkingId, selectedParking.parkingName)">
+            @click="registerFavoriteParking(selectedParking.parkingId, selectedParking.parkingName)">
             ADD to Favorite List
           </el-button>
           <el-button
@@ -91,13 +91,27 @@ export default {
       return this.status === 'RESERVED' && this.reservedBike.cycleName !== cycleName
     },
     async makeReservation(cycle) {
-      this.$store.dispatch('bicycle/makeReservation', {
+      await this.$store.dispatch('bicycle/makeReservation', {
         vue: this,
         cycle,
       })
     },
     async cancelReservation() {
-      await this.$store.dispatch('cancelReservation', { vue: this })
+      await this.$store.dispatch('bicycle/cancelReservation', { vue: this })
+    },
+    async registerFavoriteParking(parkingId, parkingName) {
+      await this.$store.dispatch('bicycle/registerFavoriteParking', {
+        vue: this,
+        parkingId,
+        parkingName,
+      })
+    },
+    createFullScreenLoadingMaskOptionWithText(text) {
+      return {
+        lock: true,
+        text: text,
+        background: 'rgba(208, 208, 208, 0.7)'
+      }
     },
   },
   updated() {

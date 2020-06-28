@@ -236,10 +236,7 @@ const actions = {
       commit('resetReservedBike')
       commit('updateStatus', { status: 'WAITING_FOR_RESERVATION' });
       commit('releaseConstraintUpdatingParkingList')
-      const promises = []
-      promises.push(dispatch('retrieveParkingList', payload));
-      promises.push(dispatch('retrieveNearbyParkingList', payload));
-      await Promise.all(promises)
+      await dispatch('refresh', payload)
       loading.close()
     }
     catch (error) {
@@ -259,12 +256,7 @@ const actions = {
           }
         })
       );
-      const promises = []
-      // キャンセル操作のタイミングでリロードされないのを防ぐ
-      commit('releaseConstraintUpdatingParkingList')
-      promises.push(dispatch('retrieveParkingList', payload));
-      promises.push(dispatch('retrieveNearbyParkingList', payload));
-      await Promise.all(promises)
+      await dispatch('refresh', payload)
       commit('resetTableDataForSorting')
       commit('displayController/unableParkingTableForSortingVisible', null, { root: true })
       loading.close()
@@ -273,6 +265,30 @@ const actions = {
       loading.close()
       payload.vue.handleErrorResponse(payload.vue, error)
     }
+  },
+  async registerFavoriteParking({ commit, dispatch }, payload) {
+    const loading = payload.vue.$loading(payload.vue.createFullScreenLoadingMaskOptionWithText('Processing...'))
+    try {
+      await api.registerFavoriteParking(
+        sessionStorage.getItem('currentUserName'),
+        payload.parkingId,
+        payload.parkingName
+      );
+      await dispatch('refresh', payload)
+      loading.close()
+    }
+    catch (error) {
+      loading.close()
+      payload.vue.handleErrorResponse(payload.vue, error)
+    }
+  },
+  async refresh({ commit, dispatch }, payload) {
+    const promises = []
+    // キャンセル操作のタイミングでリロードされないのを防ぐ
+    commit('releaseConstraintUpdatingParkingList')
+    promises.push(dispatch('retrieveParkingList', payload));
+    promises.push(dispatch('retrieveNearbyParkingList', payload));
+    await Promise.all(promises)
   },
 }
 

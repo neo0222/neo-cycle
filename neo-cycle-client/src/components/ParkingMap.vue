@@ -18,7 +18,6 @@
       :reservedBike="reservedBike"
       :status="status"
       :favoriteParkingList="favoriteParkingList"
-      @registerFavoriteParking="registerFavoriteParking"
       @removeFavoriteParking="removeFavoriteParking"/>
   </div>
 </template>
