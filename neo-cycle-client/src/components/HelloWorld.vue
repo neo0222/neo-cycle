@@ -229,36 +229,6 @@ export default {
         background: 'rgba(208, 208, 208, 0.7)'
       }
     },
-    isRowParking(scope) {
-      return scope.row.name !== ""
-    },
-    isRowReservedBike(scope) {
-      return scope.row.name === "" && scope.row.date === this.reservedBike.cycleName
-    },
-    isRowVacantBike(scope) {
-      return scope.row.name === "" && scope.row.date !== this.reservedBike.cycleName
-    },
-    beginCancellation() {
-      this.$store.commit('displayController/beginCancellation')
-    },
-    terminateCancellation() {
-      this.$store.commit('displayController/terminateCancellation')
-      this.$store.commit('displayController/setLastCancellationAttemptedDatetime')
-    },
-    deleteCancellationHistory() {
-      setTimeout(() => {
-        // 取消キャンセルボタン押下10秒後に以下処理が行われる
-        if (this.isCancellationBeenProcessing) {// 次の取消が動いていたら取消履歴の抹消は10秒待つ
-          setTimeout(this.deleteCancellationHistory, 10000)
-          return
-        }
-        // 取消が新たに行われた形跡がなければ消す
-        this.$store.commit('terminateProcessReservationIfNoAttemptCancellation')
-      }, retryIntervalMs)
-    },
-    rowClicked(row) {
-      this.$refs.tableData.toggleRowExpansion(row);
-    },
     openSessionTimeoutDialog() {
       // TODO: implement me.
       this.isSessionTimeOutDialogVisible = true;
@@ -269,23 +239,6 @@ export default {
     closeSessionTimeOutDialog() {
       sessionStorage.clear();
       this.$router.replace('/login');
-    },
-    makeParkingTableEditable() {
-      this.tableDataForSorting = this.tableData.map((parking) => {
-        return {
-          id: parking.id,
-          parkingName: parking.name,
-        }
-      })
-      this.isParkingTableEditable = true
-    },
-    makeParkingTableUneditable() {
-      this.isParkingTableEditable = false
-    },
-    removeParking(parkingId) {
-      this.tableDataForSorting = this.tableDataForSorting.filter((parking) => {
-        return parking.id !== parkingId
-      })
     },
     terminateRetry() {
       for (let timerId in this.timer) {
