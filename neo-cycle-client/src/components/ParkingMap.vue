@@ -173,7 +173,7 @@ export default {
 
 <style scoped>
 .map {
-  width: 96vw;
+  width: 95vw;
   height: 40vh;
   margin: auto;
 }

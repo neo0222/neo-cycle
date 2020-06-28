@@ -190,10 +190,9 @@ export default class Cognito {
     if (this.userPool.getCurrentUser() !== null) {
       this.userPool.getCurrentUser().signOut()
     }
-    sessionStorage.removeItem('authorities')
     sessionStorage.removeItem('currentUserName')
     sessionStorage.removeItem('storeStateCredentials')
-    sessionStorage.removeItem('group')
+    sessionStorage.removeItem('sessionId')
   }
 
   getUserAttributeByAttributeName(attributeName) {

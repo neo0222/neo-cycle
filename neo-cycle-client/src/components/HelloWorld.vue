@@ -1,16 +1,7 @@
 <template>
   <div class="hello">
-    <div style="margin-bottom: 12px">
-      <el-radio-group v-model="radio4" size="mini" fill="#67C23A">
-        <el-radio-button label="Search from Fav. List"></el-radio-button>
-        <el-radio-button
-          :disabled="isSearchNearbyParkingsButtonDisabled"
-          label="Search Nearby Parkings">
-        </el-radio-button>
-      </el-radio-group>
-    </div>
     <status-card
-      v-show="status !== '' && (radio4 === 'Search from Fav. List' || status !== 'WAITING_FOR_RESERVATION')"
+      v-show="status !== '' && (currentPage === 'Search from Fav. List' || status !== 'WAITING_FOR_RESERVATION')"
       :headerMessage="headerMessage" 
       :status="status"
       :reservedBike="reservedBike"
@@ -22,7 +13,7 @@
       @updateFavoriteParking="updateFavoriteParking"
       @cancelReservation="cancelReservation"/>
     <parking-table-for-sorting
-      v-if="isParkingTableEditable && radio4 === 'Search from Fav. List'"
+      v-if="isParkingTableEditable && currentPage === 'Search from Fav. List'"
       :tableData="tableData"
       :tableDataForSorting="tableDataForSorting"
       :reservedBike="reservedBike"
@@ -33,7 +24,7 @@
       @makeReservation="makeReservation"
       @removeParking="removeParking"/>
     <parking-table-for-reservation
-      v-show="!isParkingTableEditable && radio4 === 'Search from Fav. List'"
+      v-show="!isParkingTableEditable && currentPage === 'Search from Fav. List'"
       :tableData="tableData"
       :reservedBike="reservedBike"
       :status="status"
@@ -42,7 +33,7 @@
       @beginCancellation="beginCancellation"
       @makeReservation="makeReservation"/>
     <parking-map
-      v-show="radio4 !== 'Search from Fav. List'"
+      v-show="currentPage !== 'Search from Fav. List'"
       :parkingNearbyList="parkingNearbyList"
       @makeReservation="makeReservation"
       @cancelReservation="cancelReservation"
@@ -71,6 +62,7 @@
 
 <script>
 import api from '../api/index'
+import env from '../environment/index'
 
 import StatusCard from './StatusCard'
 import ParkingTableForReservation from './ParkingTableForReservation'
@@ -82,6 +74,9 @@ const getLocationOptions = {
   timeout: 60000,
   maximumAge: 0
 }
+
+const retryLimitMs = env.retryLimitMs
+const retryIntervalMs = env.retryIntervalMs
 
 export default {
   name: 'HelloWorld',
@@ -122,12 +117,11 @@ export default {
     }
   },
   async mounted() {
+    const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Laoding...'))
     const position = await new Promise((resolve, reject) => {
       navigator.geolocation.getCurrentPosition(resolve, reject, getLocationOptions)
     })
     this.success(position)
-    console.log(this.currentCoordinate)
-    const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Laoding...'))
     const promises = [];
     promises.push(this.checkStatus())
     promises.push(this.retrieveParkingList())
@@ -139,9 +133,10 @@ export default {
     }
     loading.close()
     this.isMounted = true
-    // this.checkStatusWithRetry()
-    // this.retrieveParkingListWithRetry()
-    // this.retrieveNearbyParkingListWithRetry()
+    this.checkStatusWithRetry()
+    this.retrieveParkingListWithRetry()
+    this.retrieveNearbyParkingListWithRetry()
+    setTimeout(this.terminateRetry, retryLimitMs)
   },
   computed: {
     headerMessage() {
@@ -181,6 +176,9 @@ export default {
     isSearchNearbyParkingsButtonDisabled() {
       return this.isParkingTableEditable
     },
+    currentPage() {
+      return this.$parent.$parent.currentPage ? this.$parent.$parent.currentPage : 'Search from Fav. List'
+    }
   },
   methods: {
     success (position) {
@@ -188,7 +186,7 @@ export default {
     },
     async checkStatusWithRetry() {
       await this.checkStatus()
-      this.timer.checkStatusTimerId = setTimeout(this.checkStatusWithRetry, 10000)
+      this.timer.checkStatusTimerId = setTimeout(this.checkStatusWithRetry, retryIntervalMs)
     },
     async checkStatus() {
       try {
@@ -216,12 +214,12 @@ export default {
     },
     async retrieveParkingListWithRetry() {
       await this.retrieveParkingList()
-      this.timer.retrieveParkingListTimerId = setTimeout(this.retrieveParkingListWithRetry, 10000)
+      this.timer.retrieveParkingListTimerId = setTimeout(this.retrieveParkingListWithRetry, retryIntervalMs)
     },
     async retrieveParkingList() {
       // 予約処理中は取得しない
       if (this.isReservationBeenProcessing) {
-        setTimeout(this.retrieveParkingList, 10000)
+        setTimeout(this.retrieveParkingList, retryIntervalMs)
         return
       }
       try {
@@ -252,12 +250,12 @@ export default {
     },
     async retrieveNearbyParkingListWithRetry() {
       await this.retrieveNearbyParkingList()
-      this.timer.retrieveNearbyParkingListTimerId = setTimeout(this.retrieveNearbyParkingListWithRetry, 10000)
+      this.timer.retrieveNearbyParkingListTimerId = setTimeout(this.retrieveNearbyParkingListWithRetry, retryIntervalMs)
     },
     async retrieveNearbyParkingList() {
       // 予約処理中は取得しない
       if (this.isReservationBeenProcessing) {
-        setTimeout(this.retrieveNearbyParkingList, 10000)
+        setTimeout(this.retrieveNearbyParkingList, retryIntervalMs)
         return
       }
       try {
@@ -408,7 +406,7 @@ export default {
       // 直近10秒以内に取消をしようとした形跡がある場合は予約処理は10秒延長
       const now = new Date()
       if (!this.lastCancellationAttemptedDatetime || now.getTime() - this.lastCancellationAttemptedDatetime.getTime() < 10000) {
-        setTimeout(this.terminateProcessReservation, 10000)
+        setTimeout(this.terminateProcessReservation, retryIntervalMs)
         return
       }
       this.isReservationBeenProcessing = false
@@ -429,7 +427,7 @@ export default {
         }
         // 取消が新たに行われた形跡がなければ消す
         this.terminateProcessReservation()
-      }, 10000)
+      }, retryIntervalMs)
     },
     rowClicked(row) {
       this.$refs.tableData.toggleRowExpansion(row);
@@ -465,12 +463,15 @@ export default {
       this.tableDataForSorting = this.tableDataForSorting.filter((parking) => {
         return parking.id !== parkingId
       })
-    }
+    },
+    terminateRetry() {
+      for (let timerId in this.timer) {
+        window.clearTimeout( this.timer[timerId] )
+      }
+    },
   },
   destroyed() {
-    for (let timerId in this.timer) {
-      window.clearTimeout( this.timer[timerId] )
-    }
+    this.terminateRetry()
   }
 }
 </script>
@@ -515,5 +516,9 @@ a {
 
 .box-card {
   width: 100%;
+}
+
+.hello {
+  width: 95vw;
 }
 </style>

@@ -4,18 +4,17 @@
     :data="tableDataForSorting"
     ref="tableDataForSorting"
     :cell-style="{padding: '0', height: '40px'}"
-    style="width: 100%;margin-bottom: 20px;"
+    style="width: 100%;margin-bottom: 60px;"
     row-key="id"
     border>
     <el-table-column
       prop="parkingName"
       label="Name"
-      width="250"
       header-align="left">
     </el-table-column>
     <el-table-column
       label="Operation"
-      width="96"
+      width="94"
       header-align="left"
       align="center">
       <template
