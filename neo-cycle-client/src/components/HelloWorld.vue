@@ -77,9 +77,7 @@ export default {
   data () {
     return {
       msg: 'Welcome to Your Vue.js App',
-      isCancellationBeenProcessing: false,
       isSessionTimeOutDialogVisible: false,
-      lastCancellationAttemptedDatetime: undefined,
       radio4: 'Search Nearby Parkings',
       isParkingTableEditable: false,
       tableDataForSorting: [],
@@ -166,6 +164,15 @@ export default {
     isReservationBeenProcessing() {
       return this.$store.getters['bicycle/isReservationBeenProcessing']
     },
+    isCancellationBeenProcessing() {
+      return this.$store.getters['bicycle/isCancellationBeenProcessing']
+    },
+    lastCancellationAttemptedDatetime() {
+      return this.$store.getters['bicycle/lastCancellationAttemptedDatetime']
+    },
+    statusTest() {
+      return this.$store.getters['display-controller/status']
+    },
   },
   methods: {
     success (position) {
@@ -199,30 +206,15 @@ export default {
       })
     },
     async makeReservation(cycle) {
-      const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Processing...'))
-      if (!cycle) return
-      try {
-        this.$store.commit('bicycle/beginReservation')
-        const responseBody = await api.makeReservation(
-          sessionStorage.getItem('currentUserName'),
-          sessionStorage.getItem('sessionId'),
-          cycle
-        );
-        this.reservedBike.cycleName = responseBody.cycleName;
-        this.reservedBike.cyclePasscode = responseBody.cyclePasscode;
-        this.status = 'RESERVED';
-        loading.close()
-        this.terminateProcessReservation();
-      }
-      catch (error) {
-        loading.close()
-        this.handleErrorResponse(this, error)
-      }
+      this.$store.dispatch('bicycle/makeReservation', {
+        vue: this,
+        cycle,
+      })
     },
     async cancelReservation(row) {
       const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Processing...'))
       try {
-        this.beginProcessReservation();
+        this.$store.commit('displayController/beginReservation')
         const responseBody = await api.cancelReservation(
           sessionStorage.getItem('currentUserName'),
           sessionStorage.getItem('sessionId')
@@ -230,7 +222,7 @@ export default {
         this.reservedBike.cycleName = '';
         this.reservedBike.cyclePasscode = '';
         this.status = 'WAITING_FOR_RESERVATION';
-        this.terminateProcessReservation();
+        this.$store.commit('terminateProcessReservationIfNoAttemptCancellation')
         const promises = []
         promises.push(this.retrieveParkingList());
         promises.push(this.retrieveNearbyParkingList());
@@ -320,25 +312,12 @@ export default {
     isRowVacantBike(scope) {
       return scope.row.name === "" && scope.row.date !== this.reservedBike.cycleName
     },
-    terminateProcessReservation() {
-      if (this.status !== 'RESERVED') {
-        this.$store.commit('terminateReservation')
-        return;
-      }
-      // 直近10秒以内に取消をしようとした形跡がある場合は予約処理は10秒延長
-      const now = new Date()
-      if (!this.lastCancellationAttemptedDatetime || now.getTime() - this.lastCancellationAttemptedDatetime.getTime() < 10000) {
-        setTimeout(this.terminateProcessReservation, retryIntervalMs)
-        return
-      }
-      this.$store.commit('terminateReservation')
-    },
     beginCancellation() {
-      this.isCancellationBeenProcessing = true;
+      this.$store.commit('displayController/beginCancellation')
     },
     terminateCancellation() {
-      this.isCancellationBeenProcessing = false;
-      this.lastCancellationAttemptedDatetime = new Date();
+      this.$store.commit('displayController/terminateCancellation')
+      this.$store.commit('displayController/setLastCancellationAttemptedDatetime')
     },
     deleteCancellationHistory() {
       setTimeout(() => {
@@ -348,7 +327,7 @@ export default {
           return
         }
         // 取消が新たに行われた形跡がなければ消す
-        this.terminateProcessReservation()
+        this.$store.commit('terminateProcessReservationIfNoAttemptCancellation')
       }, retryIntervalMs)
     },
     rowClicked(row) {

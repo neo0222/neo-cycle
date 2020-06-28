@@ -64,10 +64,10 @@ export default {
       return scope.row.cycleCount !== ""
     },
     isRowReservedBike(scope) {
-      return scope.row.cycleCount === "" && scope.row.name === this.reservedBike.name
+      return scope.row.cycleCount === "" && scope.row.name === this.reservedBike.cycleName
     },
     isRowVacantBike(scope) {
-      return scope.row.cycleCount === "" && scope.row.name !== this.reservedBike.name
+      return scope.row.cycleCount === "" && scope.row.name !== this.reservedBike.cycleName
     },
   },
   computed: {

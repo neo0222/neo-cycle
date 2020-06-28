@@ -15,6 +15,8 @@ const state = {
     lon: undefined,
   },
   parkingNearbyList: [],
+  isAcceptedUpdatingParkingList: true,
+  lastCancellationAttemptedDatetime: undefined,
 }
 
 const getters = {
@@ -33,6 +35,12 @@ const getters = {
   parkingNearbyList(state) {
     return state.parkingNearbyList
   },
+  isAcceptedUpdatingParkingList(state) {
+    return state.isAcceptedUpdatingParkingList
+  },
+  lastCancellationAttemptedDatetime(state) {
+    return state.lastCancellationAttemptedDatetime
+  }
 }
 
 const mutations = {
@@ -74,6 +82,10 @@ const mutations = {
   resetParkingNearbyList(state) {
     state.parkingNearbyList.length = 0
   },
+  recordCancellationAttempt(state) {
+    state.isAcceptedUpdatingParkingList = false
+    state.lastCancellationAttemptedDatetime = new Date()
+  }
 }
 
 
@@ -104,11 +116,17 @@ const actions = {
       payload.vue.handleErrorResponse(payload.vue, error)
     }
   },
-  async retrieveParkingList({ commit }, payload) {
-    // 予約処理中は取得しない
-    if (payload.isReservationBeenProcessing) {
-      setTimeout(dispatch('retrieveParkingList', payload), retryIntervalMs)
-      return
+  async retrieveParkingList({ commit, getters, dispatch }, payload) {
+    // 何らかの理由で更新が許可されていない場合は一旦抜ける
+    if (!getters['isAcceptedUpdatingParkingList']) {
+      await new Promise((resolve) => {setTimeout(resolve, retryIntervalMs)})
+      dispatch('retrieveParkingList', payload)
+    }
+    // キャンセルが一定時間内に行われた形跡があれば一旦抜ける
+    const now = new Date()
+    if (getters['lastCancellationAttemptedDatetime'] && now.getTime() - getters['lastCancellationAttemptedDatetime'].getTime() < 10000) {
+      await new Promise((resolve) => {setTimeout(resolve, retryIntervalMs)})
+      dispatch('retrieveParkingList', payload)
     }
     try {
       const result = await api.retrieveParkingList(
@@ -122,11 +140,17 @@ const actions = {
       payload.vue.handleErrorResponse(payload.vue, error)
     }
   },
-  async retrieveNearbyParkingList({ commit, getters }, payload) {
-    // 予約処理中は取得しない
-    if (payload.isReservationBeenProcessing) {
-      setTimeout(dispatch('retrieveNearbyParkingList', payload), retryIntervalMs)
-      return
+  async retrieveNearbyParkingList({ commit, getters, dispatch }, payload) {
+    // 何らかの理由で更新が許可されていない場合は一旦抜ける
+    if (!getters['isAcceptedUpdatingParkingList']) {
+      await new Promise((resolve) => {setTimeout(resolve, retryIntervalMs)})
+      dispatch('retrieveNearbyParkingList', payload)
+    }
+    // キャンセルが一定時間内に行われた形跡があれば一旦抜ける
+    const now = new Date()
+    if (getters['lastCancellationAttemptedDatetime'] && now.getTime() - getters['lastCancellationAttemptedDatetime'].getTime() < 10000) {
+      await new Promise((resolve) => {setTimeout(resolve, retryIntervalMs)})
+      dispatch('retrieveNearbyParkingList', payload)
     }
     try {
       const result = await api.retrieveNearbyParkingList(
@@ -141,6 +165,26 @@ const actions = {
       payload.vue.handleErrorResponse(payload.vue, error)
     }
   },
+  async makeReservation({ commit, dispatch }, payload) {
+    const loading = payload.vue.$loading(payload.vue.createFullScreenLoadingMaskOptionWithText('Processing...'))
+      if (!payload.cycle) return
+      try {
+        commit('displayController/beginReservation', null, { root: true })
+        const responseBody = await api.makeReservation(
+          sessionStorage.getItem('currentUserName'),
+          sessionStorage.getItem('sessionId'),
+          payload.cycle
+        );
+        commit('updateReservedBike', { reservedBike: responseBody })
+        commit('updateStatus', { status: 'RESERVED' })
+        loading.close()
+        commit('recordCancellationAttempt')
+      }
+      catch (error) {
+        loading.close()
+        payload.vue.handleErrorResponse(payload.vue, error)
+      }
+  }
 }
 
 export default {
