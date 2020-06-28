@@ -3,13 +3,13 @@ import env from '../../environment/index'
 const retryIntervalMs = env.retryIntervalMs
 
 const state = {
-  isParkingTableEditable: false,
   currentPage: '',
   isMounted: false,
   isSessionTimeOutDialogVisible: false,
   isReservationBeenProcessing: false,
   isCancellationBeenProcessing: false,
   lastCancellationAttemptedDatetime: undefined,
+  isParkingTableEditable: false,
 }
 
 const getters = {
@@ -22,9 +22,9 @@ const getters = {
   lastCancellationAttemptedDatetime(state) {
     return state.lastCancellationAttemptedDatetime
   },
-  status(state, getters, rootState) {
-    return rootState.status
-  }
+  isParkingTableEditable(state) {
+    return state.isParkingTableEditable
+  },
 }
 const mutations = {
   beginReservation(state) {
@@ -42,6 +42,12 @@ const mutations = {
   terminateCancellation(state) {
     state.isCancellationBeenProcessing = false
   },
+  enableParkingTableForSortingVisible(state) {
+    state.isParkingTableEditable = true
+  },
+  unableParkingTableForSortingVisible(state) {
+    state.isParkingTableEditable = false
+  },
 }
 
 const actions = {
@@ -53,7 +59,6 @@ const actions = {
     // 直近10秒以内に取消をしようとした形跡がある場合は予約処理は10秒延長
     const now = new Date()
     if (!getters['lastCancellationAttemptedDatetime'] || now.getTime() - getters['lastCancellationAttemptedDatetime'].getTime() < 10000) {
-      console.log(retryIntervalMs)
       await new Promise((resolve) => {setTimeout(resolve, retryIntervalMs)})
       return dispatch('terminateProcessReservationIfNoAttemptCancellation')
       
@@ -65,6 +70,7 @@ const actions = {
 export default {
   namespaced: true,
   state,
+  getters,
   mutations,
   actions,
 }

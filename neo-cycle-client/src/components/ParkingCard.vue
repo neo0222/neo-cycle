@@ -11,7 +11,7 @@
           plain
           size="mini"
           style="margin: 3px"
-          @click="$emit('cancelReservation')">
+          @click="cancelReservation">
           {{ reservedBike.cycleName }}
         </el-button>
         <el-button
@@ -22,7 +22,7 @@
           plain
           size="mini"
           style="margin: 3px"
-          @click="$emit('makeReservation', cycle)">
+          @click="makeReservation(cycle)">
           {{ cycle.CycleName }}
         </el-button>
         <div class="button">
@@ -89,7 +89,16 @@ export default {
     },
     isCycleButtonDisabled(cycleName) {
       return this.status === 'RESERVED' && this.reservedBike.cycleName !== cycleName
-    }
+    },
+    async makeReservation(cycle) {
+      this.$store.dispatch('bicycle/makeReservation', {
+        vue: this,
+        cycle,
+      })
+    },
+    async cancelReservation() {
+      await this.$store.dispatch('cancelReservation', { vue: this })
+    },
   },
   updated() {
     

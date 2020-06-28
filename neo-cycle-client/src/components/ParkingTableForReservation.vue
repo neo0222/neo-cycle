@@ -29,21 +29,21 @@
           iconColor="red"
           title="Are you sure to cancel reservation?"
           v-if="isRowReservedBike(scope)"
-          @onConfirm="$emit('cancelReservation')"
-          @onCancel="$emit('terminateCancellation')">
+          @onConfirm="cancelReservation"
+          @onCancel="recordLastQuitToCancellationAttempt">
           <el-button
             slot="reference"
             type="danger"
             plain
             size="mini"
-            @click="$emit('beginCancellation')">
+            @click="beginCancellation">
             取消
           </el-button>
         </el-popconfirm>
         <el-button
           v-if="isRowVacantBike(scope)"
           :disabled="status !== 'WAITING_FOR_RESERVATION'"
-          @click="$emit('makeReservation', scope.row.cycle)"
+          @click="makeReservation(scope.row.cycle)"
           type="primary"
           plain
           size="mini">
@@ -68,6 +68,28 @@ export default {
     },
     isRowVacantBike(scope) {
       return scope.row.cycleCount === "" && scope.row.name !== this.reservedBike.cycleName
+    },
+    async makeReservation(cycle) {
+      await this.$store.dispatch('bicycle/makeReservation', {
+        vue: this,
+        cycle,
+      })
+    },
+    async cancelReservation() {
+      await this.$store.dispatch('cancelReservation', { vue: this })
+    },
+    beginCancellation() {
+      this.$store.commit('bicycle/recordCancellationAttempt')
+    },
+    recordLastQuitToCancellationAttempt() {
+      this.$store.commit('bicycle/recordLastQuitToCancellationAttempt')
+    },
+    createFullScreenLoadingMaskOptionWithText(text) {
+      return {
+        lock: true,
+        text: text,
+        background: 'rgba(208, 208, 208, 0.7)'
+      }
     },
   },
   computed: {

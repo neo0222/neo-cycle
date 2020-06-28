@@ -43,9 +43,6 @@
 import Sortable from 'sortablejs'
 
 export default {
-  props: [
-    'tableDataForSorting',
-  ],
   mounted() {
     document.body.ondrop = function (event) {
       event.preventDefault();
@@ -88,6 +85,9 @@ export default {
     tableData() {
       return this.$store.getters['bicycle/tableData']
     },
+    tableDataForSorting() {
+      return this.$store.getters['bicycle/tableDataForSorting']
+    }
   },
 }
 </script>

@@ -17,6 +17,7 @@ const state = {
   parkingNearbyList: [],
   isAcceptedUpdatingParkingList: true,
   lastCancellationAttemptedDatetime: undefined,
+  tableDataForSorting: [],
 }
 
 const getters = {
@@ -40,12 +41,21 @@ const getters = {
   },
   lastCancellationAttemptedDatetime(state) {
     return state.lastCancellationAttemptedDatetime
-  }
+  },
+  tableDataForSorting(state) {
+    return state.tableDataForSorting
+  },
 }
 
 const mutations = {
   updateReservedBike(state, payload) {
     state.reservedBike = payload.reservedBike
+  },
+  resetReservedBike(state) {
+    state.reservedBike = {
+      cycleName: '',
+      cyclePasscode: '',
+    }
   },
   updateStatus(state, payload) {
     state.status = payload.status
@@ -82,10 +92,32 @@ const mutations = {
   resetParkingNearbyList(state) {
     state.parkingNearbyList.length = 0
   },
+  recordLastCancellationAttemptedDatetime(state) {
+    state.lastCancellationAttemptedDatetime = new Date()
+  },
   recordCancellationAttempt(state) {
     state.isAcceptedUpdatingParkingList = false
     state.lastCancellationAttemptedDatetime = new Date()
-  }
+  },
+  recordLastQuitToCancellationAttempt(state) {
+    state.isAcceptedUpdatingParkingList = true
+    state.lastCancellationAttemptedDatetime = new Date()
+  },
+  releaseConstraintUpdatingParkingList(state) {
+    state.isAcceptedUpdatingParkingList = true
+    state.lastCancellationAttemptedDatetime = undefined
+  },
+  createTableDataForSorting(state) {
+    state.tableDataForSorting = state.tableData.map((parking) => {
+      return {
+        id: parking.id,
+        parkingName: parking.name,
+      }
+    })
+  },
+  resetTableDataForSorting(state) {
+    state.tableDataForSorting = []
+  },
 }
 
 
@@ -120,14 +152,16 @@ const actions = {
     // 何らかの理由で更新が許可されていない場合は一旦抜ける
     if (!getters['isAcceptedUpdatingParkingList']) {
       await new Promise((resolve) => {setTimeout(resolve, retryIntervalMs)})
-      dispatch('retrieveParkingList', payload)
+      return await dispatch('retrieveParkingList', payload)
     }
     // キャンセルが一定時間内に行われた形跡があれば一旦抜ける
     const now = new Date()
     if (getters['lastCancellationAttemptedDatetime'] && now.getTime() - getters['lastCancellationAttemptedDatetime'].getTime() < 10000) {
       await new Promise((resolve) => {setTimeout(resolve, retryIntervalMs)})
-      dispatch('retrieveParkingList', payload)
+      return await dispatch('retrieveParkingList', payload)
     }
+    // もう更新してよいので制御系フラグ等をリセット
+    commit('releaseConstraintUpdatingParkingList')
     try {
       const result = await api.retrieveParkingList(
         sessionStorage.getItem('currentUserName'),
@@ -144,14 +178,16 @@ const actions = {
     // 何らかの理由で更新が許可されていない場合は一旦抜ける
     if (!getters['isAcceptedUpdatingParkingList']) {
       await new Promise((resolve) => {setTimeout(resolve, retryIntervalMs)})
-      dispatch('retrieveNearbyParkingList', payload)
+      return await dispatch('retrieveNearbyParkingList', payload)
     }
     // キャンセルが一定時間内に行われた形跡があれば一旦抜ける
     const now = new Date()
     if (getters['lastCancellationAttemptedDatetime'] && now.getTime() - getters['lastCancellationAttemptedDatetime'].getTime() < 10000) {
       await new Promise((resolve) => {setTimeout(resolve, retryIntervalMs)})
-      dispatch('retrieveNearbyParkingList', payload)
+      return await dispatch('retrieveNearbyParkingList', payload)
     }
+    // もう更新してよいので制御系フラグ等をリセット
+    commit('releaseConstraintUpdatingParkingList')
     try {
       const result = await api.retrieveNearbyParkingList(
         sessionStorage.getItem('currentUserName'),
@@ -167,24 +203,46 @@ const actions = {
   },
   async makeReservation({ commit, dispatch }, payload) {
     const loading = payload.vue.$loading(payload.vue.createFullScreenLoadingMaskOptionWithText('Processing...'))
-      if (!payload.cycle) return
-      try {
-        commit('displayController/beginReservation', null, { root: true })
-        const responseBody = await api.makeReservation(
-          sessionStorage.getItem('currentUserName'),
-          sessionStorage.getItem('sessionId'),
-          payload.cycle
-        );
-        commit('updateReservedBike', { reservedBike: responseBody })
-        commit('updateStatus', { status: 'RESERVED' })
-        loading.close()
-        commit('recordCancellationAttempt')
-      }
-      catch (error) {
-        loading.close()
-        payload.vue.handleErrorResponse(payload.vue, error)
-      }
-  }
+    if (!payload.cycle) return
+    try {
+      commit('displayController/beginReservation', null, { root: true })
+      const responseBody = await api.makeReservation(
+        sessionStorage.getItem('currentUserName'),
+        sessionStorage.getItem('sessionId'),
+        payload.cycle
+      );
+      commit('updateReservedBike', { reservedBike: responseBody })
+      commit('updateStatus', { status: 'RESERVED' })
+      loading.close()
+      commit('recordCancellationAttempt')
+    }
+    catch (error) {
+      loading.close()
+      payload.vue.handleErrorResponse(payload.vue, error)
+    }
+  },
+  async cancelReservation({ commit, dispatch }, payload) {
+    const loading = payload.vue.$loading(payload.vue.createFullScreenLoadingMaskOptionWithText('Processing...'))
+    try {
+      await api.cancelReservation(
+        sessionStorage.getItem('currentUserName'),
+        sessionStorage.getItem('sessionId')
+      );
+      commit('resetReservedBike')
+      commit('updateStatus', { status: 'WAITING_FOR_RESERVATION' });
+      commit('releaseConstraintUpdatingParkingList')
+      const promises = []
+      promises.push(dispatch('retrieveParkingList', payload));
+      promises.push(dispatch('retrieveNearbyParkingList', payload));
+      await Promise.all(promises)
+      loading.close()
+    }
+    catch (error) {
+      loading.close()
+      payload.vue.handleErrorResponse(payload.vue, error)
+    }
+
+  },
 }
 
 export default {

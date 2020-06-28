@@ -20,7 +20,7 @@
         iconColor="red"
         title="Are you sure to cancel reservation?"
         v-if="status === 'RESERVED'"
-        @onConfirm="$emit('cancelReservation')"
+        @onConfirm="cancelReservation"
         @onCancel="$emit('terminateCancellation')">
         <el-button
           slot="reference"
@@ -38,7 +38,7 @@
         :plain="false"
         :style="{width: '258.48px'}"
         v-if="status === 'WAITING_FOR_RESERVATION'"
-        @click="$emit('makeParkingTableEditable')">
+        @click="beginEditParkingList">
         EDIT favorite parking list
       </el-button>
     </div>
@@ -49,7 +49,7 @@
         :plain="true"
         :style="{width: '258.48px'}"
         v-if="status === 'WAITING_FOR_RESERVATION'"
-        @click="$emit('makeParkingTableUneditable')">
+        @click="terminateEditParkingList">
         QUIT to EDIT favorite list
       </el-button>
     </div>
@@ -84,7 +84,6 @@ export default {
     'headerMessage',
     'favoritePort',
     'atagoPort',
-    'isParkingTableEditable',
   ],
   computed: {
     status() {
@@ -92,6 +91,29 @@ export default {
     },
     reservedBike() {
       return this.$store.getters['bicycle/reservedBike']
+    },
+    isParkingTableEditable() {
+      return this.$store.getters['displayController/isParkingTableEditable']
+    },
+  },
+  methods: {
+    async cancelReservation() {
+      await this.$store.dispatch('bicycle/cancelReservation', { vue: this })
+    },
+    createFullScreenLoadingMaskOptionWithText(text) {
+      return {
+        lock: true,
+        text: text,
+        background: 'rgba(208, 208, 208, 0.7)'
+      }
+    },
+    beginEditParkingList() {
+      this.$store.commit('bicycle/createTableDataForSorting')
+      this.$store.commit('displayController/enableParkingTableForSortingVisible')
+    },
+    terminateEditParkingList() {
+      this.$store.commit('bicycle/resetTableDataForSorting')
+      this.$store.commit('displayController/unableParkingTableForSortingVisible')
     }
   }
 }

@@ -5,30 +5,15 @@
       :headerMessage="headerMessage" 
       :favoritePort="favoritePort"
       :atagoPort="atagoPort"
-      :isParkingTableEditable="isParkingTableEditable"
-      @makeParkingTableEditable="makeParkingTableEditable"
       @makeParkingTableUneditable="makeParkingTableUneditable"
-      @updateFavoriteParking="updateFavoriteParking"
-      @cancelReservation="cancelReservation"/>
+      @updateFavoriteParking="updateFavoriteParking"/>
     <parking-table-for-sorting
       v-if="isParkingTableEditable && currentPage === 'Search from Fav. List'"
-      :tableDataForSorting="tableDataForSorting"
-      @cancelReservation="cancelReservation"
-      @terminateCancellation="terminateCancellation"
-      @beginCancellation="beginCancellation"
-      @makeReservation="makeReservation"
       @removeParking="removeParking"/>
     <parking-table-for-reservation
-      v-show="!isParkingTableEditable && currentPage === 'Search from Fav. List'"
-      @cancelReservation="cancelReservation"
-      @terminateCancellation="terminateCancellation"
-      @beginCancellation="beginCancellation"
-      @makeReservation="makeReservation"/>
+      v-show="!isParkingTableEditable && currentPage === 'Search from Fav. List'"/>
     <parking-map
       v-show="currentPage !== 'Search from Fav. List'"
-      @makeReservation="makeReservation"
-      @cancelReservation="cancelReservation"
-      @retrieveNearbyParkingList="retrieveNearbyParkingList"
       :favoriteParkingList="favoriteParkingList"
       @registerFavoriteParking="registerFavoriteParking"
       @removeFavoriteParking="removeFavoriteParking"
@@ -79,8 +64,6 @@ export default {
       msg: 'Welcome to Your Vue.js App',
       isSessionTimeOutDialogVisible: false,
       radio4: 'Search Nearby Parkings',
-      isParkingTableEditable: false,
-      tableDataForSorting: [],
       timer: {
         checkStatusTimerId: undefined,
         retrieveParkingListTimerId: undefined,
@@ -170,8 +153,8 @@ export default {
     lastCancellationAttemptedDatetime() {
       return this.$store.getters['bicycle/lastCancellationAttemptedDatetime']
     },
-    statusTest() {
-      return this.$store.getters['display-controller/status']
+    isParkingTableEditable() {
+      return this.$store.getters['displayController/isParkingTableEditable']
     },
   },
   methods: {
@@ -204,36 +187,6 @@ export default {
         vue: this,
         isReservationBeenProcessing: this.isReservationBeenProcessing,
       })
-    },
-    async makeReservation(cycle) {
-      this.$store.dispatch('bicycle/makeReservation', {
-        vue: this,
-        cycle,
-      })
-    },
-    async cancelReservation(row) {
-      const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Processing...'))
-      try {
-        this.$store.commit('displayController/beginReservation')
-        const responseBody = await api.cancelReservation(
-          sessionStorage.getItem('currentUserName'),
-          sessionStorage.getItem('sessionId')
-        );
-        this.reservedBike.cycleName = '';
-        this.reservedBike.cyclePasscode = '';
-        this.status = 'WAITING_FOR_RESERVATION';
-        this.$store.commit('terminateProcessReservationIfNoAttemptCancellation')
-        const promises = []
-        promises.push(this.retrieveParkingList());
-        promises.push(this.retrieveNearbyParkingList());
-        await Promise.all(promises)
-        loading.close()
-      }
-      catch (error) {
-        loading.close()
-        this.handleErrorResponse(this, error)
-      }
-
     },
     async registerFavoriteParking(parkingId, parkingName) {
       const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Processing...'))
@@ -277,7 +230,7 @@ export default {
       try {
         const responseBody = await api.updateFavoriteParking(
           sessionStorage.getItem('currentUserName'),
-          this.tableDataForSorting.map((parking) => {
+          this.$store.getters['bicycle/tableDataForSorting'].map((parking) => {
             return {
               parkingId: parking.id,
               parkingName: parking.parkingName

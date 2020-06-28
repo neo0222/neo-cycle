@@ -15,8 +15,6 @@
     <ParkingCard
       v-if="isParkingCardVisible"
       :selectedParking="selectedParking"
-      @makeReservation="makeReservation"
-      @cancelReservation="cancelReservation"
       :reservedBike="reservedBike"
       :status="status"
       :favoriteParkingList="favoriteParkingList"
@@ -149,12 +147,6 @@ export default {
       this.isParkingCardVisible = true;
       this.selectedParkingId = parking.parkingId
     },
-    makeReservation(cycle) {
-      this.$emit('makeReservation', cycle)
-    },
-    async cancelReservation(cycle) {
-      await this.$emit('cancelReservation', cycle)
-    },
     async registerFavoriteParking(parkingId, parkingName) {
       await this.$emit('registerFavoriteParking', parkingId, parkingName)
     },
@@ -165,7 +157,7 @@ export default {
       return this.favoriteParkingList.some((parking) => {
         return parking.parkingId === parkingId
       })
-    }
+    },
   },
   watch: {
     'parkingNearbyList': {
