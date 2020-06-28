@@ -10,12 +10,11 @@
     <el-table-column
       prop="parkingName"
       label="Name"
-      width="250"
       header-align="left">
     </el-table-column>
     <el-table-column
       label="Operation"
-      width="96"
+      width="94"
       header-align="left"
       align="center">
       <template
