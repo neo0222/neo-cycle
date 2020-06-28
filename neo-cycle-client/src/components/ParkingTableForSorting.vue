@@ -44,9 +44,6 @@ import Sortable from 'sortablejs'
 
 export default {
   props: [
-    'tableData',
-    'reservedBike',
-    'status',
     'tableDataForSorting',
   ],
   mounted() {
@@ -80,7 +77,18 @@ export default {
         }
       })
     },
-  }
+  },
+  computed: {
+    status() {
+      return this.$store.getters['bicycle/status']
+    },
+    reservedBike() {
+      return this.$store.getters['bicycle/reservedBike']
+    },
+    tableData() {
+      return this.$store.getters['bicycle/tableData']
+    },
+  },
 }
 </script>
 

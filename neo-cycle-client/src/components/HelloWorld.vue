@@ -3,7 +3,6 @@
     <status-card
       v-if="status !== '' && (currentPage === 'Search from Fav. List' || status !== 'WAITING_FOR_RESERVATION')"
       :headerMessage="headerMessage" 
-      :status="status"
       :favoritePort="favoritePort"
       :atagoPort="atagoPort"
       :isParkingTableEditable="isParkingTableEditable"
@@ -13,10 +12,7 @@
       @cancelReservation="cancelReservation"/>
     <parking-table-for-sorting
       v-if="isParkingTableEditable && currentPage === 'Search from Fav. List'"
-      :tableData="tableData"
       :tableDataForSorting="tableDataForSorting"
-      :reservedBike="reservedBike"
-      :status="status"
       @cancelReservation="cancelReservation"
       @terminateCancellation="terminateCancellation"
       @beginCancellation="beginCancellation"
@@ -24,9 +20,6 @@
       @removeParking="removeParking"/>
     <parking-table-for-reservation
       v-show="!isParkingTableEditable && currentPage === 'Search from Fav. List'"
-      :tableData="tableData"
-      :reservedBike="reservedBike"
-      :status="status"
       @cancelReservation="cancelReservation"
       @terminateCancellation="terminateCancellation"
       @beginCancellation="beginCancellation"
@@ -36,8 +29,6 @@
       :parkingNearbyList="parkingNearbyList"
       @makeReservation="makeReservation"
       @cancelReservation="cancelReservation"
-      :reservedBike="reservedBike"
-      :status="status"
       @setCurrentCoordinate="setCurrentCoordinate"
       @retrieveNearbyParkingList="retrieveNearbyParkingList"
       :favoriteParkingList="favoriteParkingList"
@@ -88,7 +79,6 @@ export default {
   data () {
     return {
       msg: 'Welcome to Your Vue.js App',
-      tableData: [],
       isReservationBeenProcessing: false,
       isCancellationBeenProcessing: false,
       isSessionTimeOutDialogVisible: false,
@@ -110,7 +100,6 @@ export default {
     }
   },
   async mounted() {
-    console.log(this.$store)
     const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Laoding...'))
     const position = await new Promise((resolve, reject) => {
       navigator.geolocation.getCurrentPosition(resolve, reject, getLocationOptions)
@@ -178,7 +167,10 @@ export default {
     },
     reservedBike() {
       return this.$store.getters['bicycle/reservedBike']
-    }
+    },
+    tableData() {
+      return this.$store.getters['bicycle/tableData']
+    },
   },
   methods: {
     success (position) {
@@ -196,36 +188,10 @@ export default {
       this.timer.retrieveParkingListTimerId = setTimeout(this.retrieveParkingListWithRetry, retryIntervalMs)
     },
     async retrieveParkingList() {
-      // 予約処理中は取得しない
-      if (this.isReservationBeenProcessing) {
-        setTimeout(this.retrieveParkingList, retryIntervalMs)
-        return
-      }
-      try {
-        const result = await api.retrieveParkingList(
-          sessionStorage.getItem('currentUserName'),
-          sessionStorage.getItem('sessionId')
-        );
-        this.tableData = [];
-        for (const parking of result.parkingList) {
-          this.tableData.push({
-            id: parking.parkingId,
-            name: parking.parkingName,
-            cycleCount: parking.cycleList.length + '台',
-            children: parking.cycleList.map((cycle) => {
-              return {
-                id: cycle.CycleName,
-                name: cycle.CycleName,
-                cycleCount: '',
-                cycle: cycle,
-              }
-            })
-          })
-        }
-      }
-      catch (error) {
-        this.handleErrorResponse(this, error)
-      }
+      await this.$store.dispatch('bicycle/retrieveParkingList', {
+        vue: this,
+        isReservationBeenProcessing: this.isReservationBeenProcessing,
+      })
     },
     async retrieveNearbyParkingListWithRetry() {
       await this.retrieveNearbyParkingList()

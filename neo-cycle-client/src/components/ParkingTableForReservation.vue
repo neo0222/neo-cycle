@@ -56,11 +56,6 @@
 
 <script>
 export default {
-  props: [
-    'tableData',
-    'reservedBike',
-    'status',
-  ],
   methods: {
     rowClicked(row) {
       this.$refs.tableData.toggleRowExpansion(row);
@@ -74,7 +69,18 @@ export default {
     isRowVacantBike(scope) {
       return scope.row.cycleCount === "" && scope.row.name !== this.reservedBike.name
     },
-  }
+  },
+  computed: {
+    status() {
+      return this.$store.getters['bicycle/status']
+    },
+    reservedBike() {
+      return this.$store.getters['bicycle/reservedBike']
+    },
+    tableData() {
+      return this.$store.getters['bicycle/tableData']
+    },
+  },
 }
 </script>
 

@@ -45,8 +45,6 @@ export default {
   },
   props: [
     'parkingNearbyList',
-    'reservedBike',
-    'status',
     'favoriteParkingList',
     'isMounted'
   ],
@@ -88,6 +86,12 @@ export default {
       return this.parkingNearbyList.find((parking) => {
         return parking.parkingId === this.selectedParkingId
       })
+    },
+    status() {
+      return this.$store.getters['bicycle/status']
+    },
+    reservedBike() {
+      return this.$store.getters['bicycle/reservedBike']
     },
   },
   async created() {

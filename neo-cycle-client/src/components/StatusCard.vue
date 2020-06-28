@@ -82,12 +82,14 @@
 export default {
   props: [
     'headerMessage',
-    'status',
     'favoritePort',
     'atagoPort',
     'isParkingTableEditable',
   ],
   computed: {
+    status() {
+      return this.$store.getters['bicycle/status']
+    },
     reservedBike() {
       return this.$store.getters['bicycle/reservedBike']
     }
