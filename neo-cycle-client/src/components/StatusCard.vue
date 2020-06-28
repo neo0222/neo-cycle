@@ -83,11 +83,15 @@ export default {
   props: [
     'headerMessage',
     'status',
-    'reservedBike',
     'favoritePort',
     'atagoPort',
     'isParkingTableEditable',
-  ]
+  ],
+  computed: {
+    reservedBike() {
+      return this.$store.getters['bicycle/reservedBike']
+    }
+  }
 }
 </script>
 

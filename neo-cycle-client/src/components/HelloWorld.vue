@@ -1,10 +1,9 @@
 <template>
   <div class="hello">
     <status-card
-      v-show="status !== '' && (currentPage === 'Search from Fav. List' || status !== 'WAITING_FOR_RESERVATION')"
+      v-if="status !== '' && (currentPage === 'Search from Fav. List' || status !== 'WAITING_FOR_RESERVATION')"
       :headerMessage="headerMessage" 
       :status="status"
-      :reservedBike="reservedBike"
       :favoritePort="favoritePort"
       :atagoPort="atagoPort"
       :isParkingTableEditable="isParkingTableEditable"
@@ -89,13 +88,7 @@ export default {
   data () {
     return {
       msg: 'Welcome to Your Vue.js App',
-      status: '',
       tableData: [],
-      reservedBike: {
-        cycleName: '',
-        cyclePasscode: '',
-        cycleUseStartDatetime: ','
-      },
       isReservationBeenProcessing: false,
       isCancellationBeenProcessing: false,
       isSessionTimeOutDialogVisible: false,
@@ -117,6 +110,7 @@ export default {
     }
   },
   async mounted() {
+    console.log(this.$store)
     const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Laoding...'))
     const position = await new Promise((resolve, reject) => {
       navigator.geolocation.getCurrentPosition(resolve, reject, getLocationOptions)
@@ -178,6 +172,12 @@ export default {
     },
     currentPage() {
       return this.$parent.$parent.currentPage ? this.$parent.$parent.currentPage : 'Search from Fav. List'
+    },
+    status() {
+      return this.$store.getters['bicycle/status']
+    },
+    reservedBike() {
+      return this.$store.getters['bicycle/reservedBike']
     }
   },
   methods: {
@@ -189,28 +189,7 @@ export default {
       this.timer.checkStatusTimerId = setTimeout(this.checkStatusWithRetry, retryIntervalMs)
     },
     async checkStatus() {
-      try {
-        const result = await api.checkStatus(
-          sessionStorage.getItem('currentUserName'),
-          sessionStorage.getItem('sessionId')
-        );
-        this.status = result.status;
-        if (this.status === 'RESERVED') {
-          this.reservedBike.cycleName = result.detail.cycleName
-          this.reservedBike.cyclePasscode = result.detail.cyclePasscode
-        } else if (this.status === 'IN_USE') {
-          this.reservedBike.cycleName = result.detail.cycleName
-          this.reservedBike.cyclePasscode = result.detail.cyclePasscode
-          this.reservedBike.cycleUseStartDatetime = result.detail.cycleUseStartDatetime
-        } else {
-          this.reservedBike.cycleName = ''
-          this.reservedBike.cyclePasscode = ''
-          this.reservedBike.cycleUseStartDatetime = ''
-        }
-      }
-      catch (error) {
-        this.handleErrorResponse(this, error)
-      }
+      await this.$store.dispatch('bicycle/checkStatus', { vue: this })
     },
     async retrieveParkingListWithRetry() {
       await this.retrieveParkingList()
