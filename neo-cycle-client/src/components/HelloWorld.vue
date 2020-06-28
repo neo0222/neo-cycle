@@ -4,9 +4,7 @@
       v-if="status !== '' && (currentPage === 'Search from Fav. List' || status !== 'WAITING_FOR_RESERVATION')"
       :headerMessage="headerMessage" 
       :favoritePort="favoritePort"
-      :atagoPort="atagoPort"
-      @makeParkingTableUneditable="makeParkingTableUneditable"
-      @updateFavoriteParking="updateFavoriteParking"/>
+      :atagoPort="atagoPort"/>
     <parking-table-for-sorting
       v-if="isParkingTableEditable && currentPage === 'Search from Fav. List'"
       @removeParking="removeParking"/>
@@ -218,30 +216,6 @@ export default {
         promises.push(this.retrieveParkingList());
         promises.push(this.retrieveNearbyParkingList());
         await Promise.all(promises)
-        loading.close()
-      }
-      catch (error) {
-        loading.close()
-        this.handleErrorResponse(this, error)
-      }
-    },
-    async updateFavoriteParking() {
-      const loading = this.$loading(this.createFullScreenLoadingMaskOptionWithText('Processing...'))
-      try {
-        const responseBody = await api.updateFavoriteParking(
-          sessionStorage.getItem('currentUserName'),
-          this.$store.getters['bicycle/tableDataForSorting'].map((parking) => {
-            return {
-              parkingId: parking.id,
-              parkingName: parking.parkingName
-            }
-          })
-        );
-        const promises = []
-        promises.push(this.retrieveParkingList());
-        promises.push(this.retrieveNearbyParkingList());
-        await Promise.all(promises)
-        this.isParkingTableEditable = false
         loading.close()
       }
       catch (error) {

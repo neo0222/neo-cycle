@@ -241,7 +241,33 @@ const actions = {
       loading.close()
       payload.vue.handleErrorResponse(payload.vue, error)
     }
-
+  },
+  async updateFavoriteParking({ commit, getters, dispatch }, payload) {
+    const loading = payload.vue.$loading(payload.vue.createFullScreenLoadingMaskOptionWithText('Processing...'))
+    try {
+      await api.updateFavoriteParking(
+        sessionStorage.getItem('currentUserName'),
+        getters['tableDataForSorting'].map((parking) => {
+          return {
+            parkingId: parking.id,
+            parkingName: parking.parkingName
+          }
+        })
+      );
+      const promises = []
+      // キャンセル操作のタイミングでリロードされないのを防ぐ
+      commit('releaseConstraintUpdatingParkingList')
+      promises.push(dispatch('retrieveParkingList', payload));
+      promises.push(dispatch('retrieveNearbyParkingList', payload));
+      await Promise.all(promises)
+      commit('resetTableDataForSorting')
+      commit('displayController/unableParkingTableForSortingVisible', null, { root: true })
+      loading.close()
+    }
+    catch (error) {
+      loading.close()
+      payload.vue.handleErrorResponse(payload.vue, error)
+    }
   },
 }
 

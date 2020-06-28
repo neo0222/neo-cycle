@@ -60,7 +60,7 @@
         :plain="true"
         :style="{width: '258.48px'}"
         v-if="status === 'WAITING_FOR_RESERVATION'"
-        @click="$emit('updateFavoriteParking')">
+        @click="updateFavoriteParking">
         CONFIRM to EDIT favorite list
       </el-button>
     </div>
@@ -114,7 +114,13 @@ export default {
     terminateEditParkingList() {
       this.$store.commit('bicycle/resetTableDataForSorting')
       this.$store.commit('displayController/unableParkingTableForSortingVisible')
-    }
+    },
+    async updateFavoriteParking() {
+      await this.$store.dispatch('bicycle/updateFavoriteParking', { vue: this })
+    },
+    openErrorDialog(title, message) {
+      console.log(title, message)
+    },
   }
 }
 </script>
