@@ -266,13 +266,28 @@ const actions = {
       payload.vue.handleErrorResponse(payload.vue, error)
     }
   },
-  async registerFavoriteParking({ commit, dispatch }, payload) {
+  async registerFavoriteParking({ dispatch }, payload) {
     const loading = payload.vue.$loading(payload.vue.createFullScreenLoadingMaskOptionWithText('Processing...'))
     try {
       await api.registerFavoriteParking(
         sessionStorage.getItem('currentUserName'),
         payload.parkingId,
         payload.parkingName
+      );
+      await dispatch('refresh', payload)
+      loading.close()
+    }
+    catch (error) {
+      loading.close()
+      payload.vue.handleErrorResponse(payload.vue, error)
+    }
+  },
+  async removeFavoriteParking({ dispatch }, payload) {
+    const loading = payload.vue.$loading(payload.vue.createFullScreenLoadingMaskOptionWithText('Processing...'))
+    try {
+      await api.removeFavoriteParking(
+        sessionStorage.getItem('currentUserName'),
+        payload.parkingId
       );
       await dispatch('refresh', payload)
       loading.close()
