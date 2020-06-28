@@ -102,41 +102,6 @@ async function retrieveParkingList(memberId, sessionId, lat, lon) {
         lat: rawParking.shop_gps_lat,
         lon: rawParking.shop_gps_lon,
       };
-      // const res = await axios.post(url.Parameter.Value, params, config);
-      // const html = res.data;
-      // if (html.indexOf('ログイン情報が削除されました') !== -1) throw 'session expired.'
-      // const $ = cheerio.load(html);
-      // レンタル可能な自転車がない場合
-      // if (!$('[class=park_info_inner_left]').children().get(0)) return parking;
-      // // 自転車がある場合は処理を継続
-      // parking.parkingName = $('[class=park_info_inner_left]').children().get(0).next.data.substr(2);
-
-      // // 1つの自転車が1つのformに紐づいている
-      // const formElementMap = $('[class=sp_view]').children();
-      // formElementMap.each((index, element) => {
-      //   let cycle = {};
-        
-      //   // input要素のvalueにパラメータが格納されている
-      //   element.children.filter((element) => {
-      //     return element.name === 'input'
-      //   }).map((element => {
-      //     // Credenetialな情報は返さない
-      //     if (element.attribs.name === 'MemberID' || element.attribs.name === 'SessionID') return
-      //     cycle[element.attribs.name] = element.attribs.value;
-      //   }));
-
-      //   // 自転車のラベル番号はdivにしかないので個別に詰める
-      //   const elementWithNameDiv = element.children.filter((element) => {
-      //     return element.name === 'div'
-      //   })[0]
-      //   const elementWithNameA = elementWithNameDiv.children.filter((element) => {
-      //     return element.name === 'a'
-      //   })[0]
-      //   const elementWithCycleName = elementWithNameA.children[0];
-      //   cycle['CycleName'] = elementWithCycleName.data;
-
-      //   parking.cycleList.push(cycle);
-      // })
       return parking;
     })()); 
   }

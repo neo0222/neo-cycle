@@ -7,6 +7,7 @@ import ElementUI from 'element-ui'
 import Cognito from './cognito/cognito'
 import httpManager from './utils/http_manager'
 import env from './environment/index'
+import store from './store/store'
 
 import '../node_modules/element-ui/lib/theme-chalk/index.css'
 // ElementUIでの言語設定、datePickerとかで適用される
@@ -29,4 +30,5 @@ new Vue({
   components: { App },
   template: '<App/>',
   cognito,
+  store,
 })

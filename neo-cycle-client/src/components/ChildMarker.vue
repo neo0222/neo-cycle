@@ -22,7 +22,7 @@ export default {
       },
       map: this.map,
       label: {
-        text: this.parking.cycleList.length.toString(),
+        text: this.isParkingFavorite ? this.parking.cycleList.length.toString() : ' ',
         fontSize: '14px',
       },
       title: this.parking.parkingName,
@@ -36,12 +36,16 @@ export default {
   },
   methods: {
     clickEventFunc() {
-      this.$emit('showParkingCard', this.parking)
+      this.showParkingCard(this.parking)
     },
     determineMarkerUrl(cycleCount) {
       if (cycleCount === 0) return markerGrey
       else if (!this.isParkingFavorite) return markerWhite
       else return markerOrange
+    },
+    showParkingCard(parking) {
+      this.$store.commit('displayController/enableParkingCardVisible')
+      this.$store.commit('bicycle/selectParking', { parkingId: parking.parkingId })
     },
   },
   destroyed() {
