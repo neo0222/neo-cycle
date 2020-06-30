@@ -1,0 +1,92 @@
+{
+	"result": 200,
+	"get_start_no": 1,
+	"total_num": 12,
+	"get_num": 12,
+	"cycle_info": [
+		{
+			"ent_id": "TYO",
+			"cyc_name": "MNT1786",
+			"type_name": "グリッター・EB",
+			"battery_level": 3,
+			"csa_type": 0
+		},
+		{
+			"ent_id": "TYO",
+			"cyc_name": "TYO11401",
+			"type_name": "SW",
+			"battery_level": 3,
+			"csa_type": 0
+		},
+		{
+			"ent_id": "TYO",
+			"cyc_name": "TYO1228",
+			"type_name": "グリッター・EB",
+			"battery_level": 2,
+			"csa_type": 0
+		},
+		{
+			"ent_id": "TYO",
+			"cyc_name": "TYO4253",
+			"type_name": "SW",
+			"battery_level": 2,
+			"csa_type": 0
+		},
+		{
+			"ent_id": "TYO",
+			"cyc_name": "TYO11488",
+			"type_name": "SW",
+			"battery_level": 1,
+			"csa_type": 0
+		},
+		{
+			"ent_id": "TYO",
+			"cyc_name": "TYO5143",
+			"type_name": "アシスタ　ユニ",
+			"battery_level": 3,
+			"csa_type": 0
+		},
+		{
+			"ent_id": "TYO",
+			"cyc_name": "TYO11041",
+			"type_name": "グリッター・EB",
+			"battery_level": 0,
+			"csa_type": 0
+		},
+		{
+			"ent_id": "TYO",
+			"cyc_name": "TYO13312",
+			"type_name": "SW",
+			"battery_level": 0,
+			"csa_type": 0
+		},
+		{
+			"ent_id": "TYO",
+			"cyc_name": "MNT1509",
+			"type_name": "アシスタ　ユニ",
+			"battery_level": 3,
+			"csa_type": 0
+		},
+		{
+			"ent_id": "TYO",
+			"cyc_name": "TYO1154",
+			"type_name": "アシスタ　ユニ",
+			"battery_level": 2,
+			"csa_type": 0
+		},
+		{
+			"ent_id": "TYO",
+			"cyc_name": "TYO11097",
+			"type_name": "グリッター・EB",
+			"battery_level": 0,
+			"csa_type": 0
+		},
+		{
+			"ent_id": "TYO",
+			"cyc_name": "TYO3575",
+			"type_name": "アシスタ　ユニ",
+			"battery_level": 1,
+			"csa_type": 0
+		}
+	]
+}
