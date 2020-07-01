@@ -13,7 +13,7 @@
       <template
         slot-scope="scope">
         {{scope.row.name}}
-        <img v-if="!isRowParking(scope)" class="img" :src="batteryCapacity(scope.row.name)" width="20" />
+        <img v-if="!isRowParking(scope)" class="img" :src="batteryCapacity(scope.row.name)" width="20"/>
       </template>
     </el-table-column>
     <el-table-column
@@ -96,7 +96,7 @@ export default {
       }
     },
     batteryCapacity(cycleName) {
-      const batteryCapacity = this.batteryCapacityMap[cycleName]
+      const batteryCapacity = this.batteryCapacityMap[cycleName] ? this.batteryCapacityMap[cycleName] : 0
       return require(`../assets/battery-${batteryCapacity}.jpg`)
     },
   },
@@ -158,5 +158,9 @@ a {
 
 .box-card {
   width: 100%;
+}
+
+.img {
+  padding-left: 12px;
 }
 </style>
