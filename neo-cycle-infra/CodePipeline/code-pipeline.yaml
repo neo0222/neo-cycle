@@ -99,6 +99,8 @@ Resources:
                 Fn::Sub: ${NameTag}-${EnvName}-RoleUserMigratorArn
               - !ImportValue
                 Fn::Sub: ${NameTag}-${EnvName}-RolePostAuthenticatorArn
+              - !ImportValue
+                Fn::Sub: ${NameTag}-${EnvName}-RoleBikeAvailableRetrieverArn
             Action:
               - iam:PassRole
 
