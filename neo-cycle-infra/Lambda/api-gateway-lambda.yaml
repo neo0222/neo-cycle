@@ -155,6 +155,8 @@ Resources:
       Environment:
         Variables:
           ENV_NAME: !Ref EnvName
+          SHARE_CYCLE_API_KEY: !Ref ShareCycleApiKey
+          SHARE_CYCLE_API_URL: !Ref ShareCycleApiUrl
       FunctionName: !Sub ${NameTag}-${EnvName}-BikeAvailableRetriever
       Handler: index.handler
       ReservedConcurrentExecutions: 1

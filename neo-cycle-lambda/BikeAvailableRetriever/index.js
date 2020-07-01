@@ -47,12 +47,15 @@ async function retrieveSessionId(memberId) {
   const params = {
     TableName: sessionTableName,
     Key: {
-      sessionId,
+      memberId,
     },
   };
   try {
     const result = await docClient.get(params).promise();
-    return result.Item ? result.Item.sessionId;
+    if (result.Item) {
+      return result.Item.sessionId;
+    }
+    throw "UserNotFountExeption";
   }
   catch (error) {
     throw error
@@ -68,12 +71,16 @@ async function retrieveParkingIdList(memberId) {
   };
   try {
     const result = await docClient.get(params).promise();
-    return result.Item ? result.Item.favoriteParkingList.map((parking) => {
+    const maybeParkingIdList = result.Item ? result.Item.favoriteParkingList.map((parking) => {
+      if (!parking.parkingId) return; // 販売所はidがnullで登録されるので無視
       const parkingIdStr = parking.parkingId.toFixed();
-      if (parkingIdStr.length !== 5) throw `unexpected data: memberId ${memberId}, parkingId: ${parkingId}`
+      if (parkingIdStr.length !== 5) throw `unexpected data: memberId ${memberId}, parkingId: ${parking.parkingId}, parkingName: ${parking.parkingName}`
       const parkingIdForRequest = '000' + parkingIdStr;
       return parkingIdForRequest;
-    }) : []
+    }) : [];
+    return maybeParkingIdList.filter((parkingId) => {
+      return parkingId;
+    })
   }
   catch (error) {
     console.log(error);
