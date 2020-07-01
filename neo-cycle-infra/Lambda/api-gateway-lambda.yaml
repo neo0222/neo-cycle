@@ -841,7 +841,7 @@ Resources:
       ParentId: !GetAtt
         - NeoCycleRestAPI
         - RootResourceId
-      PathPart: Bikes
+      PathPart: bikes
 
   ######################################################
   # Bikes/Nearby
