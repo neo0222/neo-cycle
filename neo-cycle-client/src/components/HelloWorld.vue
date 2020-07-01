@@ -76,6 +76,7 @@ export default {
     const promises = [];
     promises.push(this.checkStatus())
     promises.push(this.retrieveParkingList())
+    promises.push(this.retrieveAvailableBike())
     try {
       await Promise.all(promises)
     }
@@ -169,6 +170,12 @@ export default {
     },
     async retrieveParkingList() {
       await this.$store.dispatch('bicycle/retrieveParkingList', {
+        vue: this,
+        isReservationBeenProcessing: this.isReservationBeenProcessing,
+      })
+    },
+    async retrieveAvailableBike() {
+      await this.$store.dispatch('bicycle/retrieveAvailableBike', {
         vue: this,
         isReservationBeenProcessing: this.isReservationBeenProcessing,
       })
