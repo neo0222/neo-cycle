@@ -33,6 +33,10 @@ Parameters:
     Description: Enter profile.
   SlackWebhookUrlForLoginMonitoring:
     Type: String
+  ShareCycleApiKey:
+    Type: String
+  ShareCycleApiUrl:
+    Type: String
 
 ######################################################
 # Resources
@@ -128,6 +132,10 @@ Resources:
             Value: !Ref GoogleApiKey
           - Name: SLACK_WEBHOOK_URL_FOR_LOGIN_MONITORING
             Value: !Ref SlackWebhookUrlForLoginMonitoring
+          - Name: SHARE_CYCLE_API_KEY
+            Value: !Ref ShareCycleApiKey
+          - Name: SHARE_CYCLE_API_URL
+            Value: !Ref ShareCycleApiUrl
         Type: LINUX_CONTAINER
         Image: aws/codebuild/standard:2.0-1.13.0
       ServiceRole: !GetAtt RoleCodeBuildService.Arn
