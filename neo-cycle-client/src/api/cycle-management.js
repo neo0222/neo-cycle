@@ -45,3 +45,8 @@ export async function updateFavoriteParking(memberId, favoriteParkingList) {
   const res = await axios.post(url + '/parkings/update', { memberId, favoriteParkingList });
   return res.data
 }
+
+export async function retrieveAvailableBikeMap(memberId) {
+  const res = await axios.post(url + '/bikes/available', { memberId });
+  return res.data
+}

@@ -8,9 +8,13 @@
     @row-click="rowClicked"
     border>
     <el-table-column
-      prop="name"
       label="Name"
       header-align="left">
+      <template
+        slot-scope="scope">
+        {{scope.row.name}}
+        <img v-if="!isRowParking(scope)" class="img" :src="batteryCapacity(scope.row.name)" width="20"/>
+      </template>
     </el-table-column>
     <el-table-column
       label="Bikes"
@@ -91,6 +95,10 @@ export default {
         background: 'rgba(208, 208, 208, 0.7)'
       }
     },
+    batteryCapacity(cycleName) {
+      const batteryCapacity = this.batteryCapacityMap[cycleName] ? this.batteryCapacityMap[cycleName] : 0
+      return require(`../assets/battery-${batteryCapacity}.jpg`)
+    },
   },
   computed: {
     status() {
@@ -101,6 +109,9 @@ export default {
     },
     tableData() {
       return this.$store.getters['bicycle/tableData']
+    },
+    batteryCapacityMap() {
+      return this.$store.getters['bicycle/batteryCapacityMap']
     },
   },
 }
@@ -147,5 +158,9 @@ a {
 
 .box-card {
   width: 100%;
+}
+
+.img {
+  padding-left: 12px;
 }
 </style>
