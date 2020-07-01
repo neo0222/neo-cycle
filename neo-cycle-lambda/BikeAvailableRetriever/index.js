@@ -20,7 +20,7 @@ exports.handler = async (event, context) => {
 async function main(event, context) {
   const { memberId } = await retrieveUserInfoFromSsm();
   const sessionId = await retrieveSessionId(memberId);
-  const parkingIdList = await retrieveParkingIdList(event.memberId);
+  const parkingIdList = await retrieveParkingIdList(JSON.parse(event.body).memberId);
   const availableBikeMap = await retrieveParkngInfoWithAvailableBike(sessionId, parkingIdList);
   const response = {
     statusCode: 200,
@@ -111,6 +111,7 @@ async function retrieveAvailableBikeByParkingId(sessionId, parkingId, availableB
   };
   try {
     const res = await axios.get(process.env['SHARE_CYCLE_API_URL'] + '/parkcycleinfo/' + parkingId + '/100/1', config);
+    if (!res.data.cycle_info) return;
     res.data.cycle_info.forEach((cycle) => {
       availableBikeMap[cycle.cyc_name] = cycle.battery_level;
     });
