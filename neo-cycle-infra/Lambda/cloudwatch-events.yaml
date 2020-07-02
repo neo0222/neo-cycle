@@ -9,6 +9,16 @@ Description: >
 Parameters:
   ObjectKeyPrefix:
     Type: String
+  NameTag:
+    Type: String
+    Default: neo-cycle
+    AllowedValues:
+      - neo-cycle
+  EnvName:
+    Type: String
+    AllowedValues:
+      - dev
+      - prod
 
 ######################################################
 # Resources
@@ -21,12 +31,14 @@ Resources:
       ScheduleExpression: 'cron(0/30 * * * ? *)'
       State: ENABLED
       Targets:
-        - Arn: !ImportValue LambdaSessionMaintainerArn
+        - Arn: !ImportValue
+            Fn::Sub: ${NameTag}-${EnvName}-LambdaSessionMaintainerArn
           Id: schedule-session-maintenance-target
   LambdaSessionMaintainerInvokePermission:
     Type: AWS::Lambda::Permission
     Properties: 
       Action: lambda:InvokeFunction
-      FunctionName: !ImportValue LambdaSessionMaintainerFunctionName
+      FunctionName: !ImportValue
+        Fn::Sub: ${NameTag}-${EnvName}-LambdaSessionMaintainerFunctionName
       Principal: events.amazonaws.com
       SourceArn: !GetAtt LambdaSessionMaintainerScheduleEvent.Arn

@@ -71,6 +71,32 @@ Resources:
             Resource:
               - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${NameTag}-${EnvName}-USER"
 
+  NeoCycleSessionTablePutItemPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: authorize to put item into session dynamodb 
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:PutItem
+            Resource:
+              - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${NameTag}-${EnvName}-SESSION"
+
+  NeoCycleSessionTableGetItemPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: authorize to get item from session dynamodb 
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:GetItem
+            Resource:
+              - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${NameTag}-${EnvName}-SESSION"
+
   NeoCycleGetParameterPolicy:
     Type: AWS::IAM::ManagedPolicy
     Properties:
@@ -83,6 +109,8 @@ Resources:
               - ssm:getParameter
             Resource:
               - arn:aws:ssm:ap-northeast-1:010660485109:parameter/neo-cycle/php-url
+              - !Sub arn:aws:ssm:ap-northeast-1:010660485109:parameter/neo-cycle/${EnvName}/memberId
+              - !Sub arn:aws:ssm:ap-northeast-1:010660485109:parameter/neo-cycle/${EnvName}/password
 
   #-----------------------
   # ロールの作成
@@ -98,7 +126,7 @@ Resources:
         }
       ManagedPolicyArns:
         - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
-        - !Ref NeoCycleUserTablePutItemPolicy
+        - !Ref NeoCycleSessionTablePutItemPolicy
         - !Ref NeoCycleGetParameterPolicy
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
@@ -295,6 +323,28 @@ Resources:
             Action: sts:AssumeRole
             Principal:
               Service: lambda.amazonaws.com 
+
+  RoleBikeAvailableRetriever:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub
+        - ${NameTag}-${EnvName}-bike-available-retriever-role
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+      ManagedPolicyArns:
+        - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
+        - !Ref NeoCycleGetParameterPolicy
+        - !Ref NeoCycleUserTableGetItemPolicy
+        - !Ref NeoCycleSessionTableGetItemPolicy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: lambda.amazonaws.com 
 #################################
 # Outputs
 #################################
@@ -394,6 +444,16 @@ Outputs:
     Export:
       Name: !Sub
         - ${NameTag}-${EnvName}-RolePostAuthenticatorArn
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+
+  RoleBikeAvailableRetrieverArn:
+    Value: !GetAtt RoleBikeAvailableRetriever.Arn
+    Export:
+      Name: !Sub
+        - ${NameTag}-${EnvName}-RoleBikeAvailableRetrieverArn
         - {
           NameTag: !FindInMap [ StackConfig, NameTag, Value ],
           EnvName: !Ref EnvName

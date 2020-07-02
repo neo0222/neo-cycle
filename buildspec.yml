@@ -50,11 +50,15 @@ phases:
       - npm install
       - zip -r Deploy.zip ./
       - aws s3 mv ./Deploy.zip s3://neo-cycle-${ENVIRONMENT_NAME}-lambda/${CODEBUILD_BUILD_NUMBER}/PostAuthenticator/Deploy.zip
+      - cd ../BikeAvailableRetriever
+      - npm install
+      - zip -r Deploy.zip ./
+      - aws s3 mv ./Deploy.zip s3://neo-cycle-${ENVIRONMENT_NAME}-lambda/${CODEBUILD_BUILD_NUMBER}/BikeAvailableRetriever/Deploy.zip
       - cd ../../neo-cycle-infra
       - aws cloudformation deploy
           --stack-name neo-cycle-${ENVIRONMENT_NAME}-lambda
           --template-file Lambda/api-gateway-lambda.yaml
-          --parameter-overrides ObjectKeyPrefix=${CODEBUILD_BUILD_NUMBER} EnvName=${ENVIRONMENT_NAME}
+          --parameter-overrides ObjectKeyPrefix=${CODEBUILD_BUILD_NUMBER} EnvName=${ENVIRONMENT_NAME} ShareCycleApiKey=${SHARE_CYCLE_API_KEY} ShareCycleApiUrl=${SHARE_CYCLE_API_URL}
           --capabilities CAPABILITY_AUTO_EXPAND
       - aws cloudformation deploy
           --stack-name neo-cycle-${ENVIRONMENT_NAME}-cognito-lambda

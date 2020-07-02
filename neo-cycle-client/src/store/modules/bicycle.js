@@ -18,6 +18,7 @@ const state = {
   tableDataForSorting: [],
   selectedParking: undefined,
   cycleListMap: {},
+  batteryCapacityMap: {},
 }
 
 const getters = {
@@ -59,6 +60,9 @@ const getters = {
   selectedParking(state) {
     state.selectedParking.cycleList = state.cycleListMap[state.selectedParking.parkingId] ? state.cycleListMap[state.selectedParking.parkingId] : []
     return state.selectedParking
+  },
+  batteryCapacityMap(state) {
+    return state.batteryCapacityMap
   },
 }
 
@@ -147,6 +151,9 @@ const mutations = {
       return parking.parkingId === payload.parkingId
     })
   },
+  updateBatteryCapacityMap(state, payload) {
+    state.batteryCapacityMap = payload.batteryCapacityMap
+  },
 }
 
 
@@ -225,6 +232,31 @@ const actions = {
       );
       commit('resetParkingNearbyList')
       commit('updateParkingNearbyList', { parkingList: result.parkingList })
+    }
+    catch (error) {
+      payload.vue.handleErrorResponse(payload.vue, error)
+    }
+  },
+  async retrieveAvailableBike({ commit, getters, dispatch }, payload) {
+    // 何らかの理由で更新が許可されていない場合は一旦抜ける
+    if (!getters['isAcceptedUpdatingParkingList']) {
+      await new Promise((resolve) => {setTimeout(resolve, retryIntervalMs)})
+      return await dispatch('retrieveAvailableBike', payload)
+    }
+    // キャンセルが一定時間内に行われた形跡があれば一旦抜ける
+    const now = new Date()
+    if (getters['lastCancellationAttemptedDatetime'] && now.getTime() - getters['lastCancellationAttemptedDatetime'].getTime() < 10000) {
+      await new Promise((resolve) => {setTimeout(resolve, retryIntervalMs)})
+      return await dispatch('retrieveAvailableBike', payload)
+    }
+    // もう更新してよいので制御系フラグ等をリセット
+    commit('releaseConstraintUpdatingParkingList')
+    try {
+      const result = await api.retrieveAvailableBikeMap(
+        sessionStorage.getItem('currentUserName'),
+      );
+      const batteryCapacityMap = result.availableBikeMap
+      commit('updateBatteryCapacityMap', { batteryCapacityMap })
     }
     catch (error) {
       payload.vue.handleErrorResponse(payload.vue, error)

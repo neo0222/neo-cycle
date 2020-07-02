@@ -5,8 +5,9 @@ const docClient = new AWS.DynamoDB.DocumentClient({
 const ssm = new AWS.SSM();
 const axios = require('axios');
 
-const sessionTableName = 'neo-cycle-SESSION';
-
+const envName = process.env.ENV_NAME;
+const sessionTableName = `neo-cycle-${envName}-SESSION`;
+  
 exports.handler = async (event, context) => {
   if (event.warmup) {
       console.log("This is warm up.");
@@ -33,36 +34,30 @@ async function main(event, context) {
 
 async function retrieveUserInfoFromSsm() {
   const memberId = await ssm.getParameter({
-    Name: '/neo-cycle/memberId',
+    Name: `/neo-cycle/${envName}/memberId`,
     WithDecryption: false,
   }).promise();
   const password = await ssm.getParameter({
-    Name: '/neo-cycle/password',
+    Name: `/neo-cycle/${envName}/password`,
     WithDecryption: true,
   }).promise();
   return { memberId: memberId.Parameter.Value, password: password.Parameter.Value };
 }
 
 async function retrieveSessionId(memberId, password) {
-  const url = await ssm.getParameter({
-    Name: '/neo-cycle/php-url',
-    WithDecryption: false,
-  }).promise();
-  const params = new URLSearchParams()
-  params.append('EventNo', 21401);
-  params.append('GarblePrevention', '%EF%BC%B0%EF%BC%AF%EF%BC%B3%EF%BC%B4%E3%83%87%E3%83%BC%E3%82%BF');
-  params.append('MemberID', memberId);
-  params.append('Password', password);
+  const params = {
+    userID: memberId,
+    password: password,
+  };
   const config = {
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3'
+      'Content-Type': 'application/json;charset=UTF-8',
+      'X-Api-Key': process.env['SHARE_CYCLE_API_KEY'],
     }
-  }
+  };
   try {
-    const res = await axios.post(url.Parameter.Value, params, config);
-    const html = res.data;
-    const sessionId = html.substr(html.indexOf('"SessionID" value="') + 19, 36+memberId.length);
+    const res = await axios.post(process.env['SHARE_CYCLE_API_URL'] + '/bikesharesignin', params, config);
+    const sessionId = res.headers['x-bks-sessionid'];
     return sessionId;
   }
   catch (error) {
