@@ -5,7 +5,8 @@ const docClient = new AWS.DynamoDB.DocumentClient({
 const ssm = new AWS.SSM();
 const axios = require('axios');
 
-const sessionTableName = `neo-cycle-${process.env.ENV_NAME}-SESSION`;
+const envName = process.env.ENV_NAME;
+const sessionTableName = `neo-cycle-${envName}-SESSION`;
   
 exports.handler = async (event, context) => {
   if (event.warmup) {
@@ -33,11 +34,11 @@ async function main(event, context) {
 
 async function retrieveUserInfoFromSsm() {
   const memberId = await ssm.getParameter({
-    Name: '/neo-cycle/memberId',
+    Name: `/neo-cycle/${envName}/memberId`,
     WithDecryption: false,
   }).promise();
   const password = await ssm.getParameter({
-    Name: '/neo-cycle/password',
+    Name: `/neo-cycle/${envName}/password`,
     WithDecryption: true,
   }).promise();
   return { memberId: memberId.Parameter.Value, password: password.Parameter.Value };
