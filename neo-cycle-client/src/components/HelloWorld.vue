@@ -63,6 +63,7 @@ export default {
         checkStatusTimerId: undefined,
         retrieveParkingListTimerId: undefined,
         retrieveNearbyParkingListTimerId: undefined,
+        retrieveAvailableBikeTimerId: undefined,
       },
       isMounted: false,
     }
@@ -88,6 +89,7 @@ export default {
     this.checkStatusWithRetry()
     this.retrieveParkingListWithRetry()
     this.retrieveNearbyParkingListWithRetry()
+    this.retrieveAvailableBikeWithRetry()
     setTimeout(this.terminateRetry, retryLimitMs)
   },
   computed: {
@@ -179,6 +181,10 @@ export default {
         vue: this,
         isReservationBeenProcessing: this.isReservationBeenProcessing,
       })
+    },
+    async retrieveAvailableBikeWithRetry() {
+      await this.retrieveAvailableBike()
+      this.timer.retrieveAvailableBikeTimerId = setTimeout(this.retrieveAvailableBikeWithRetry, retryIntervalMs)
     },
     async retrieveNearbyParkingListWithRetry() {
       await this.retrieveNearbyParkingList()
