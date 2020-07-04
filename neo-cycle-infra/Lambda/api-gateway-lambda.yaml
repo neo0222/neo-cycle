@@ -73,6 +73,9 @@ Resources:
       Code:
         S3Bucket: !Sub ${NameTag}-${EnvName}-lambda
         S3Key: !Sub ${ObjectKeyPrefix}/ReservationMaker/Deploy.zip
+      Variables:
+        SHARE_CYCLE_API_KEY: !Ref ShareCycleApiKey
+        SHARE_CYCLE_API_URL: !Ref ShareCycleApiUrl
       FunctionName: !Sub ${NameTag}-${EnvName}-ReservationMaker
       Handler: index.handler
       ReservedConcurrentExecutions: 1
@@ -88,6 +91,9 @@ Resources:
       Code:
         S3Bucket: !Sub ${NameTag}-${EnvName}-lambda
         S3Key: !Sub ${ObjectKeyPrefix}/ReservationCanceller/Deploy.zip
+      Variables:
+        SHARE_CYCLE_API_KEY: !Ref ShareCycleApiKey
+        SHARE_CYCLE_API_URL: !Ref ShareCycleApiUrl
       FunctionName: !Sub ${NameTag}-${EnvName}-ReservationCanceller
       Handler: index.handler
       ReservedConcurrentExecutions: 1
@@ -103,6 +109,9 @@ Resources:
       Code:
         S3Bucket: !Sub ${NameTag}-${EnvName}-lambda
         S3Key: !Sub ${ObjectKeyPrefix}/StatusChecker/Deploy.zip
+      Variables:
+        SHARE_CYCLE_API_KEY: !Ref ShareCycleApiKey
+        SHARE_CYCLE_API_URL: !Ref ShareCycleApiUrl
       FunctionName: !Sub ${NameTag}-${EnvName}-StatusChecker
       Handler: index.handler
       ReservedConcurrentExecutions: 1
