@@ -128,7 +128,7 @@ export default {
       return this.isParkingTableEditable
     },
     currentPage() {
-      return this.$parent.$parent.currentPage ? this.$parent.$parent.currentPage : 'Search from Fav. List'
+      return this.$store.getters['displayController/currentPage']
     },
     status() {
       return this.$store.getters['bicycle/status']

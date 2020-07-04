@@ -32,7 +32,6 @@ export default {
   name: 'App',
   data() {
     return {
-      currentPage: 'Search from Fav. List',
       gridData: [{
         operation: 'logout',
       },]
@@ -49,7 +48,7 @@ export default {
        })
     },
     selectPage(page) {
-      this.currentPage = page
+      this.$store.commit('displayController/updateCurrentPage', { currentPage: page })
     },
     handleOperation(row) {
       const operation = row.operation
@@ -65,7 +64,10 @@ export default {
   computed: {
     isFooterVisible() {
       return this.$route.path !== '/login'
-    }
+    },
+    currentPage() {
+      return this.$store.getters['displayController/currentPage']
+    },
   },
 }
 </script>
