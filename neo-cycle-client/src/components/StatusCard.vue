@@ -1,34 +1,7 @@
 <template>
-  <el-card class="box-card" :body-style="{height: '111px', margin: 'auto'}">
+  <el-card v-show="status === 'WAITING_FOR_RESERVATION'" class="box-card" :body-style="{height: '111px', margin: 'auto'}">
     <div slot="header" class="clearfix">
       <span>{{ headerMessage }}</span>
-    </div>
-    <div v-show="status !== 'WAITING_FOR_RESERVATION'" class="text item">
-      Cycle Name: {{ reservedBike.cycleName }}
-    </div>
-    <div v-show="status !== 'WAITING_FOR_RESERVATION'" class="text item">
-      Passcode: {{ reservedBike.cyclePasscode }}
-    </div>
-    <div v-show="status === 'IN_USE'" class="text item">
-      Use Start Time: {{ reservedBike.cycleUseStartDatetime }}
-    </div>
-    <div >
-      <el-popconfirm
-        confirmButtonText='Yes'
-        cancelButtonText='No, Thanks'
-        icon="el-icon-question"
-        iconColor="red"
-        title="Are you sure to cancel reservation?"
-        v-if="status === 'RESERVED'"
-        @onConfirm="cancelReservation"
-        @onCancel="recordLastQuitToCancellationAttempt">
-        <el-button
-          slot="reference"
-          type="danger"
-          plain>
-          Cancel Reservation
-        </el-button>
-      </el-popconfirm>
     </div>
     <div v-if="!isParkingTableEditable" class="button">
       <el-button
@@ -97,9 +70,6 @@ export default {
     },
   },
   methods: {
-    async cancelReservation() {
-      await this.$store.dispatch('bicycle/cancelReservation', { vue: this })
-    },
     createFullScreenLoadingMaskOptionWithText(text) {
       return {
         lock: true,
@@ -120,9 +90,6 @@ export default {
     },
     openErrorDialog(title, message) {
       console.log(title, message)
-    },
-    recordLastQuitToCancellationAttempt() {
-      this.$store.commit('bicycle/recordLastQuitToCancellationAttempt')
     },
   }
 }

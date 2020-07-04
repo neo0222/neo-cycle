@@ -16,13 +16,10 @@ async function main(event, context) {
   const aplVersion = JSON.parse(event.body).aplVersion;
   const cycleName = JSON.parse(event.body).cycleName;
   try {
-    const { cyclePasscode } = await makeReservation(memberId, sessionId, cycleName, aplVersion);
+    const res = await makeReservation(memberId, sessionId, cycleName, aplVersion);
     const response = {
       statusCode: 200,
-      body: JSON.stringify({
-        cycleName,
-        cyclePasscode
-      }),
+      body: JSON.stringify(res),
       headers: {
           "Access-Control-Allow-Origin": '*'
       },

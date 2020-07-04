@@ -1,6 +1,6 @@
 <template>
   <div>
-    <el-card>
+    <el-card style="margin-bottom: 60px;">
       <div slot="header" class="clearfix">
         <span>{{ selectedParking.parkingName }}</span>
       </div>

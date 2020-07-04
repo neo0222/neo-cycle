@@ -62,7 +62,7 @@ async function retrieveApiVersion() {
   try {
     const res = await axios.get(process.env['SHARE_CYCLE_API_URL'] + '/aplversion', config);
     if (res.data.result !== 200) throw "Error occurred when retrieving aplVersion.";
-    const versionInfo = JSON.stringify(res.data.version_info);
+    const versionInfo = res.data.version_info.ios;
     return versionInfo;
   }
   catch (error) {

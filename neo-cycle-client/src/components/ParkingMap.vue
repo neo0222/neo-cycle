@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div class="map" ref="googleMap" />
+    <div :style="mapStyle" class="map" ref="googleMap" />
       <template v-if="!!this.google && !!this.map && isMounted">
         <child-marker 
           v-for="(parking,i) in parkingNearbyList"
@@ -90,6 +90,10 @@ export default {
     isParkingCardVisible() {
       return this.$store.getters['displayController/isParkingCardVisible']
     },
+    mapStyle() {
+      if (this.status !== 'WAITING_FOR_RESERVATION') return "width: 95vw; height: 60vh; margin-top: 104px; margin-bottom: auto; margin-right: auto; margin-left: auto;"
+      else return "width: 95vw; height: 60vh; margin: auto;"
+    },
   },
   async created() {
     this.google = await GoogleMapsApiLoader({
@@ -171,7 +175,6 @@ export default {
 <style scoped>
 .map {
   width: 95vw;
-  height: 40vh;
-  margin: auto;
+  height: 60vh;
 }
 </style>

@@ -3,7 +3,7 @@
     :data="tableData"
     ref="tableData"
     :cell-style="{padding: '0', height: '40px'}"
-    style="width: 100%;margin-bottom: 60px; font-size: 13.5px;"
+    :style="tableStyle"
     row-key="id"
     @row-click="rowClicked"
     border>
@@ -98,6 +98,10 @@ export default {
     getBatteryImageSource(batteryLevel) {
       return require(`../assets/battery-${batteryLevel ? batteryLevel : 0}.jpg`)
     },
+    openErrorDialog() {
+      // TODO: implement me.
+      this.isSessionTimeOutDialogVisible = true;
+    },
   },
   computed: {
     status() {
@@ -112,6 +116,10 @@ export default {
     batteryCapacityMap() {
       return this.$store.getters['bicycle/batteryCapacityMap']
     },
+    tableStyle() {
+      if (this.status !== 'WAITING_FOR_RESERVATION') return "width: 100%; margin-bottom: 60px; font-size: 13.5px; margin-top: 104px"
+      else return "width: 100%; margin-bottom: 60px; font-size: 13.5px"
+    }
   },
 }
 </script>

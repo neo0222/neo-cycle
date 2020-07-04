@@ -243,6 +243,9 @@ export default {
         window.clearTimeout( this.timer[timerId] )
       }
     },
+    async cancelReservation() {
+      await this.$store.dispatch('bicycle/cancelReservation', { vue: this })
+    },
   },
   destroyed() {
     this.terminateRetry()

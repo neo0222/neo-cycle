@@ -19,6 +19,8 @@ const state = {
   selectedParking: undefined,
   cycleListMap: {},
   batteryCapacityMap: {},
+  reservedBikeMessage: undefined,
+  BikeInUseMessage: undefined,
 }
 
 const getters = {
@@ -63,6 +65,12 @@ const getters = {
   },
   batteryCapacityMap(state) {
     return state.batteryCapacityMap
+  },
+  reservedBikeMessage(state) {
+    return state.reservedBikeMessage
+  },
+  BikeInUseMessage(state) {
+    return state.BikeInUseMessage
   },
 }
 
@@ -120,6 +128,10 @@ const mutations = {
   recordLastCancellationAttemptedDatetime(state) {
     state.lastCancellationAttemptedDatetime = new Date()
   },
+  recordBikeReservationDatetime(state) {
+    state.isAcceptedUpdatingParkingList = true
+    state.lastCancellationAttemptedDatetime = new Date()
+  },
   recordCancellationAttempt(state) {
     state.isAcceptedUpdatingParkingList = false
     state.lastCancellationAttemptedDatetime = new Date()
@@ -156,11 +168,72 @@ const mutations = {
   updateBatteryCapacityMap(state, payload) {
     state.batteryCapacityMap = payload.batteryCapacityMap
   },
+  updateReservedBikeMessage(state, payload) {
+    const h = payload.vue.$createElement;
+    state.reservedBikeMessage = payload.vue.$message({
+      message: h('div', { style: 'display: flex' }, [
+        h('p', { style: 'padding-left: 4vw; padding-left: 4vw' }, [
+          h('span', { style: 'color: #303133', "font-family": 'Avenir, Helvetica, Arial, sans-serif' }, `CycleName: ${payload.reservedBike.cycleName}`),
+          h('br'),
+          h('span', { style: 'color: #303133', "font-family": 'Avenir, Helvetica, Arial, sans-serif' }, `Passcode: ${payload.reservedBike.cyclePasscode}`),
+          h('br'),
+          h('span', { style: 'color: #303133', "font-family": 'Avenir, Helvetica, Arial, sans-serif' }, `ReserveLimit: ${payload.reservedBike.reserveLimit.substring(11)}`),
+          h('br'),
+        ]),
+        h('div', { style: 'padding-left: 4vw; padding-left: 4vw; display: flex; justify-content: center; align-items: center;' }, [
+          h('el-button', {
+            props: {
+              type: "danger",
+              plain: true,
+              size: "mini"
+            },
+            style: 'color: #F56C6C;',
+            nativeOn: {
+              click: payload.vue.cancelReservation
+            },
+          }, 'cancel')
+        ])
+      ]),
+      type: 'info',
+      iconClass: 'el-icon-bicycle',
+      duration: 0,
+      center: true,
+      offset: 2,
+    })
+  },
+  resetReservedBikeMessage(state) {
+    state.reservedBikeMessage.close()
+    state.reservedBikeMessage = undefined
+  },
+  updateBikeInUseMessage(state, payload) {
+    const h = payload.vue.$createElement;
+    state.bikeInUseMessage = payload.vue.$message({
+      message: h('div', { style: 'display: flex' }, [
+        h('p', { style: 'padding-left: 4vw; padding-left: 4vw' }, [
+          h('span', { style: 'color: #303133', "font-family": 'Avenir, Helvetica, Arial, sans-serif' }, `CycleName: ${payload.reservedBike.cycleName}`),
+          h('br'),
+          h('span', { style: 'color: #303133', "font-family": 'Avenir, Helvetica, Arial, sans-serif' }, `Passcode: ${payload.reservedBike.cyclePasscode}`),
+          h('br'),
+          h('span', { style: 'color: #303133', "font-family": 'Avenir, Helvetica, Arial, sans-serif' }, `StartDatetime: ${payload.reservedBike.cycleUseStartDatetime.substring(11)}`),
+          h('br'),
+        ]),
+      ]),
+      type: 'info',
+      iconClass: 'el-icon-bicycle',
+      duration: 0,
+      center: true,
+      offset: 2,
+    })
+  },
+  resetBikeInUseMessage(state) {
+    state.bikeInUseMessage.close()
+    state.bikeInUseMessage = undefined
+  },
 }
 
 
 const actions = {
-  async checkStatus({ commit }, payload) {
+  async checkStatus({ commit, getters }, payload) {
     try {
       const result = await api.checkStatus(
         sessionStorage.getItem('currentUserName'),
@@ -171,14 +244,19 @@ const actions = {
       let reservedBike
       if (status === 'RESERVED') {
         reservedBike = result.detail
+        if (!getters['reservedBikeMessage'])commit('updateReservedBikeMessage', { reservedBike, vue: payload.vue})
       } else if (status === 'IN_USE') {
         reservedBike = result.detail
+        commit('resetReservedBikeMessage')
+        if (!getters['BikeInUseMessage'])commit('updateBikeInUseMessage', { reservedBike, vue: payload.vue})
       } else {
         reservedBike =  {
           cycleName: '',
           cyclePasscode: '',
           cycleUseStartDatetime: '',
         }
+        if (getters['reservedBikeMessage']) commit('resetReservedBikeMessage')
+        if (getters['bikeInUseMessage']) commit('resetBikeInUseMessage')
       }
       commit('updateReservedBike', { reservedBike })
       commit('updateStatus', { status })
@@ -290,8 +368,9 @@ const actions = {
       );
       commit('updateReservedBike', { reservedBike: responseBody })
       commit('updateStatus', { status: 'RESERVED' })
+      commit('updateReservedBikeMessage', { reservedBike: responseBody, vue: payload.vue })
       loading.close()
-      commit('recordCancellationAttempt')
+      commit('recordBikeReservationDatetime')
     }
     catch (error) {
       loading.close()
@@ -309,6 +388,7 @@ const actions = {
       commit('resetReservedBike')
       commit('updateStatus', { status: 'WAITING_FOR_RESERVATION' });
       commit('releaseConstraintUpdatingParkingList')
+      commit('resetReservedBikeMessage')
       await dispatch('refresh', payload)
       loading.close()
     }
