@@ -22,6 +22,10 @@ Parameters:
     Description: Enter profile.
   SlackWebhookUrlForLoginMonitoring:
     Type: String
+  ShareCycleApiKey:
+    Type: String
+  ShareCycleApiUrl:
+    Type: String
 
 ######################################################
 # Resources
@@ -74,6 +78,7 @@ Resources:
       Environment:
         Variables:
           ENV_NAME: !Ref EnvName
+          SHARE_CYCLE_API_KEY: !Ref ShareCycleApiKey
           SHARE_CYCLE_API_URL: !Ref ShareCycleApiUrl
           SLACK_WEBHOOK_URL_FOR_LOGIN_MONITORING: !Ref SlackWebhookUrlForLoginMonitoring
       FunctionName: !Sub ${NameTag}-${EnvName}-PostAuthenticator
