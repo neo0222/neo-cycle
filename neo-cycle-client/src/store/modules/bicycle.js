@@ -173,11 +173,11 @@ const mutations = {
     state.reservedBikeMessage = payload.vue.$message({
       message: h('div', { style: 'display: flex' }, [
         h('p', { style: 'padding-left: 4vw; padding-left: 4vw' }, [
-          h('span', { style: 'color: #303133', "font-family": 'Avenir, Helvetica, Arial, sans-serif' }, `CycleName: ${payload.reservedBike.cycleName}`),
+          h('span', { style: 'color: #606266; font-family: Avenir, Helvetica, Arial, sans-serif' }, `CycleName: ${payload.reservedBike.cycleName}`),
           h('br'),
-          h('span', { style: 'color: #303133', "font-family": 'Avenir, Helvetica, Arial, sans-serif' }, `Passcode: ${payload.reservedBike.cyclePasscode}`),
+          h('span', { style: 'color: #606266; font-family: Avenir, Helvetica, Arial, sans-serif' }, `Passcode: ${payload.reservedBike.cyclePasscode}`),
           h('br'),
-          h('span', { style: 'color: #303133', "font-family": 'Avenir, Helvetica, Arial, sans-serif' }, `ReserveLimit: ${payload.reservedBike.reserveLimit.substring(11)}`),
+          h('span', { style: 'color: #606266; font-family: Avenir, Helvetica, Arial, sans-serif' }, `ReserveLimit: ${payload.reservedBike.reserveLimit.substring(11)}`),
           h('br'),
         ]),
         h('div', { style: 'padding-left: 4vw; padding-left: 4vw; display: flex; justify-content: center; align-items: center;' }, [
@@ -210,11 +210,11 @@ const mutations = {
     state.bikeInUseMessage = payload.vue.$message({
       message: h('div', { style: 'display: flex' }, [
         h('p', { style: 'padding-left: 4vw; padding-left: 4vw' }, [
-          h('span', { style: 'color: #303133', "font-family": 'Avenir, Helvetica, Arial, sans-serif' }, `CycleName: ${payload.reservedBike.cycleName}`),
+          h('span', { style: 'color: #606266; font-family: Avenir, Helvetica, Arial, sans-serif' }, `CycleName: ${payload.reservedBike.cycleName}`),
           h('br'),
-          h('span', { style: 'color: #303133', "font-family": 'Avenir, Helvetica, Arial, sans-serif' }, `Passcode: ${payload.reservedBike.cyclePasscode}`),
+          h('span', { style: 'color: #606266; font-family: Avenir, Helvetica, Arial, sans-serif' }, `Passcode: ${payload.reservedBike.cyclePasscode}`),
           h('br'),
-          h('span', { style: 'color: #303133', "font-family": 'Avenir, Helvetica, Arial, sans-serif' }, `StartDatetime: ${payload.reservedBike.cycleUseStartDatetime.substring(11)}`),
+          h('span', { style: 'color: #606266; font-family: Avenir, Helvetica, Arial, sans-serif' }, `StartDatetime: ${payload.reservedBike.cycleUseStartDatetime.substring(11)}`),
           h('br'),
         ]),
       ]),
