@@ -1,12 +1,5 @@
 const AWS = require('aws-sdk');
-const docClient = new AWS.DynamoDB.DocumentClient({
-  region: 'ap-northeast-1'
-});
-const ssm = new AWS.SSM();
 const axios = require('axios');
-const cheerio = require('cheerio');
-
-const sessionTableName = 'neo-cycle-SESSION';
 
 exports.handler = async (event, context) => {
   if (event.warmup) {
@@ -20,9 +13,9 @@ exports.handler = async (event, context) => {
 async function main(event, context) {
   const memberId = JSON.parse(event.body).memberId;
   const sessionId = JSON.parse(event.body).sessionId;
+  const aplVersion = JSON.parse(event.body).aplVersion;
   try {
-    await cancelReservation(memberId, sessionId, 21609);
-    await cancelReservation(memberId, sessionId, 27901);
+    await cancelReservation(memberId, sessionId, aplVersion);
     const response = {
       statusCode: 200,
       body: "",
@@ -43,30 +36,22 @@ async function main(event, context) {
       isBase64Encoded: false
     };
   }
+  
 }
 
-async function cancelReservation(memberId, sessionId, eventId) {
-  const url = await ssm.getParameter({
-    Name: '/neo-cycle/php-url',
-    WithDecryption: false,
-  }).promise();
-  
-  const params = new URLSearchParams()
-  params.append('EventNo', eventId);
-  params.append('SessionID', sessionId);
-  params.append('UserID', 'TYO');
-  params.append('MemberID', memberId);
-  
+async function cancelReservation(memberId, sessionId, aplVersion) {
   const config = {
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3'
+      'Content-Type': 'application/json;charset=UTF-8',
+      'X-Api-Key': process.env['SHARE_CYCLE_API_KEY'],
+      'X-BKS-SESSIONID': sessionId,
+      'user-agent': `bike%20share/${aplVersion} CFNetwork/1121.2.2 Darwin/19.3.0`,
+      'accept': '*/*'
     }
-  }
+  };
   try {
-    const res = await axios.post(url.Parameter.Value, params, config);
-    const html = res.data
-    if (html.indexOf('ログイン情報が削除されました') !== -1) throw 'session expired.'
+    const res = await axios.delete(process.env['SHARE_CYCLE_API_URL'] + '/reservecycle', config);
+    if (res.data.result !== 200) throw "Error occurred.";
   }
   catch (error) {
     throw error;

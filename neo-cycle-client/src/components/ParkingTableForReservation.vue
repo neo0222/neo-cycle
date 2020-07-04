@@ -47,7 +47,7 @@
         <el-button
           v-if="isRowVacantBike(scope)"
           :disabled="status !== 'WAITING_FOR_RESERVATION'"
-          @click="makeReservation(scope.row.cycle)"
+          @click="makeReservation(scope.row.name)"
           type="primary"
           plain
           size="mini">
@@ -73,10 +73,10 @@ export default {
     isRowVacantBike(scope) {
       return scope.row.cycleCount === "" && scope.row.name !== this.reservedBike.cycleName
     },
-    async makeReservation(cycle) {
+    async makeReservation(cycleName) {
       await this.$store.dispatch('bicycle/makeReservation', {
         vue: this,
-        cycle,
+        cycleName,
       })
     },
     async cancelReservation() {
