@@ -202,7 +202,7 @@ const mutations = {
     })
   },
   resetReservedBikeMessage(state) {
-    state.reservedBikeMessage.close()
+    if (state.reservedBikeMessage) state.reservedBikeMessage.close()
     state.reservedBikeMessage = undefined
   },
   updateBikeInUseMessage(state, payload) {
@@ -226,7 +226,7 @@ const mutations = {
     })
   },
   resetBikeInUseMessage(state) {
-    state.bikeInUseMessage.close()
+    if (state.bikeInUseMessage) state.bikeInUseMessage.close()
     state.bikeInUseMessage = undefined
   },
 }
