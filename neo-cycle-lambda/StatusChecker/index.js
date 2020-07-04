@@ -1,12 +1,4 @@
-const AWS = require('aws-sdk');
-const docClient = new AWS.DynamoDB.DocumentClient({
-  region: 'ap-northeast-1'
-});
-const ssm = new AWS.SSM();
 const axios = require('axios');
-const cheerio = require('cheerio');
-
-const sessionTableName = 'neo-cycle-SESSION';
 
 exports.handler = async (event, context) => {
   if (event.warmup) {
@@ -20,15 +12,17 @@ exports.handler = async (event, context) => {
 async function main(event, context) {
   const memberId = JSON.parse(event.body).memberId;
   const sessionId = JSON.parse(event.body).sessionId;
+  const aplVersion = JSON.parse(event.body).aplVersion;
   try {
     const response = {
       statusCode: 200,
-      body: JSON.stringify(await checkStatus(memberId, sessionId)),
+      body: JSON.stringify(await checkStatus(sessionId, aplVersion)),
       headers: {
           "Access-Control-Allow-Origin": '*'
       },
       isBase64Encoded: false
     };
+    console.log(`memberId: ${memberId}, response: ${JSON.stringify(response)}`);
     return response;
   }
   catch (error) {
@@ -44,61 +38,97 @@ async function main(event, context) {
   
 }
 
-async function checkStatus(memberId, sessionId) {
-  const url = await ssm.getParameter({
-    Name: '/neo-cycle/php-url',
-    WithDecryption: false,
-  }).promise();
-  
-  const params = new URLSearchParams()
-  params.append('EventNo', 25704);
-  params.append('SessionID', sessionId);
-  params.append('UserID', 'TYO');
-  params.append('MemberID', memberId);
-  
+async function checkStatus(sessionId, aplVersion) {
   const config = {
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3'
-    }
-  }
+      'Content-Type': 'application/json;charset=UTF-8',
+      'X-Api-Key': process.env['SHARE_CYCLE_API_KEY'],
+      'X-BKS-SESSIONID': sessionId,
+      'user-agent': `bike%20share/${aplVersion} CFNetwork/1121.2.2 Darwin/19.3.0`,
+      'accept': '*/*'
+    },
+  };
   try {
-    const res = await axios.post(url.Parameter.Value, params, config);
-    const html = res.data;
-    if (html.indexOf('ログイン情報が削除されました') !== -1) throw 'session expired.'
-    const $ = cheerio.load(html);
-    if (html.indexOf('利用予約中') !== -1) {
-      const children = $('[class=usr_stat]').children()
-      const cycleName = children.get(0).prev.data.substr(16, children.get(0).prev.data.length-17);
-      const cyclePasscode = children.get(1).children[0].data;
-      return {
-        status: 'RESERVED',
-        detail: {
-          cycleName,
-          cyclePasscode
-        }
-      };
-    } else if (html.indexOf('自転車を借りる') !== -1) {
+    const res = await axios.get(process.env['SHARE_CYCLE_API_URL'] + '/reservecyclestatus', config);
+    if (res.data.result !== 200) throw "Error occurred.";
+    const userStatusNum = res.data.user_info.user_status;
+    if (userStatusNum === 0) {
       return {
         status: 'WAITING_FOR_RESERVATION'
-      }
+      };
+    } else if (userStatusNum === 1) {
+      return getReserveCycle(sessionId, aplVersion);
+    } else if (userStatusNum === 2) {
+      return getReserveCycleUsage(sessionId, aplVersion);
     } else {
-      const children = $('[class=usr_stat]').children()
-      const cycleName = children.get(0).prev.data.substr(12, children.get(0).prev.data.length-13);
-      const cyclePasscode = children.get(2).children[0].data;
-      const cycleUseStartDatetime = children.get(0).next.data.substr(22, 16);
-      console.log(cycleName, cyclePasscode, cycleUseStartDatetime)
-      return {
-        status: 'IN_USE',
-        detail: {
-          cycleName,
-          cyclePasscode,
-          cycleUseStartDatetime
-        }
-      }
+      throw "Unexpected user status.";
     }
   }
   catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+async function getReserveCycle(sessionId, aplVersion) {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json;charset=UTF-8',
+      'X-Api-Key': process.env['SHARE_CYCLE_API_KEY'],
+      'X-BKS-SESSIONID': sessionId,
+      'user-agent': `bike%20share/${aplVersion} CFNetwork/1121.2.2 Darwin/19.3.0`,
+      'accept': '*/*'
+    },
+  };
+  try {
+    const res = await axios.get(process.env['SHARE_CYCLE_API_URL'] + '/reservecycle', config);
+    if (res.data.result !== 200) throw "Error occurred when retrieve reserve info.";
+    const reserveInfo = res.data.reserve_info;
+    return {
+      status: 'RESERVED',
+      detail: {
+        cycleName: reserveInfo.cycle_info.cyc_name,
+        cyclePasscode: reserveInfo.passcode,
+        reserveDatetime: reserveInfo.reserve_datetime,
+        reserveLimit: reserveInfo.reserve_limit,
+        batteryLevel: reserveInfo.cycle_info.battery_level,
+        parkingId: reserveInfo.park_info.park_id,
+        parkingName: reserveInfo.park_info.start_park_jp,
+      }
+    };
+  }
+  catch (error) {
+    console.log(error);
+    throw error;
+  }
+}
+
+async function getReserveCycleUsage(sessionId, aplVersion) {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json;charset=UTF-8',
+      'X-Api-Key': process.env['SHARE_CYCLE_API_KEY'],
+      'X-BKS-SESSIONID': sessionId,
+      'user-agent': `bike%20share/${aplVersion} CFNetwork/1121.2.2 Darwin/19.3.0`,
+      'accept': '*/*'
+    },
+  };
+  try {
+    const res = await axios.get(process.env['SHARE_CYCLE_API_URL'] + '/reservecycleusage', config);
+    if (res.data.result !== 200) throw "Error occurred when retrieve bicycle usage info.";
+    const reserveInfo = res.data.reserve_info;
+    return {
+        status: 'IN_USE',
+        detail: {
+          cycleName: reserveInfo.cycle_info.cyc_name,
+          cyclePasscode: reserveInfo.passcode,
+          cycleUseStartDatetime: reserveInfo.start_datetime,
+          batteryLevel: reserveInfo.cycle_info.battery_level,
+        }
+      };
+  }
+  catch (error) {
+    console.log(error);
     throw error;
   }
 }

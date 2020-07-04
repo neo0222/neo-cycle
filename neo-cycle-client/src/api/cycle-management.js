@@ -6,8 +6,8 @@ export async function retrieveParkingList(memberId, sessionId) {
   const res = await axios.post(url + '/parkings', { memberId, sessionId });
   return res.data
 }
-export async function checkStatus(memberId, sessionId) {
-  const res = await axios.post(url + '/status', { memberId, sessionId });
+export async function checkStatus(memberId, sessionId, aplVersion) {
+  const res = await axios.post(url + '/status', { memberId, sessionId, aplVersion });
   return res.data
 }
 
@@ -46,7 +46,7 @@ export async function updateFavoriteParking(memberId, favoriteParkingList) {
   return res.data
 }
 
-export async function retrieveAvailableBikeMap(memberId) {
-  const res = await axios.post(url + '/bikes/available', { memberId });
+export async function retrieveAvailableBikeMap(memberId, sessionId, aplVersion) {
+  const res = await axios.post(url + '/bikes/available', { memberId, sessionId, aplVersion });
   return res.data
 }

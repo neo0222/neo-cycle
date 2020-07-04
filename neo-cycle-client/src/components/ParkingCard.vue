@@ -17,13 +17,13 @@
         <el-button
           v-for="(cycle,i) in unreservedCycleList"
           :key="i"
-          :type="cycleButtonType(cycle.CycleName)"
-          :disabled="isCycleButtonDisabled(cycle.CycleName)"
+          :type="cycleButtonType(cycle.cycleName)"
+          :disabled="isCycleButtonDisabled(cycle.cycleName)"
           plain
           size="mini"
           style="margin: 3px"
           @click="makeReservation(cycle)">
-          {{ cycle.CycleName }}
+          {{ cycle.cycleName }}
         </el-button>
         <div class="button">
           <el-button
@@ -62,12 +62,12 @@ export default {
   computed: {
     unreservedCycleList() {
       return this.selectedParking.cycleList.filter((cycle) => {
-        return cycle.CycleName !== this.reservedBike.cycleName
+        return cycle.cycleName !== this.reservedBike.cycleName
       })
     },
     isReservedBikeExist() {
       return this.selectedParking.cycleList.some((cycle) => {
-        return cycle.CycleName === this.reservedBike.cycleName
+        return cycle.cycleName === this.reservedBike.cycleName
       })
     },
     isParkingFavorite() {

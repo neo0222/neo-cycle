@@ -84,20 +84,22 @@ const mutations = {
       state.tableData.push({
         id: parking.parkingId,
         name: parking.parkingName,
-        cycleCount: parking.cycleList.length + '台',
-        children: parking.cycleList.map((cycle) => {
+        cycleCount: payload.availableBikeMap[parking.parkingId].length + '台',
+        children: payload.availableBikeMap[parking.parkingId].map((cycle) => {
           return {
-            id: cycle.CycleName,
-            name: cycle.CycleName,
+            id: cycle.cycleName,
+            name: cycle.cycleName,
             cycleCount: '',
-            cycle: cycle,
+            batteryLevel: cycle.batteryLevel,
           }
         })
       })
     }
+  },
+  updateCycleList(state, payload) {
     state.cycleListMap = {}
     payload.parkingList.forEach((parking) => {
-      state.cycleListMap[parking.parkingId] = parking.cycleList
+      state.cycleListMap[parking.parkingId] = payload.availableBikeMap[parking.parkingId]
     })
   },
   resetTableData(state) {
@@ -162,7 +164,8 @@ const actions = {
     try {
       const result = await api.checkStatus(
         sessionStorage.getItem('currentUserName'),
-        sessionStorage.getItem('sessionId')
+        sessionStorage.getItem('sessionId'),
+        sessionStorage.getItem('aplVersion'),
       );
       const status = result.status
       let reservedBike
@@ -203,8 +206,15 @@ const actions = {
         sessionStorage.getItem('currentUserName'),
         sessionStorage.getItem('sessionId')
       );
+      const result2 = await api.retrieveAvailableBikeMap(
+        sessionStorage.getItem('currentUserName'),
+        sessionStorage.getItem('sessionId'),
+        sessionStorage.getItem('aplVersion'),
+      );
+      const availableBikeMap = result2.availableBikeMap
       commit('resetTableData')
-      commit('updateTableData', { parkingList: result.parkingList })
+      commit('updateTableData', { parkingList: result.parkingList, availableBikeMap })
+      commit('updateCycleList', { parkingList: result.parkingList, availableBikeMap })
     }
     catch (error) {
       payload.vue.handleErrorResponse(payload.vue, error)
@@ -254,9 +264,11 @@ const actions = {
     try {
       const result = await api.retrieveAvailableBikeMap(
         sessionStorage.getItem('currentUserName'),
+        sessionStorage.getItem('sessionId'),
+        sessionStorage.getItem('aplVersion'),
       );
-      const batteryCapacityMap = result.availableBikeMap
-      commit('updateBatteryCapacityMap', { batteryCapacityMap })
+      const availableBikeMap = result.availableBikeMap
+      commit('updateCycleList', { availableBikeMap })
     }
     catch (error) {
       payload.vue.handleErrorResponse(payload.vue, error)

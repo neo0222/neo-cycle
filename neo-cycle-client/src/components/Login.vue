@@ -76,6 +76,7 @@ export default {
           return
         }
         sessionStorage.setItem('sessionId', session.getIdToken().payload.sessionId)
+        sessionStorage.setItem('aplVersion', session.getIdToken().payload.aplVersion)
         
         loading.close()
         this.$router.replace('/')
@@ -98,6 +99,7 @@ export default {
             return
           }
           sessionStorage.setItem('sessionId', session.getIdToken().payload.sessionId)
+          sessionStorage.setItem('aplVersion', session.getIdToken().payload.aplVersion)
           loading.close()
           this.$router.replace('/')
         }

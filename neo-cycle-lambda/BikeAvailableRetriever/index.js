@@ -2,12 +2,10 @@ const AWS = require('aws-sdk');
 const docClient = new AWS.DynamoDB.DocumentClient({
   region: 'ap-northeast-1'
 });
-const ssm = new AWS.SSM();
 const axios = require('axios');
 
 const envName = process.env.ENV_NAME;
 
-const sessionTableName = `neo-cycle-${envName}-SESSION`;
 const userTableName = `neo-cycle-${envName}-USER`;
   
 exports.handler = async (event, context) => {
@@ -20,51 +18,42 @@ exports.handler = async (event, context) => {
 };
 
 async function main(event, context) {
-  const { memberId } = await retrieveUserInfoFromSsm();
-  const sessionId = await retrieveSessionId(memberId);
-  const parkingIdList = await retrieveParkingIdList(JSON.parse(event.body).memberId);
-  const availableBikeMap = await retrieveParkngInfoWithAvailableBike(sessionId, parkingIdList);
-  const response = {
-    statusCode: 200,
-    body: JSON.stringify({
-      availableBikeMap,
-    }),
-    headers: {
-        "Access-Control-Allow-Origin": '*'
-    },
-    isBase64Encoded: false
-  };
-  return response;
-}
-
-async function retrieveUserInfoFromSsm() {
-  const memberId = await ssm.getParameter({
-    Name: `/neo-cycle/${envName}/memberId`,
-    WithDecryption: false,
-  }).promise();
-  return { memberId: memberId.Parameter.Value };
-}
-
-async function retrieveSessionId(memberId) {
-  const params = {
-    TableName: sessionTableName,
-    Key: {
-      memberId,
-    },
-  };
+  const memberId = JSON.parse(event.body).memberId;
+  const sessionId = JSON.parse(event.body).sessionId;
+  const aplVersion = JSON.parse(event.body).aplVersion;
+  const cursor = JSON.parse(event.body).cursor;
+  const limit = JSON.parse(event.body).limit;
+  
   try {
-    const result = await docClient.get(params).promise();
-    if (result.Item) {
-      return result.Item.sessionId;
-    }
-    throw "UserNotFountExeption";
+    const parkingIdList = await retrieveParkingIdList(JSON.parse(event.body).memberId, cursor, limit);
+    console.log(parkingIdList);
+    const availableBikeMap = await retrieveAvailableBikeList(sessionId, parkingIdList, aplVersion);
+    const response = {
+      statusCode: 200,
+      body: JSON.stringify({
+        availableBikeMap,
+      }),
+      headers: {
+          "Access-Control-Allow-Origin": '*'
+      },
+      isBase64Encoded: false
+    };
+    console.log(`memberId: ${memberId}, response: ${JSON.stringify(response)}`);
+    return response;
   }
   catch (error) {
-    throw error
+    return {
+      statusCode: 440,
+      body: JSON.stringify({message: 'session expired.'}),
+      headers: {
+          "Access-Control-Allow-Origin": '*'
+      },
+      isBase64Encoded: false
+    };
   }
 }
 
-async function retrieveParkingIdList(memberId) {
+async function retrieveParkingIdList(memberId, cursor, limit) {
   const params = {
     TableName: userTableName,
     Key: {
@@ -73,16 +62,22 @@ async function retrieveParkingIdList(memberId) {
   };
   try {
     const result = await docClient.get(params).promise();
-    const maybeParkingIdList = result.Item ? result.Item.favoriteParkingList.map((parking) => {
+    const maybeParkingIdList = result.Item ? result.Item.favoriteParkingList.filter((parking, index, self) => {
+      const firstIndex = self.findIndex((parking) => {
+        return parking.parkingId === cursor;
+      });
+      return index >= firstIndex && index < firstIndex + limit;
+    }).map((parking) => {
       if (!parking.parkingId) return; // 販売所はidがnullで登録されるので無視
       const parkingIdStr = parking.parkingId.toFixed();
-      if (parkingIdStr.length !== 5) throw `unexpected data: memberId ${memberId}, parkingId: ${parking.parkingId}, parkingName: ${parking.parkingName}`
+      if (parkingIdStr.length !== 5) throw `unexpected data: memberId ${memberId}, parkingId: ${parking.parkingId}, parkingName: ${parking.parkingName}`;
       const parkingIdForRequest = '000' + parkingIdStr;
       return parkingIdForRequest;
     }) : [];
+    // nullを除外して返す
     return maybeParkingIdList.filter((parkingId) => {
       return parkingId;
-    })
+    });
   }
   catch (error) {
     console.log(error);
@@ -90,18 +85,17 @@ async function retrieveParkingIdList(memberId) {
   }
 }
 
-
-async function retrieveParkngInfoWithAvailableBike(sessionId, parkingIdList) {
+async function retrieveAvailableBikeList(sessionId, parkingIdList, aplVersion) {
   let availableBikeMap = {};
   const promises = [];
   for (const parkingId of parkingIdList) {
-    promises.push(retrieveAvailableBikeByParkingId(sessionId, parkingId, availableBikeMap));
+    promises.push(retrieveAvailableBikeByParkingId(sessionId, parkingId, availableBikeMap, aplVersion));
   }
   await Promise.all(promises);
   return availableBikeMap;
 }
 
-async function retrieveAvailableBikeByParkingId(sessionId, parkingId, availableBikeMap) {
+async function retrieveAvailableBikeByParkingId(sessionId, parkingId, availableBikeMap, aplVersion) {
   const config = {
     headers: {
       'Content-Type': 'application/json;charset=UTF-8',
@@ -113,13 +107,16 @@ async function retrieveAvailableBikeByParkingId(sessionId, parkingId, availableB
   };
   try {
     const res = await axios.get(process.env['SHARE_CYCLE_API_URL'] + '/parkcycleinfo/' + parkingId + '/100/1', config);
-    if (!res.data.cycle_info) return;
-    res.data.cycle_info.forEach((cycle) => {
-      availableBikeMap[cycle.cyc_name] = cycle.battery_level;
-    });
+    
+    availableBikeMap[parkingId.substring(3)] = res.data.cycle_info ? res.data.cycle_info.map((cycle) => {
+      return {
+        cycleName: cycle.cyc_name,
+        batteryLevel: cycle.battery_level,
+      };
+    }) : [];
   }
   catch (error) {
-    console.log(error)
+    console.log(error);
     throw error;
   }
 }

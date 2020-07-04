@@ -1,8 +1,3 @@
-const AWS = require('aws-sdk');
-const docClient = new AWS.DynamoDB.DocumentClient({
-  region: 'ap-northeast-1'
-});
-const ssm = new AWS.SSM();
 const axios = require('axios');
 
 exports.handler = async (event, context) => {
@@ -15,11 +10,14 @@ exports.handler = async (event, context) => {
 async function main(event, context) {
   try {
     if (!event.request.clientMetadata) return event
-    const sessionId = await retrieveSessionId(event.userName, event.request.clientMetadata.password);
+    const sessionIdPromise = retrieveSessionId(event.userName, event.request.clientMetadata.password);
+    const aplVersionPromise = retrieveApiVersion();
+    const result = await Promise.all([sessionIdPromise, aplVersionPromise]);
     event.response = {
       "claimsOverrideDetails": {
         "claimsToAddOrOverride": {
-          "sessionId": sessionId
+          "sessionId": result[0],
+          "aplVersion": result[1],
         }
       }
     };
@@ -33,28 +31,39 @@ async function main(event, context) {
 }
 
 async function retrieveSessionId(memberId, password) {
-  const url = await ssm.getParameter({
-    Name: '/neo-cycle/php-url',
-    WithDecryption: false,
-  }).promise();
-  const params = new URLSearchParams()
-  params.append('EventNo', 21401);
-  params.append('GarblePrevention', '%EF%BC%B0%EF%BC%AF%EF%BC%B3%EF%BC%B4%E3%83%87%E3%83%BC%E3%82%BF');
-  params.append('MemberID', memberId);
-  params.append('Password', password);
+  const params = {
+    userID: memberId,
+    password: password,
+  };
   const config = {
     headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3'
+      'Content-Type': 'application/json;charset=UTF-8',
+      'X-Api-Key': process.env['SHARE_CYCLE_API_KEY'],
     }
-  }
+  };
   try {
-    const res = await axios.post(url.Parameter.Value, params, config);
-    const html = res.data;
-    if (html.indexOf('IDまたはパスワードが異なります') !== -1) throw 'User does not exist.'
-    if (html.indexOf('連続して誤ったパスワードを複数回入力したため') !== -1) throw 'Account is locked.'
-    const sessionId = html.substr(html.indexOf('"SessionID" value="') + 19, 36+memberId.length);
+    const res = await axios.post(process.env['SHARE_CYCLE_API_URL'] + '/bikesharesignin', params, config);
+    if (res.data.result !== 200) throw "User does not exist.";
+    const sessionId = res.headers['x-bks-sessionid'];
     return sessionId;
+  }
+  catch (error) {
+    throw error;
+  }
+}
+
+async function retrieveApiVersion() {
+  const config = {
+    headers: {
+      'Content-Type': 'application/json;charset=UTF-8',
+      'X-Api-Key': process.env['SHARE_CYCLE_API_KEY'],
+    }
+  };
+  try {
+    const res = await axios.get(process.env['SHARE_CYCLE_API_URL'] + '/aplversion', config);
+    if (res.data.result !== 200) throw "Error occurred when retrieving aplVersion.";
+    const versionInfo = JSON.stringify(res.data.version_info);
+    return versionInfo;
   }
   catch (error) {
     throw error;

@@ -193,6 +193,7 @@ export default class Cognito {
     sessionStorage.removeItem('currentUserName')
     sessionStorage.removeItem('storeStateCredentials')
     sessionStorage.removeItem('sessionId')
+    sessionStorage.removeItem('aplVersion')
   }
 
   getUserAttributeByAttributeName(attributeName) {
