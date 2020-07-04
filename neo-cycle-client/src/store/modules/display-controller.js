@@ -11,6 +11,7 @@ const state = {
   lastCancellationAttemptedDatetime: undefined,
   isParkingTableEditable: false,
   isParkingCardVisible: false,
+  currentPage: 'Search from Fav. List',
 }
 
 const getters = {
@@ -26,8 +27,11 @@ const getters = {
   isParkingTableEditable(state) {
     return state.isParkingTableEditable
   },
-  isParkingCardVisible(store) {
+  isParkingCardVisible(state) {
     return state.isParkingCardVisible
+  },
+  currentPage(state) {
+    return state.currentPage
   },
 }
 const mutations = {
@@ -57,6 +61,9 @@ const mutations = {
   },
   unableParkingCardVisible(state) {
     state.isParkingCardVisible = false
+  },
+  updateCurrentPage(state, payload) {
+    state.currentPage = payload.currentPage
   },
 }
 
