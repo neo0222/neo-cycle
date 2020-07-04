@@ -58,6 +58,8 @@ export default {
     },
     logout() {
       this.$cognito.logout()
+      this.$store.commit('bicycle/resetBikeInUseMessage')
+      this.$store.commit('bicycle/resetReservedBikeMessage')
       this.$router.replace('/login')
     },
   },
