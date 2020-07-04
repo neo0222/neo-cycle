@@ -11,13 +11,13 @@ export async function checkStatus(memberId, sessionId, aplVersion) {
   return res.data
 }
 
-export async function makeReservation(memberId, sessionId, cycle) {
-  const res = await axios.post(url + '/reservation', { memberId, sessionId, cycle });
+export async function makeReservation(memberId, sessionId, cycleName, aplVersion) {
+  const res = await axios.post(url + '/reservation', { memberId, sessionId, cycleName, aplVersion });
   return res.data
 }
 
-export async function cancelReservation(memberId, sessionId) {
-  const res = await axios.post(url + '/cancellation', { memberId, sessionId });
+export async function cancelReservation(memberId, sessionId, aplVersion) {
+  const res = await axios.post(url + '/cancellation', { memberId, sessionId, aplVersion });
   return res.data
 }
 

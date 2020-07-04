@@ -63,6 +63,7 @@ async function retrieveParkingIdList(memberId, cursor, limit) {
   try {
     const result = await docClient.get(params).promise();
     const maybeParkingIdList = result.Item ? result.Item.favoriteParkingList.filter((parking, index, self) => {
+      if (!cursor || !limit) return self;
       const firstIndex = self.findIndex((parking) => {
         return parking.parkingId === cursor;
       });

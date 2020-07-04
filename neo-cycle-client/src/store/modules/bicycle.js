@@ -276,13 +276,17 @@ const actions = {
   },
   async makeReservation({ commit, dispatch }, payload) {
     const loading = payload.vue.$loading(payload.vue.createFullScreenLoadingMaskOptionWithText('Processing...'))
-    if (!payload.cycle) return
+    if (!payload.cycleName) {
+      loading.close()
+      return
+    }
     try {
       commit('displayController/beginReservation', null, { root: true })
       const responseBody = await api.makeReservation(
         sessionStorage.getItem('currentUserName'),
         sessionStorage.getItem('sessionId'),
-        payload.cycle
+        payload.cycleName,
+        sessionStorage.getItem('aplVersion'),
       );
       commit('updateReservedBike', { reservedBike: responseBody })
       commit('updateStatus', { status: 'RESERVED' })
@@ -299,7 +303,8 @@ const actions = {
     try {
       await api.cancelReservation(
         sessionStorage.getItem('currentUserName'),
-        sessionStorage.getItem('sessionId')
+        sessionStorage.getItem('sessionId'),
+        sessionStorage.getItem('aplVersion'),
       );
       commit('resetReservedBike')
       commit('updateStatus', { status: 'WAITING_FOR_RESERVATION' });
