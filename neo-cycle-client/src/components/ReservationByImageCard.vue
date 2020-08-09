@@ -39,7 +39,6 @@ export default {
         }
       }).then(stream => {
         this.video.srcObject = stream
-        this.video.play()
       }).catch(error => {
         navigator.mediaDevices.getUserMedia({
           audio: false,
@@ -50,7 +49,6 @@ export default {
           }
         }).then(stream => {
             this.video.srcObject = stream
-            this.video.play()
           })
       })
     }
