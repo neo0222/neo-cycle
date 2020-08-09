@@ -51,6 +51,15 @@ export default {
             this.video.srcObject = stream
           })
       })
+    } else {
+      this.$notify({
+        title: "warning",
+        message: "WebCam is not supported!",
+        type: 'warning',
+        duration: 4000,
+        // dangeroulyUserHtmlString: true,
+        // customClass: 'httpErrorNOtification'
+      })
     }
   },
   computed: {
