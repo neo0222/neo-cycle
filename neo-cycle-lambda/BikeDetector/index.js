@@ -5,7 +5,7 @@ exports.handler = async (event) => {
   // TODO implement
   const result = await rekognition.detectText({
     Image: {
-      Bytes: Buffer.from(event.imageBase64, 'base64')
+      Bytes: Buffer.from(JSON.parse(event.body).imageBase64, 'base64')
     }
   }).promise();
   const cycleName = result.TextDetections

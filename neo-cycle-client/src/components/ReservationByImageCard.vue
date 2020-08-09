@@ -30,9 +30,28 @@ export default {
   mounted(){
     this.video = this.$refs.video
     if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      navigator.mediaDevices.getUserMedia({ video: true }).then(stream => {
+      navigator.mediaDevices.getUserMedia({
+        audio: false,
+        video: {
+          width: 500,
+          height: 500,
+          facingMode: "user",
+        }
+      }).then(stream => {
         this.video.srcObject = stream
         this.video.play()
+      }).catch(error => {
+        navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: {
+            width: 500,
+            height: 500,
+            facingMode: { exact: "environment" },
+          }
+        }).then(stream => {
+            this.video.srcObject = stream
+            this.video.play()
+          })
       })
     }
   },
@@ -55,6 +74,7 @@ export default {
         imageBase64: this.captures[this.captures.length - 1].split("data:image/png;base64,")[1],
       })
       console.log(this.detectedCycleName);
+      if (!this.detectedCycleName) return;
       // TODO: handle error plz
       await this.$store.dispatch('bicycle/makeReservation', {
         vue: this,
