@@ -35,7 +35,7 @@ export default {
         video: {
           width: 500,
           height: 500,
-          facingMode: "user",
+          facingMode: { exact: "environment" },
         }
       }).then(stream => {
         this.video.srcObject = stream
@@ -46,7 +46,7 @@ export default {
           video: {
             width: 500,
             height: 500,
-            facingMode: { exact: "environment" },
+            facingMode: "user",
           }
         }).then(stream => {
             this.video.srcObject = stream
