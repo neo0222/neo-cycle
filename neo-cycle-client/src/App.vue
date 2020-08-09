@@ -5,11 +5,13 @@
     </el-main>
     <el-footer v-if="isFooterVisible">
         <div class="footer-internal">
-          <el-button type="text" style="font-size:30px; width: 29vw; margin: 0px;" @click="selectPage('Search from Fav. List')">
+          <el-button type="text" style="font-size:30px; width: 22vw; margin: 0px;" @click="selectPage('Search from Fav. List')">
             <i class="el-icon-tickets"></i>
           </el-button>
-          <el-button type="text" style="font-size:30px; width: 29vw; margin: 0px;" @click="selectPage('Search Nearby Parkings')">
+          <el-button type="text" style="font-size:30px; width: 22vw; margin: 0px;" @click="selectPage('Search Nearby Parkings')">
             <i class="el-icon-map-location"></i>
+          </el-button><el-button type="text" style="font-size:30px; width: 22vw; margin: 0px;" @click="selectPage('Reserve By Image')">
+            <i class="el-icon-camera"></i>
           </el-button>
           <el-popover
             placement="top"
@@ -18,7 +20,7 @@
             <el-table :data="gridData" @row-click="handleOperation">
               <el-table-column property="operation" label="Settings"></el-table-column>
             </el-table>
-            <el-button slot="reference" type="text" style="font-size:30px; width: 29vw; margin: 0px;">
+            <el-button slot="reference" type="text" style="font-size:30px; width: 22vw; margin: 0px;">
               <i class="el-icon-setting"></i>
             </el-button>
           </el-popover>

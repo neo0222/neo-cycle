@@ -21,6 +21,7 @@ const state = {
   batteryCapacityMap: {},
   reservedBikeMessage: undefined,
   BikeInUseMessage: undefined,
+  detectedCycleName: undefined,
 }
 
 const getters = {
@@ -71,6 +72,9 @@ const getters = {
   },
   BikeInUseMessage(state) {
     return state.BikeInUseMessage
+  },
+  detectedCycleName(state) {
+    return state.detectedCycleName;
   },
 }
 
@@ -228,6 +232,9 @@ const mutations = {
   resetBikeInUseMessage(state) {
     if (state.bikeInUseMessage) state.bikeInUseMessage.close()
     state.bikeInUseMessage = undefined
+  },
+  updateDetectedCycleName(state, payload) {
+    state.detectedCycleName = payload.detectedCycleName;
   },
 }
 
@@ -443,6 +450,18 @@ const actions = {
         payload.parkingId
       );
       await dispatch('refresh', payload)
+      loading.close()
+    }
+    catch (error) {
+      loading.close()
+      payload.vue.handleErrorResponse(payload.vue, error)
+    }
+  },
+  async detectCycleName({ commit, dispatch }, payload) {
+    const loading = payload.vue.$loading(payload.vue.createFullScreenLoadingMaskOptionWithText('Processing...'))
+    try {
+      const result = await api.detectBike(payload.imageBase64);
+      commit('updateDetectedCycleName', { detectedCycleName: result.cycleName });
       loading.close()
     }
     catch (error) {

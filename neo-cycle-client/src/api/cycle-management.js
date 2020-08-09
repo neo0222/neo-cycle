@@ -50,3 +50,8 @@ export async function retrieveAvailableBikeMap(memberId, sessionId, aplVersion) 
   const res = await axios.post(url + '/bikes/available', { memberId, sessionId, aplVersion });
   return res.data
 }
+
+export async function detectBike(imageBase64) {
+  const res = await axios.post(url + '/bikes/detection', { imageBase64, });
+  return res.data
+}
