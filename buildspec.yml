@@ -54,6 +54,10 @@ phases:
       - npm install
       - zip -r Deploy.zip ./
       - aws s3 mv ./Deploy.zip s3://neo-cycle-${ENVIRONMENT_NAME}-lambda/${CODEBUILD_BUILD_NUMBER}/BikeAvailableRetriever/Deploy.zip
+      - cd ../BikeDetector
+      - npm install
+      - zip -r Deploy.zip ./
+      - aws s3 mv ./Deploy.zip s3://neo-cycle-${ENVIRONMENT_NAME}-lambda/${CODEBUILD_BUILD_NUMBER}/BikeDetector/Deploy.zip
       - cd ../../neo-cycle-infra
       - aws cloudformation deploy
           --stack-name neo-cycle-${ENVIRONMENT_NAME}-lambda
