@@ -3,7 +3,7 @@
     <el-card :style="cardStyle">
       <div class="text item">
         <div>
-          <video :v-if="isVideoVisible" ref="video" id="video" width="100%" autoplay playsinline></video>
+          <video :v-if="isVideoVisible" ref="video" id="video" height="300" autoplay playsinline></video>
           <canvas v-show="false" ref="canvas" id="canvas" width="500" height="500"></canvas>
         </div>
       </div>
