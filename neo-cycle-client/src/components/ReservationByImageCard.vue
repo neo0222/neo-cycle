@@ -1,20 +1,87 @@
 <template>
   <div>
     <el-card style="margin-bottom: 60px;">
-      <div slot="header" class="clearfix">
-        <span>{{ video }}</span>
-      </div>
       <div class="text item">
         <div>
-          <video v-if="true" ref="video" id="video" width="96%" autoplay></video>
-          <div>
-            <button color="info" id="snap" v-on:click="capture()">Snap Photo</button>
-          </div>
+          <video :v-if="isVideoVisible" ref="video" id="video" width="100%" autoplay playsinline></video>
           <canvas v-show="false" ref="canvas" id="canvas" width="500" height="500"></canvas>
-          
         </div>
       </div>
     </el-card>
+    <el-dialog
+      :visible.sync="isConfirmReservationDialogVisible"
+      title="Confirmation"
+      @close="moveFavoriteParkingListPage"
+      width="90%"
+      center>
+        <span class="dialog-body">
+          Do you want to reserve bike?<br><br>
+          ・CycleName: {{ detectedCycleName }}
+        </span>
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="moveFavoriteParkingListPage">Cancel</el-button>
+          <el-button type="primary" @click="reserveBike">Confirm</el-button>
+        </span>
+    </el-dialog>
+    <el-dialog
+      :visible.sync="isConfirmCancelCurrentReservationAndMakeNewReservationDialogVisible"
+      title="Confirmation"
+      @close="moveFavoriteParkingListPage"
+      width="90%"
+      center>
+        <span class="dialog-body">
+          You have already reserved another bike.<br>
+          Do you want to reserve new bike anyway?<br><br>
+          ・current CycleName: {{ reservedBike.cycleName }}<br>
+          ・new CycleName: {{ detectedCycleName }}
+        </span>
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="moveFavoriteParkingListPage">Cancel</el-button>
+          <el-button type="primary" @click="cancelAndReserveBike">Confirm</el-button>
+        </span>
+    </el-dialog>
+    <el-dialog
+      :visible.sync="isSuggestCancelBikeDialogVisible"
+      title="Perhaps you already reserved the same bike?"
+      @close="moveFavoriteParkingListPage"
+      width="90%"
+      center>
+        <span class="dialog-body">
+          You tried to reserve bike you already reserved.<br>
+          Please try again for another bike.<br><br>
+        </span>
+        <span slot="footer" class="dialog-footer">
+          <el-button type="primary" @click="moveFavoriteParkingListPage">OK, got it!</el-button>
+        </span>
+    </el-dialog>
+    <el-dialog
+      :visible.sync="isSuggestReturnBikeInUseDialogVisible"
+      title="Perhaps you are already using or a bike?"
+      @close="moveFavoriteParkingListPage"
+      width="90%"
+      center>
+        <span class="dialog-body">
+          Bike you reserved is in use.<br>
+          Please return it and try again.<br><br>
+        </span>
+        <span slot="footer" class="dialog-footer">
+          <el-button type="primary" @click="moveFavoriteParkingListPage">OK, got it!</el-button>
+        </span>
+    </el-dialog>
+    <el-dialog
+      :visible.sync="isDetectionTimeoutDialogVisible"
+      title="Detection Timeout"
+      @close="moveFavoriteParkingListPage"
+      width="90%"
+      center>
+        <span class="dialog-body">
+          Bike label detection timed out.<br>
+          Please try again.<br><br>
+        </span>
+        <span slot="footer" class="dialog-footer">
+          <el-button type="primary" @click="moveFavoriteParkingListPage">OK, got it!</el-button>
+        </span>
+    </el-dialog>
   </div>
 </template>
 <script>
@@ -25,42 +92,20 @@ export default {
       video: {},
       canvas: {},
       captures: [],
+      timerList: [],
+      isVideoVisible: true,
+      isConfirmReservationDialogVisible: false,
+      isConfirmCancelCurrentReservationAndMakeNewReservationDialogVisible: false,
+      isSuggestCancelBikeDialogVisible: false,
+      isSuggestReturnBikeInUseDialogVisible: false,
+      isDetectionTimeoutDialogVisible: false,
+      isDetectionCompleted: false,
     }
   },
-  mounted(){
-    this.video = this.$refs.video
-    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
-      navigator.mediaDevices.getUserMedia({
-        audio: false,
-        video: {
-          width: 500,
-          height: 500,
-          facingMode: { exact: "environment" },
-        }
-      }).then(stream => {
-        this.video.srcObject = stream
-      }).catch(error => {
-        navigator.mediaDevices.getUserMedia({
-          audio: false,
-          video: {
-            width: 500,
-            height: 500,
-            facingMode: "user",
-          }
-        }).then(stream => {
-            this.video.srcObject = stream
-          })
-      })
-    } else {
-      this.$notify({
-        title: "warning",
-        message: "WebCam is not supported!",
-        type: 'warning',
-        duration: 4000,
-        // dangeroulyUserHtmlString: true,
-        // customClass: 'httpErrorNOtification'
-      })
-    }
+  async mounted(){
+    setTimeout(this.openDetectionTimeoutDialog, 15000)
+    this.initVideo()
+    await this.capture()
   },
   computed: {
     currentPage() {
@@ -69,9 +114,60 @@ export default {
     detectedCycleName() {
       return this.$store.getters['bicycle/detectedCycleName'];
     },
+    status() {
+      return this.$store.getters['bicycle/status']
+    },
+    reservedBike() {
+      return this.$store.getters['bicycle/reservedBike']
+    },
   },
   methods: {
+    openDetectionTimeoutDialog() {
+      if (this.isDetectionCompleted) return
+      this.isDetectionTimeoutDialogVisible = true
+      this.terminateDetection()
+      this.stopStream()
+      this.hideVideo()
+    },
+    initVideo() {
+      this.video = this.$refs.video
+      if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+        navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: {
+            facingMode: { exact: "environment" },
+          }
+        }).then(stream => {
+          this.video.srcObject = stream
+          video.onloadedmetadata = function(e) {
+            video.play()
+          }
+        }).catch(error => {
+          navigator.mediaDevices.getUserMedia({
+            audio: false,
+            video: {
+              facingMode: "user",
+            }
+          }).then(stream => {
+              this.video.srcObject = stream
+              video.onloadedmetadata = function(e) {
+                video.play()
+              }
+            })
+        })
+      } else {
+        this.$notify({
+          title: "warning",
+          message: "WebCam is not supported! open this page with Safari for iOS or chrome for Android.",
+          type: 'warning',
+          duration: 4000,
+        })
+      }
+    },
     async capture () {
+      if (this.isDetectionTimeoutDialogVisible) {
+        return
+      } 
       this.canvas = this.$refs.canvas
       this.canvas.getContext('2d').drawImage(this.video, 0, 0, 500, 500)
       this.captures.push(this.canvas.toDataURL('image/png'))
@@ -80,43 +176,77 @@ export default {
         vue: this,
         imageBase64: this.captures[this.captures.length - 1].split("data:image/png;base64,")[1],
       })
-      console.log(this.detectedCycleName);
-      if (!this.detectedCycleName) return;
-      // TODO: handle error plz
+      if (!this.detectedCycleName) {
+        this.timerList.push(setTimeout(this.capture, 300))
+        return
+      }
+      // 予約されているdetectionを取り消し
+      this.terminateDetection()
+      this.stopStream()
+      this.hideVideo()
+      this.handleOperation()
+      this.isDetectionCompleted = true
+    },
+    terminateDetection() {
+      for (const timer of this.timerList) {
+        window.clearTimeout(timer)
+      }
+    },
+    stopStream() {
+      const stream = this.video.srcObject
+      stream.getTracks().forEach((track) => {
+        console.log(track)
+        track.stop()
+      })
+      this.video.srcObject = null
+    },
+    hideVideo() {
+      this.isVideoVisible = false
+    },
+    handleOperation() {
+      if (this.status === "WAITING_FOR_RESERVATION") {
+        this.openConfirmReservationDialog()
+      } else if (this.status === "RESERVED") {
+        if (this.detectedCycleName === this.reservedBike.cycleName) {
+          this.openSuggestCancelBikeDialog()
+        } else {
+          this.openConfirmCancelCurrentReservationAndMakeNewReservationDialog()
+        }
+      } else if (this.status === "IN_USE") {
+        this.openSuggestReturnBikeInUseDialog()
+      }
+    },
+    openConfirmReservationDialog() {
+      this.isConfirmReservationDialogVisible = true
+    },
+    openConfirmCancelCurrentReservationAndMakeNewReservationDialog() {
+      this.isConfirmCancelCurrentReservationAndMakeNewReservationDialogVisible = true
+    },
+    openSuggestCancelBikeDialog() {
+      this.isSuggestCancelBikeDialogVisible = true
+    },
+    openSuggestReturnBikeInUseDialog() {
+      this.isSuggestReturnBikeInUseDialogVisible = true
+    },
+    moveFavoriteParkingListPage() {
+      this.$store.commit('displayController/updateCurrentPage', { currentPage: "Search from Fav. List" })
+    },
+    async reserveBike() {
       await this.$store.dispatch('bicycle/makeReservation', {
         vue: this,
         cycleName: this.detectedCycleName,
       });
-      this.$store.commit('displayController/updateCurrentPage', { currentPage: "Search from Fav. List" });
+      this.moveFavoriteParkingListPage()
     },
-    cycleButtonType(cycleName) {
-      if (this.status === 'RESERVED' && this.reservedBike.cycleName === cycleName) return 'danger'
-      else return 'primary'
-    },
-    isCycleButtonDisabled(cycleName) {
-      return this.status === 'RESERVED' && this.reservedBike.cycleName !== cycleName
-    },
-    async makeReservation(cycleName) {
+    async cancelAndReserveBike() {
+      await this.$store.dispatch('bicycle/cancelReservation', {
+        vue: this,
+      });
       await this.$store.dispatch('bicycle/makeReservation', {
         vue: this,
-        cycleName,
-      })
-    },
-    async cancelReservation() {
-      await this.$store.dispatch('bicycle/cancelReservation', { vue: this })
-    },
-    async registerFavoriteParking(parkingId, parkingName) {
-      await this.$store.dispatch('bicycle/registerFavoriteParking', {
-        vue: this,
-        parkingId,
-        parkingName,
-      })
-    },
-    async removeFavoriteParking(parkingId) {
-      await this.$store.dispatch('bicycle/removeFavoriteParking', {
-        vue: this,
-        parkingId,
-      })
+        cycleName: this.detectedCycleName,
+      });
+      this.moveFavoriteParkingListPage()
     },
     createFullScreenLoadingMaskOptionWithText(text) {
       return {
@@ -126,9 +256,9 @@ export default {
       }
     },
   },
-  updated() {
-    
-  }
+  destroyed() {
+    this.stopStream()
+  },
 }
 </script>
 

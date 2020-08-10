@@ -637,6 +637,9 @@ Resources:
         - StatusCode: 440
           ResponseParameters:
             "method.response.header.Access-Control-Allow-Origin" : true
+        - StatusCode: 400
+          ResponseParameters:
+            "method.response.header.Access-Control-Allow-Origin" : true
       Integration:
         Type: AWS_PROXY
         Uri: !Sub arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/${LambdaReservationMaker.Arn}/invocations
@@ -646,6 +649,9 @@ Resources:
             ResponseParameters:
               'method.response.header.Access-Control-Allow-Origin' : "'*'" # 中身を一重引用符で囲う
           - StatusCode: 440
+            ResponseParameters:
+              'method.response.header.Access-Control-Allow-Origin' : "'*'" # 中身を一重引用符で囲う
+          - StatusCode: 400
             ResponseParameters:
               'method.response.header.Access-Control-Allow-Origin' : "'*'" # 中身を一重引用符で囲う
     DependsOn: LambdaReservationMakerPermission

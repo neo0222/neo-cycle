@@ -458,11 +458,9 @@ const actions = {
     }
   },
   async detectCycleName({ commit, dispatch }, payload) {
-    const loading = payload.vue.$loading(payload.vue.createFullScreenLoadingMaskOptionWithText('Processing...'))
     try {
       const result = await api.detectBike(payload.imageBase64);
-      commit('updateDetectedCycleName', { detectedCycleName: result.cycleName });
-      loading.close()
+      commit('updateDetectedCycleName', { detectedCycleName: result.maybeCycleName });
     }
     catch (error) {
       loading.close()
