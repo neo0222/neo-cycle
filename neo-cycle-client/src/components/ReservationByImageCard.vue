@@ -171,7 +171,6 @@ export default {
       this.canvas = this.$refs.canvas
       this.canvas.getContext('2d').drawImage(this.video, 0, 0, 500, 500)
       this.captures.push(this.canvas.toDataURL('image/png'))
-      console.log(this.captures[this.captures.length - 1])
       await this.$store.dispatch('bicycle/detectCycleName', {
         vue: this,
         imageBase64: this.captures[this.captures.length - 1].split("data:image/png;base64,")[1],
@@ -194,10 +193,11 @@ export default {
     },
     stopStream() {
       const stream = this.video.srcObject
-      stream.getTracks().forEach((track) => {
-        console.log(track)
-        track.stop()
-      })
+      if (stream) {
+        stream.getTracks().forEach((track) => {
+          track.stop()
+        })
+      }
       this.video.srcObject = null
     },
     hideVideo() {
@@ -247,6 +247,9 @@ export default {
         cycleName: this.detectedCycleName,
       });
       this.moveFavoriteParkingListPage()
+    },
+    async cancelReservation() {
+      await this.$store.dispatch('bicycle/cancelReservation', { vue: this })
     },
     createFullScreenLoadingMaskOptionWithText(text) {
       return {
