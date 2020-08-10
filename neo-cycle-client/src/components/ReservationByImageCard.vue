@@ -1,11 +1,19 @@
 <template>
   <div>
-    <el-card style="margin-bottom: 60px;">
+    <el-card :style="cardStyle">
       <div class="text item">
         <div>
           <video :v-if="isVideoVisible" ref="video" id="video" width="100%" autoplay playsinline></video>
           <canvas v-show="false" ref="canvas" id="canvas" width="500" height="500"></canvas>
         </div>
+      </div>
+      <div>
+        <el-progress
+          type="circle"
+          :percentage="remainingTimePercentageRemainingDelay"
+          :color="countDownCircleStatus"
+          :format="getRemainingTrialCount">
+        </el-progress>
       </div>
     </el-card>
     <el-dialog
@@ -70,12 +78,12 @@
     </el-dialog>
     <el-dialog
       :visible.sync="isDetectionTimeoutDialogVisible"
-      title="Detection Timeout"
+      title="Detection Limit Exceeded"
       @close="moveFavoriteParkingListPage"
       width="90%"
       center>
         <span class="dialog-body">
-          Bike label detection timed out.<br>
+          Bike label detection trial exceeded the limit.<br>
           Please try again.<br><br>
         </span>
         <span slot="footer" class="dialog-footer">
@@ -100,10 +108,11 @@ export default {
       isSuggestReturnBikeInUseDialogVisible: false,
       isDetectionTimeoutDialogVisible: false,
       isDetectionCompleted: false,
+      remainingTimePercentage: 100,
+      remainingTrialCount: 5,
     }
   },
   async mounted(){
-    setTimeout(this.openDetectionTimeoutDialog, 15000)
     this.initVideo()
     await this.capture()
   },
@@ -119,6 +128,19 @@ export default {
     },
     reservedBike() {
       return this.$store.getters['bicycle/reservedBike']
+    },
+    cardStyle() {
+      if (this.status !== 'WAITING_FOR_RESERVATION') return "margin-bottom: 60px; margin-top: 104px"
+      else return "margin-bottom: 60px;"
+    },
+    countDownCircleStatus() {
+      if (this.remainingTrialCount > 3) return "#67c23a"
+      else if (this.remainingTrialCount > 1) return "#e6a23c"
+      else return "#f56c6c"
+    },
+    remainingTimePercentageRemainingDelay() {
+      return 100- ( (100 - this.remainingTimePercentage) * (1 + 1.20 * 0.01 * (this.remainingTimePercentage) ) ) 
+      // return 100- ( (100 - this.remainingTimePercentage) )
     },
   },
   methods: {
@@ -165,17 +187,23 @@ export default {
       }
     },
     async capture () {
-      if (this.isDetectionTimeoutDialogVisible) {
+      if (this.remainingTrialCount === 0) {
+        this.openDetectionTimeoutDialog()
         return
-      } 
+      }
+      this.remainingTimePercentage = 100
       this.canvas = this.$refs.canvas
       this.canvas.getContext('2d').drawImage(this.video, 0, 0, 500, 500)
       this.captures.push(this.canvas.toDataURL('image/png'))
+      await this.countDown()
+      await new Promise(resolve => setTimeout(resolve, 280))
+      if (this.remainingTrialCount !== 1) this.remainingTimePercentage = 100
       await this.$store.dispatch('bicycle/detectCycleName', {
         vue: this,
         imageBase64: this.captures[this.captures.length - 1].split("data:image/png;base64,")[1],
       })
       if (!this.detectedCycleName) {
+        this.remainingTrialCount--
         this.timerList.push(setTimeout(this.capture, 300))
         return
       }
@@ -257,6 +285,21 @@ export default {
         text: text,
         background: 'rgba(208, 208, 208, 0.7)'
       }
+    },
+    async countDown() {
+      while (true) {
+        await this.decreaseRemainingTimePercentage()
+        if (this.remainingTimePercentage === 0) {
+          return
+        }
+      }
+    },
+    async decreaseRemainingTimePercentage() {
+      await new Promise(resolve => setTimeout(resolve, 50))
+      this.remainingTimePercentage = this.remainingTimePercentage - 1
+    },
+    getRemainingTrialCount() {
+      return this.remainingTrialCount
     },
   },
   destroyed() {
