@@ -22,25 +22,26 @@ exports.handler = async (event, context) => {
 };
 
 async function main(event, context) {
+  console.log(JSON.stringify(event));
   // const { memberId, password } = await retrieveUserInfoFromSsm();
   // const sessionId = await retrieveSessionId(memberId, password);
   
-  const userList = await retrieveUserListToMaintainSession();
+  // const userList = await retrieveUserListToMaintainSession();
   
-  const promises = [];
-  for (const user of userList) {
-    promises.push((async () => {
-      const decodedPassword = await decodePassword(user.encodedPasswordBufferObj);
-      const sessionId = await retrieveSessionId(user.memberId, decodedPassword);
-      await putSessionId(user.memberId, sessionId);
-    })());
-  }
+  // const promises = [];
+  // for (const user of userList) {
+  //   promises.push((async () => {
+  //     const decodedPassword = await decodePassword(user.encodedPasswordBufferObj);
+  //     const sessionId = await retrieveSessionId(user.memberId, decodedPassword);
+  //     await putSessionId(user.memberId, sessionId);
+  //   })());
+  // }
   
-  try {
-    await Promise.all(promises);
-  } catch (error) {
-    console.log(error);
-  }
+  // try {
+  //   await Promise.all(promises);
+  // } catch (error) {
+  //   console.log(error);
+  // }
   
   // const rawString = "example-password";
   // const encryptParams = {

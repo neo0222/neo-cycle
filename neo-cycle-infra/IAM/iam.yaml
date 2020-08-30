@@ -55,6 +55,7 @@ Resources:
           - Effect: Allow
             Action:
               - dynamodb:GetItem
+              - dynamodb:Scan
             Resource:
               - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${NameTag}-${EnvName}-USER"
 
@@ -96,6 +97,34 @@ Resources:
               - dynamodb:GetItem
             Resource:
               - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${NameTag}-${EnvName}-SESSION"
+
+  NeoCycleCommonSessionTablePutItemPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: authorize to put item into common session dynamodb
+      ManagedPolicyName: !Sub ${NameTag}-${EnvName}-iam-NeoCycleCommonSessionTablePutItemPolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:PutItem
+            Resource:
+              - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${NameTag}-common-SESSION"
+
+  NeoCycleCommonSessionTableGetItemPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: authorize to get item from common session dynamodb
+      ManagedPolicyName: !Sub ${NameTag}-${EnvName}-iam-NeoCycleCommonSessionTableGetItemPolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:GetItem
+            Resource:
+              - !Sub "arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${NameTag}-common-SESSION"
 
   NeoCycleGetParameterPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -140,6 +169,32 @@ Resources:
       ManagedPolicyArns:
         - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
         - !Ref NeoCycleSessionTablePutItemPolicy
+        - !Ref NeoCycleUserTableGetItemPolicy
+        - !Ref NeoCycleCommonSessionTablePutItemPolicy
+        - !Ref NeoCycleCommonSessionTableGetItemPolicy
+        - !Ref NeoCycleGetParameterPolicy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: lambda.amazonaws.com
+
+  RoleSessionSpreader:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub
+        - ${NameTag}-${EnvName}-session-spreader-role
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+      ManagedPolicyArns:
+        - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
+        - !Ref NeoCycleSessionTablePutItemPolicy
+        - !Ref NeoCycleUserTableGetItemPolicy
+        - !Ref NeoCycleCommonSessionTableGetItemPolicy
         - !Ref NeoCycleGetParameterPolicy
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
@@ -387,6 +442,16 @@ Outputs:
     Export:
       Name: !Sub
         - ${NameTag}-${EnvName}-RoleSessionMaintainerArn
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+
+  RoleSessionSpreaderArn:
+    Value: !GetAtt RoleSessionSpreader.Arn
+    Export:
+      Name: !Sub
+        - ${NameTag}-${EnvName}-RoleSessionSpreaderArn
         - {
           NameTag: !FindInMap [ StackConfig, NameTag, Value ],
           EnvName: !Ref EnvName
