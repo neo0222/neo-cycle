@@ -5,6 +5,8 @@ const docClient = new AWS.DynamoDB.DocumentClient({
 
 const axios = require('axios');
 const sessionTableName = `neo-cycle-common-SESSION`;
+const envName = process.env["ENV_NAME"];
+const userTableName = `neo-cycle-${envName}-USER`;
 
 exports.handler = async (event, context) => {
   if (event.warmup) {
@@ -38,6 +40,8 @@ async function main(event, context) {
 }
 
 async function retrieveSessionId(memberId, password) {
+  const userInfo = await retrieveUserInfo(memberId);
+  if (userInfo.encodedPasswordBufferObj) return;
   const params = {
     userID: memberId,
     password: password,
@@ -57,6 +61,17 @@ async function retrieveSessionId(memberId, password) {
   catch (error) {
     throw error;
   }
+}
+
+async function retrieveUserInfo(memberId) {
+  const params = {
+    TableName: userTableName,
+    Key: {
+      memberId: memberId,
+    },
+  };
+  const result = await docClient.get(params);
+  return result.Item;
 }
 
 async function retrieveApiVersion() {

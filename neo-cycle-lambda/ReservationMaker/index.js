@@ -1,6 +1,8 @@
 const AWS = require('aws-sdk');
 const axios = require('axios');
 
+const sessionTableName = `neo-cycle-${envName}-SESSION`;
+
 exports.handler = async (event, context) => {
   if (event.warmup) {
       console.log("This is warm up.");
@@ -12,7 +14,7 @@ exports.handler = async (event, context) => {
 
 async function main(event, context) {
   const memberId = JSON.parse(event.body).memberId;
-  const sessionId = JSON.parse(event.body).sessionId;
+  const sessionId = JSON.parse(event.body).sessionId ? JSON.parse(event.body).sessionId : await retrieveSessionId(memberId);
   const aplVersion = JSON.parse(event.body).aplVersion;
   const cycleName = JSON.parse(event.body).cycleName;
   try {
@@ -48,6 +50,17 @@ async function main(event, context) {
     };
   }
   
+}
+
+async function retrieveSessionId(memberId) {
+  const params = {
+    TableName: sessionTableName,
+    Key: {
+      memberId: memberId,
+    },
+  };
+  const result = await docClient.get(params).promise();
+  return result.Item.sessionId;
 }
 
 async function makeReservation(memberId, sessionId, cycleName, aplVersion) {
