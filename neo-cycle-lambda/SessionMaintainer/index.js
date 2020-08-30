@@ -7,7 +7,7 @@ const kms = new AWS.KMS({ region: 'ap-northeast-1' });
 const axios = require('axios');
 
 const envName = process.env.ENV_NAME;
-const sessionTableName = `neo-cycle-${envName}-SESSION`;
+const sessionTableName = `neo-cycle-common-SESSION`;
 const userTableName = `neo-cycle-${envName}-USER`;
 const keyAlias = `alias/neo-cycle-${envName}-key-for-manipulating-password`;
 const encryptionAlgotirhm = "RSAES_OAEP_SHA_256";
@@ -22,9 +22,6 @@ exports.handler = async (event, context) => {
 };
 
 async function main(event, context) {
-  // const { memberId, password } = await retrieveUserInfoFromSsm();
-  // const sessionId = await retrieveSessionId(memberId, password);
-  
   const userList = await retrieveUserListToMaintainSession();
   
   const promises = [];
@@ -85,17 +82,6 @@ async function retrieveUserListToMaintainSession() {
     return !!user.encodedPasswordBufferObj;
   });
 }
-async function retrieveUserInfoFromSsm() {
-  const memberId = await ssm.getParameter({
-    Name: `/neo-cycle/${envName}/memberId`,
-    WithDecryption: false,
-  }).promise();
-  const password = await ssm.getParameter({
-    Name: `/neo-cycle/${envName}/password`,
-    WithDecryption: true,
-  }).promise();
-  return { memberId: memberId.Parameter.Value, password: password.Parameter.Value };
-}
 
 async function retrieveSessionId(memberId, password) {
   const params = {
@@ -128,7 +114,7 @@ async function decodePassword(encodedPasswordBufferObj) {
   return res.Plaintext.toString('utf-8');
 }
 
-async function putSessionId(memberId, sessionId, json) {
+async function putSessionId(memberId, sessionId) {
   const params = {
     TableName: sessionTableName,
     Item: {

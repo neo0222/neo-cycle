@@ -154,6 +154,22 @@ Resources:
             Resource:
               - "*"
 
+  NeoCycleDynamoDBStreamReadPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: authorize to read dynamodb stream
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:DescribeStream
+              - dynamodb:GetRecords
+              - dynamodb:GetShardIterator
+              - dynamodb:ListStreams
+            Resource:
+              - !Sub arn:aws:dynamodb:ap-northeast-1:010660485109:table/${NameTag}-common-SESSION/stream/*
+
   #-----------------------
   # ロールの作成
   #-----------------------
@@ -196,6 +212,7 @@ Resources:
         - !Ref NeoCycleUserTableGetItemPolicy
         - !Ref NeoCycleCommonSessionTableGetItemPolicy
         - !Ref NeoCycleGetParameterPolicy
+        - !Ref NeoCycleDynamoDBStreamReadPolicy
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
