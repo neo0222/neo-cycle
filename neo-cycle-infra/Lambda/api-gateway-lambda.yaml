@@ -177,6 +177,24 @@ Resources:
       Runtime: nodejs12.x
       Timeout: 10
       ReservedConcurrentExecutions: 10
+
+  LambdaBikeDetector:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Sub ${NameTag}-${EnvName}-lambda
+        S3Key: !Sub ${ObjectKeyPrefix}/BikeDetector/Deploy.zip
+      Environment:
+        Variables:
+          ENV_NAME: !Ref EnvName
+      FunctionName: !Sub ${NameTag}-${EnvName}-BikeDetector
+      Handler: index.handler
+      ReservedConcurrentExecutions: 1
+      Role: !ImportValue
+        Fn::Sub: ${NameTag}-${EnvName}-RoleBikeDetectorArn
+      Runtime: nodejs12.x
+      Timeout: 10
+      ReservedConcurrentExecutions: 10
   ######################################################
   # Rest API
   ######################################################
@@ -619,6 +637,9 @@ Resources:
         - StatusCode: 440
           ResponseParameters:
             "method.response.header.Access-Control-Allow-Origin" : true
+        - StatusCode: 400
+          ResponseParameters:
+            "method.response.header.Access-Control-Allow-Origin" : true
       Integration:
         Type: AWS_PROXY
         Uri: !Sub arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/${LambdaReservationMaker.Arn}/invocations
@@ -628,6 +649,9 @@ Resources:
             ResponseParameters:
               'method.response.header.Access-Control-Allow-Origin' : "'*'" # 中身を一重引用符で囲う
           - StatusCode: 440
+            ResponseParameters:
+              'method.response.header.Access-Control-Allow-Origin' : "'*'" # 中身を一重引用符で囲う
+          - StatusCode: 400
             ResponseParameters:
               'method.response.header.Access-Control-Allow-Origin' : "'*'" # 中身を一重引用符で囲う
     DependsOn: LambdaReservationMakerPermission
@@ -938,6 +962,88 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref LambdaBikeAvailableRetriever
       Principal: apigateway.amazonaws.com
+  
+  ######################################################
+  # Bikes/Detection
+  #   - Resource
+  #     - path: /Bikes/detection
+  #   - Method
+  #     - POST
+  #     - OPTION(for enable CORS)
+  #   - Lambda Permission
+  ######################################################
+  BikesDetectionResource:
+    Type: AWS::ApiGateway::Resource
+    Properties:
+      RestApiId: !Ref NeoCycleRestAPI
+      ParentId: !Ref BikesResource
+      PathPart: detection
+
+  BikesDetectionPostMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      HttpMethod: POST
+      ResourceId: !Ref BikesDetectionResource
+      RestApiId: !Ref NeoCycleRestAPI
+      MethodResponses: 
+        - StatusCode: 200
+          ResponseParameters:
+            "method.response.header.Access-Control-Allow-Origin" : true
+        - StatusCode: 440
+          ResponseParameters:
+            "method.response.header.Access-Control-Allow-Origin" : true            
+      Integration:
+        Type: AWS_PROXY
+        Uri: !Sub arn:aws:apigateway:ap-northeast-1:lambda:path/2015-03-31/functions/${LambdaBikeDetector.Arn}/invocations
+        IntegrationHttpMethod: POST
+        IntegrationResponses:
+          - StatusCode: 200
+            ResponseParameters:
+              'method.response.header.Access-Control-Allow-Origin' : "'*'" # 中身を一重引用符で囲う
+          - StatusCode: 440
+            ResponseParameters:
+              'method.response.header.Access-Control-Allow-Origin' : "'*'" # 中身を一重引用符で囲う
+    DependsOn: LambdaBikesDetectorPermission
+
+  BikesDetectorOptionsMethod:
+    Type: AWS::ApiGateway::Method
+    Properties:
+      AuthorizationType: NONE
+      RestApiId:
+        Ref: NeoCycleRestAPI
+      ResourceId:
+        Ref: BikesDetectionResource
+      HttpMethod: OPTIONS
+      Integration:
+        IntegrationResponses:
+        - StatusCode: 200
+          ResponseParameters:
+            method.response.header.Access-Control-Allow-Headers: "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,X-Amz-Security-Token'"
+            method.response.header.Access-Control-Allow-Methods: "'POST,OPTIONS'"
+            method.response.header.Access-Control-Allow-Origin: "'*'"
+          ResponseTemplates:
+            application/json: ''
+        PassthroughBehavior: WHEN_NO_MATCH
+        RequestTemplates:
+          application/json: '{"statusCode": 200}'
+        Type: MOCK
+      MethodResponses:
+      - StatusCode: 200
+        ResponseModels:
+          application/json: 'Empty'
+        ResponseParameters:
+          method.response.header.Access-Control-Allow-Headers: false
+          method.response.header.Access-Control-Allow-Methods: false
+          method.response.header.Access-Control-Allow-Origin: false
+    DependsOn: BikesDetectionResource
+
+  LambdaBikesDetectorPermission:
+    Type: AWS::Lambda::Permission
+    Properties: 
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref LambdaBikeDetector
+      Principal: apigateway.amazonaws.com
 
 #################################
 # Outputs
@@ -1007,3 +1113,11 @@ Outputs:
     Value: !Ref LambdaBikeAvailableRetriever
     Export:
       Name: !Sub ${NameTag}-${EnvName}-LambdaBikeAvailableRetrieverName
+  LambdaBikeDetectorArn:
+    Value: !GetAtt LambdaBikeDetector.Arn
+    Export:
+      Name: !Sub ${NameTag}-${EnvName}-LambdaBikeDetectorArn
+  LambdaBikeDetectorName:
+    Value: !Ref LambdaBikeDetector
+    Export:
+      Name: !Sub ${NameTag}-${EnvName}-LambdaBikeDetectorName

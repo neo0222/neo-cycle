@@ -33,6 +33,12 @@
         "description": "this exception is thrown when a number of confirmation code attempts exceeded.",
         "ja": "試行回数が上限を超過しました。時間を置いて再度入力してください。"
       }
+    },
+    "apiGateway": {
+      "bike not found.": {
+        "description": "指定した自転車が見つからない。",
+        "ja": "指定した自転車が見つかりません。"
+      }
     }
   }
 }

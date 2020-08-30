@@ -112,6 +112,19 @@ Resources:
               - !Sub arn:aws:ssm:ap-northeast-1:010660485109:parameter/neo-cycle/${EnvName}/memberId
               - !Sub arn:aws:ssm:ap-northeast-1:010660485109:parameter/neo-cycle/${EnvName}/password
 
+  NeoCycleRekognitionDetectTextPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: authorize to detect text on rekognition
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - rekognition:DetectText
+            Resource:
+              - "*"
+
   #-----------------------
   # ロールの作成
   #-----------------------
@@ -345,6 +358,26 @@ Resources:
             Action: sts:AssumeRole
             Principal:
               Service: lambda.amazonaws.com 
+
+  RoleBikeDetector:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub
+        - ${NameTag}-${EnvName}-bike-detector-role
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+      ManagedPolicyArns:
+        - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
+        - !Ref NeoCycleRekognitionDetectTextPolicy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: lambda.amazonaws.com 
 #################################
 # Outputs
 #################################
@@ -454,6 +487,16 @@ Outputs:
     Export:
       Name: !Sub
         - ${NameTag}-${EnvName}-RoleBikeAvailableRetrieverArn
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+
+  RoleBikeDetectorArn:
+    Value: !GetAtt RoleBikeDetector.Arn
+    Export:
+      Name: !Sub
+        - ${NameTag}-${EnvName}-RoleBikeDetectorArn
         - {
           NameTag: !FindInMap [ StackConfig, NameTag, Value ],
           EnvName: !Ref EnvName

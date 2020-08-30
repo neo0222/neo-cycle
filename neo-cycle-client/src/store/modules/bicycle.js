@@ -21,6 +21,7 @@ const state = {
   batteryCapacityMap: {},
   reservedBikeMessage: undefined,
   BikeInUseMessage: undefined,
+  detectedCycleName: undefined,
 }
 
 const getters = {
@@ -71,6 +72,9 @@ const getters = {
   },
   BikeInUseMessage(state) {
     return state.BikeInUseMessage
+  },
+  detectedCycleName(state) {
+    return state.detectedCycleName;
   },
 }
 
@@ -125,17 +129,17 @@ const mutations = {
   resetParkingNearbyList(state) {
     state.parkingNearbyList.length = 0
   },
-  recordLastCancellationAttemptedDatetime(state) {
-    state.lastCancellationAttemptedDatetime = new Date()
-  },
+  /* 予約が行われた時刻を記録 */
   recordBikeReservationDatetime(state) {
     state.isAcceptedUpdatingParkingList = true
     state.lastCancellationAttemptedDatetime = new Date()
   },
+  /* キャンセルしようとした場合にacceptedフラグをfalseに */
   recordCancellationAttempt(state) {
     state.isAcceptedUpdatingParkingList = false
     state.lastCancellationAttemptedDatetime = new Date()
   },
+  /* 予約取消をキャンセルした時に最終試行時刻を記録 */
   recordLastQuitToCancellationAttempt(state) {
     state.isAcceptedUpdatingParkingList = true
     state.lastCancellationAttemptedDatetime = new Date()
@@ -229,6 +233,9 @@ const mutations = {
     if (state.bikeInUseMessage) state.bikeInUseMessage.close()
     state.bikeInUseMessage = undefined
   },
+  updateDetectedCycleName(state, payload) {
+    state.detectedCycleName = payload.detectedCycleName;
+  },
 }
 
 
@@ -240,15 +247,28 @@ const actions = {
         sessionStorage.getItem('sessionId'),
         sessionStorage.getItem('aplVersion'),
       );
+      const previousReservedBike = getters['reservedBike']
+      const isReservationRenewed = (reservedBike, previousReservedBike) => {
+        return !previousReservedBike 
+          || reservedBike.cycleName !== previousReservedBike.cycleName
+          && reservedBike.cyclePasscode !== previousReservedBike.cyclePasscode
+      }
       const status = result.status
       let reservedBike
       if (status === 'RESERVED') {
         reservedBike = result.detail
-        if (!getters['reservedBikeMessage'])commit('updateReservedBikeMessage', { reservedBike, vue: payload.vue})
+        if (isReservationRenewed(reservedBike, previousReservedBike)) {
+          commit('resetReservedBikeMessage')
+          commit('resetBikeInUseMessage')
+          commit('updateReservedBikeMessage', { reservedBike, vue: payload.vue})
+        }
       } else if (status === 'IN_USE') {
         reservedBike = result.detail
-        commit('resetReservedBikeMessage')
-        if (!getters['BikeInUseMessage'])commit('updateBikeInUseMessage', { reservedBike, vue: payload.vue})
+        if (isReservationRenewed(reservedBike, previousReservedBike)) {
+          commit('resetReservedBikeMessage')
+          commit('resetBikeInUseMessage')
+          commit('updateBikeInUseMessage', { reservedBike, vue: payload.vue})
+        }
       } else {
         reservedBike =  {
           cycleName: '',
@@ -443,6 +463,18 @@ const actions = {
         payload.parkingId
       );
       await dispatch('refresh', payload)
+      loading.close()
+    }
+    catch (error) {
+      loading.close()
+      payload.vue.handleErrorResponse(payload.vue, error)
+    }
+  },
+  async detectCycleName({ commit, dispatch }, payload) {
+    const loading = payload.vue.$loading(payload.vue.createFullScreenLoadingMaskOptionWithText('Processing...'))
+    try {
+      const result = await api.detectBike(payload.imageBase64);
+      commit('updateDetectedCycleName', { detectedCycleName: result.maybeCycleName });
       loading.close()
     }
     catch (error) {

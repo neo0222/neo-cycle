@@ -10,9 +10,12 @@
     <parking-table-for-reservation
       v-show="!isParkingTableEditable && currentPage === 'Search from Fav. List'"/>
     <parking-map
-      v-show="currentPage !== 'Search from Fav. List'"
+      v-show="currentPage === 'Search Nearby Parkings'"
       :favoriteParkingList="favoriteParkingList"
       :isMounted="isMounted"
+      />
+    <reservation-by-image-card
+      v-if="currentPage === 'Reserve By Image'"
       />
     <el-dialog
       :visible.sync="isSessionTimeOutDialogVisible"
@@ -36,6 +39,7 @@ import StatusCard from './StatusCard'
 import ParkingTableForReservation from './ParkingTableForReservation'
 import ParkingMap from './ParkingMap'
 import ParkingTableForSorting from './ParkingTableForSorting'
+import ReservationByImageCard from './ReservationByImageCard'
 
 const getLocationOptions = {
   enableHighAccuracy: false,
@@ -53,6 +57,7 @@ export default {
     ParkingTableForReservation,
     ParkingMap,
     ParkingTableForSorting,
+    ReservationByImageCard,
   },
   data () {
     return {

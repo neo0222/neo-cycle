@@ -28,6 +28,16 @@ async function main(event, context) {
     return response;
   }
   catch (error) {
+    if (error === "BikeNotFoundError") {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({message: 'bike not found.'}),
+        headers: {
+            "Access-Control-Allow-Origin": '*'
+        },
+        isBase64Encoded: false
+      };
+    }
     return {
       statusCode: 440,
       body: JSON.stringify({message: 'session expired.'}),
@@ -55,7 +65,9 @@ async function makeReservation(memberId, sessionId, cycleName, aplVersion) {
   };
   try {
     const res = await axios.post(process.env['SHARE_CYCLE_API_URL'] + '/reservecycle', params, config);
-    if (res.data.result !== 200) throw "Error occurred.";
+    console.log(res);
+    if (res.data.result === 300) throw "BikeNotFoundError";
+    if (res.data.result !== 200) throw "SessionExpiredError";
     return {
       cycleName: cycleName,
       cyclePasscode: res.data.passcode,
