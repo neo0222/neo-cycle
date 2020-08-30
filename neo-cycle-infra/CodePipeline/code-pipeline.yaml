@@ -103,6 +103,8 @@ Resources:
                 Fn::Sub: ${NameTag}-${EnvName}-RoleBikeAvailableRetrieverArn
               - !ImportValue
                 Fn::Sub: ${NameTag}-${EnvName}-RoleBikeDetectorArn
+              - !ImportValue
+                Fn::Sub: ${NameTag}-${EnvName}-RoleSessionSpreaderArn
             Action:
               - iam:PassRole
 

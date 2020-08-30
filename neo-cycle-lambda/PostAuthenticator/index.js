@@ -1,4 +1,10 @@
+const AWS = require('aws-sdk');
+const docClient = new AWS.DynamoDB.DocumentClient({
+  region: 'ap-northeast-1'
+});
+
 const axios = require('axios');
+const sessionTableName = `neo-cycle-common-SESSION`;
 
 exports.handler = async (event, context) => {
   if (event.warmup) {
@@ -13,6 +19,7 @@ async function main(event, context) {
     const sessionIdPromise = retrieveSessionId(event.userName, event.request.clientMetadata.password);
     const aplVersionPromise = retrieveApiVersion();
     const result = await Promise.all([sessionIdPromise, aplVersionPromise]);
+    await putSessionId(event.userName, result[0]);
     event.response = {
       "claimsOverrideDetails": {
         "claimsToAddOrOverride": {
@@ -64,6 +71,23 @@ async function retrieveApiVersion() {
     if (res.data.result !== 200) throw "Error occurred when retrieving aplVersion.";
     const versionInfo = res.data.version_info.ios;
     return versionInfo;
+  }
+  catch (error) {
+    throw error;
+  }
+}
+
+async function putSessionId(memberId, sessionId) {
+  const params = {
+    TableName: sessionTableName,
+    Item: {
+      memberId: memberId,
+      sessionId: sessionId,
+    }
+  };
+  try {
+    await docClient.put(params).promise();
+    console.log(`[SUCCESS]put sessionId (memberId: ${memberId})`);
   }
   catch (error) {
     throw error;
