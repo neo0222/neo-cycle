@@ -1,3 +1,8 @@
+const AWS = require('aws-sdk');
+const docClient = new AWS.DynamoDB.DocumentClient({
+  region: 'ap-northeast-1'
+});
+
 const axios = require('axios');
 const sessionTableName = `neo-cycle-common-SESSION`;
 
