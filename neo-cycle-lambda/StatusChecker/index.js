@@ -1,4 +1,12 @@
+const AWS = require('aws-sdk');
+const docClient = new AWS.DynamoDB.DocumentClient({
+  region: 'ap-northeast-1'
+});
 const axios = require('axios');
+
+const envName = process.env.ENV_NAME;
+
+const sessionTableName = `neo-cycle-${envName}-SESSION`;
 
 exports.handler = async (event, context) => {
   if (event.warmup) {
@@ -11,7 +19,7 @@ exports.handler = async (event, context) => {
 
 async function main(event, context) {
   const memberId = JSON.parse(event.body).memberId;
-  const sessionId = JSON.parse(event.body).sessionId;
+  const sessionId = JSON.parse(event.body).sessionId ? JSON.parse(event.body).sessionId : await retrieveSessionId(memberId);
   const aplVersion = JSON.parse(event.body).aplVersion;
   try {
     const response = {
@@ -68,6 +76,17 @@ async function checkStatus(sessionId, aplVersion) {
     console.log(error);
     throw error;
   }
+}
+
+async function retrieveSessionId(memberId) {
+  const params = {
+    TableName: sessionTableName,
+    Key: {
+      memberId: memberId,
+    },
+  };
+  const result = await docClient.get(params).promise();
+  return result.Item.sessionId;
 }
 
 async function getReserveCycle(sessionId, aplVersion) {

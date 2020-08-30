@@ -75,7 +75,9 @@ export default {
           this.openUpdatePasswordDialog()
           return
         }
-        sessionStorage.setItem('sessionId', session.getIdToken().payload.sessionId)
+        if (!!session.getIdToken().payload.sessionId) {
+          sessionStorage.setItem('sessionId', session.getIdToken().payload.sessionId)
+        }
         sessionStorage.setItem('aplVersion', session.getIdToken().payload.aplVersion)
         
         loading.close()
@@ -98,7 +100,9 @@ export default {
             this.openUpdatePasswordDialog()
             return
           }
-          sessionStorage.setItem('sessionId', session.getIdToken().payload.sessionId)
+          if (!!session.getIdToken().payload.sessionId) {
+            sessionStorage.setItem('sessionId', session.getIdToken().payload.sessionId)
+          }
           sessionStorage.setItem('aplVersion', session.getIdToken().payload.aplVersion)
           loading.close()
           this.$router.replace('/')

@@ -255,6 +255,7 @@ Resources:
         - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
         - !Ref NeoCycleUserTableGetItemPolicy
         - !Ref NeoCycleGetParameterPolicy
+        - !Ref NeoCycleSessionTableGetItemPolicy
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -276,6 +277,7 @@ Resources:
         - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
         - !Ref NeoCycleUserTableGetItemPolicy
         - !Ref NeoCycleGetParameterPolicy
+        - !Ref NeoCycleSessionTableGetItemPolicy
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -297,6 +299,7 @@ Resources:
         - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
         - !Ref NeoCycleUserTableGetItemPolicy
         - !Ref NeoCycleGetParameterPolicy
+        - !Ref NeoCycleSessionTableGetItemPolicy
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
@@ -402,6 +405,7 @@ Resources:
         - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
         - !Ref NeoCycleGetParameterPolicy
         - !Ref NeoCycleCommonSessionTablePutItemPolicy
+        - !Ref NeoCycleUserTableGetItemPolicy
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
