@@ -101,6 +101,7 @@ Resources:
         S3Key: !Sub ${ObjectKeyPrefix}/ReservationMaker/Deploy.zip
       Environment:
         Variables:
+          ENV_NAME: !Ref EnvName
           SHARE_CYCLE_API_KEY: !Ref ShareCycleApiKey
           SHARE_CYCLE_API_URL: !Ref ShareCycleApiUrl
       FunctionName: !Sub ${NameTag}-${EnvName}-ReservationMaker
@@ -120,6 +121,7 @@ Resources:
         S3Key: !Sub ${ObjectKeyPrefix}/ReservationCanceller/Deploy.zip
       Environment:
         Variables:
+          ENV_NAME: !Ref EnvName
           SHARE_CYCLE_API_KEY: !Ref ShareCycleApiKey
           SHARE_CYCLE_API_URL: !Ref ShareCycleApiUrl
       FunctionName: !Sub ${NameTag}-${EnvName}-ReservationCanceller
@@ -139,6 +141,7 @@ Resources:
         S3Key: !Sub ${ObjectKeyPrefix}/StatusChecker/Deploy.zip
       Environment:
         Variables:
+          ENV_NAME: !Ref EnvName
           SHARE_CYCLE_API_KEY: !Ref ShareCycleApiKey
           SHARE_CYCLE_API_URL: !Ref ShareCycleApiUrl
       FunctionName: !Sub ${NameTag}-${EnvName}-StatusChecker

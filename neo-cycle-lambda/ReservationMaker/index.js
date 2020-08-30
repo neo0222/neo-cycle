@@ -1,6 +1,8 @@
 const AWS = require('aws-sdk');
 const axios = require('axios');
 
+const envName = process.env.ENV_NAME;
+
 const sessionTableName = `neo-cycle-${envName}-SESSION`;
 
 exports.handler = async (event, context) => {

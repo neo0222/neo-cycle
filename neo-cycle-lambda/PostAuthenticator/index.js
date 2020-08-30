@@ -21,7 +21,9 @@ async function main(event, context) {
     const sessionIdPromise = retrieveSessionId(event.userName, event.request.clientMetadata.password);
     const aplVersionPromise = retrieveApiVersion();
     const result = await Promise.all([sessionIdPromise, aplVersionPromise]);
-    await putSessionId(event.userName, result[0]);
+    if (!!result[0]) {
+      await putSessionId(event.userName, result[0]);
+    }
     event.response = {
       "claimsOverrideDetails": {
         "claimsToAddOrOverride": {
@@ -41,7 +43,7 @@ async function main(event, context) {
 
 async function retrieveSessionId(memberId, password) {
   const userInfo = await retrieveUserInfo(memberId);
-  if (userInfo.encodedPasswordBufferObj) return;
+  if (!!userInfo.encodedPasswordBufferObj) return;
   const params = {
     userID: memberId,
     password: password,
@@ -70,7 +72,7 @@ async function retrieveUserInfo(memberId) {
       memberId: memberId,
     },
   };
-  const result = await docClient.get(params);
+  const result = await docClient.get(params).promise();
   return result.Item;
 }
 
