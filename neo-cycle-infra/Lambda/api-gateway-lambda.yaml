@@ -73,6 +73,7 @@ Resources:
       EventSourceArn: !ImportValue
         Fn::Sub: ${NameTag}-common-SessionTableStreamArn
       FunctionName: !Ref LambdaSessionSpreader
+      StartingPosition: TRIM_HORIZON
 
   LambdaParkingRetriever:
     Type: AWS::Lambda::Function
