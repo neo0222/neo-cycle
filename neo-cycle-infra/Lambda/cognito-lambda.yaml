@@ -48,7 +48,7 @@ Resources:
       Runtime: nodejs12.x
       Timeout: 10
       ReservedConcurrentExecutions: 10
-      Layer: !Ref LambdaCognitoLayer
+      Layers: !Ref LambdaCognitoLayer
 
   LambdaUserMigrator:
     Type: AWS::Lambda::Function
@@ -68,7 +68,7 @@ Resources:
       Runtime: nodejs12.x
       Timeout: 10
       ReservedConcurrentExecutions: 10
-      Layer: !Ref LambdaCognitoLayer
+      Layers: !Ref LambdaCognitoLayer
 
 
   LambdaPostAuthenticator:
@@ -91,7 +91,7 @@ Resources:
       Runtime: nodejs12.x
       Timeout: 10
       ReservedConcurrentExecutions: 10
-      Layer: !Ref LambdaCognitoLayer
+      Layers: !Ref LambdaCognitoLayer
 
   LambdaCognitoLayer:
     Type: AWS::Lambda::LayerVersion

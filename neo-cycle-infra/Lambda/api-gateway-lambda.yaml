@@ -48,7 +48,7 @@ Resources:
       Runtime: nodejs12.x
       Timeout: 10
       ReservedConcurrentExecutions: 10
-      Layer: !Ref LambdaCommonLayer
+      Layers: !Ref LambdaCommonLayer
 
   LambdaSessionSpreader:
     Type: AWS::Lambda::Function
@@ -67,7 +67,7 @@ Resources:
       Runtime: nodejs12.x
       Timeout: 10
       ReservedConcurrentExecutions: 10
-      Layer: !Ref LambdaCommonLayer
+      Layers: !Ref LambdaCommonLayer
 
   LambdaSessionSpreaderEventSourceMapping:
     Type: AWS::Lambda::EventSourceMapping
@@ -94,7 +94,7 @@ Resources:
       Runtime: nodejs12.x
       Timeout: 10
       ReservedConcurrentExecutions: 10
-      Layer: !Ref LambdaCommonLayer
+      Layers: !Ref LambdaCommonLayer
 
   LambdaReservationMaker:
     Type: AWS::Lambda::Function
@@ -115,7 +115,7 @@ Resources:
       Runtime: nodejs12.x
       Timeout: 10
       ReservedConcurrentExecutions: 10
-      Layer: !Ref LambdaCommonLayer
+      Layers: !Ref LambdaCommonLayer
 
   LambdaReservationCanceller:
     Type: AWS::Lambda::Function
@@ -136,7 +136,7 @@ Resources:
       Runtime: nodejs12.x
       Timeout: 10
       ReservedConcurrentExecutions: 10
-      Layer: !Ref LambdaCommonLayer
+      Layers: !Ref LambdaCommonLayer
 
   LambdaStatusChecker:
     Type: AWS::Lambda::Function
@@ -157,7 +157,7 @@ Resources:
       Runtime: nodejs12.x
       Timeout: 10
       ReservedConcurrentExecutions: 10
-      Layer: !Ref LambdaCommonLayer
+      Layers: !Ref LambdaCommonLayer
 
   LambdaParkingNearbyRetriever:
     Type: AWS::Lambda::Function
@@ -173,7 +173,7 @@ Resources:
       Runtime: nodejs12.x
       Timeout: 10
       ReservedConcurrentExecutions: 10
-      Layer: !Ref LambdaCommonLayer
+      Layers: !Ref LambdaCommonLayer
       MemorySize: 3008
 
   LambdaParkingRegisterer:
@@ -193,7 +193,7 @@ Resources:
       Runtime: nodejs12.x
       Timeout: 10
       ReservedConcurrentExecutions: 10
-      Layer: !Ref LambdaCommonLayer
+      Layers: !Ref LambdaCommonLayer
 
   LambdaBikeAvailableRetriever:
     Type: AWS::Lambda::Function
@@ -214,7 +214,7 @@ Resources:
       Runtime: nodejs12.x
       Timeout: 10
       ReservedConcurrentExecutions: 10
-      Layer: !Ref LambdaCommonLayer
+      Layers: !Ref LambdaCommonLayer
 
   LambdaBikeDetector:
     Type: AWS::Lambda::Function
@@ -233,7 +233,7 @@ Resources:
       Runtime: nodejs12.x
       Timeout: 10
       ReservedConcurrentExecutions: 10
-      Layer: !Ref LambdaCommonLayer
+      Layers: !Ref LambdaCommonLayer
 
   LambdaCommonLayer:
     Type: AWS::Lambda::LayerVersion
