@@ -143,7 +143,7 @@ Resources:
           - Name: SHARE_CYCLE_API_URL
             Value: !Ref ShareCycleApiUrl
         Type: LINUX_CONTAINER
-        Image: aws/codebuild/standard:2.0-1.13.0
+        Image: aws/codebuild/amazonlinux2-x86_64-standard:3.0
       ServiceRole: !GetAtt RoleCodeBuildService.Arn
       Name: !Sub ${NameTag}-${EnvName}-build
       Source:
