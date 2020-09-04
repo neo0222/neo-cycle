@@ -10,8 +10,9 @@ phases:
       - if [ -e /tmp/node_modules.tar ]; then tar xf /tmp/node_modules.tar; fi
       - npm install
       - cd ../neo-cycle-lambda
-      - cd ./Layer/CommonLayer
+      - cd ./Layer/CommonLayer/nodejs
       - npm install
+      - cd ../
       - zip -r Deploy.zip ./
       - aws s3 mv ./Deploy.zip s3://neo-cycle-${ENVIRONMENT_NAME}-lambda/${CODEBUILD_BUILD_NUMBER}/Layer/CommonLayer/Deploy.zip
       - cd ../../SessionMaintainer
