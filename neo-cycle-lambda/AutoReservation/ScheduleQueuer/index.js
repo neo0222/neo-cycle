@@ -32,13 +32,15 @@ async function main(event, context) {
     const regularScheduleList = await retrieveRegularSchedule();
     // one-time schedule取得
     const oneTimeScheduleList = await retrieveOneTimeSchedule();
-    console.log(`regularScheduleList: ${JSON.stringify(regularScheduleList)}, oneTimeScheduleList: ${JSON.stringify(oneTimeScheduleList)}`);
+    console.log(`regularScheduleList.length: ${regularScheduleList.length}, oneTimeScheduleList.length: ${oneTimeScheduleList.length}`);
     // queue
     const promises = [];
     for (const schedule of regularScheduleList.concat(oneTimeScheduleList)) {
       promises.push(sendMessage(schedule));
     }
-    console.log(await Promise.all(promises));
+    console.log((await Promise.all(promises)).map((res => {
+      return res.MessageId;
+    })));
   } catch (error) {
     console.log(error);
     throw error;
@@ -82,7 +84,7 @@ async function retrieveOneTimeSchedule() {
 async function sendMessage(schedule) {
   const params = {
     QueueUrl: scheduleQueueUrl,
-    MessageBody: `${schedule.memberId}_${schedule.createdUnixDatetime}`,
+    MessageBody: `${schedule.memberId}:${schedule.createdUnixDatetime}`,
     MessageAttributes: {
       "memberId_scheduleId": {
         DataType: "String",
