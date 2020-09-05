@@ -13,8 +13,8 @@ const envName = process.env.ENV_NAME;
 const dailyScheduleTableName = `neo-cycle-${envName}-DAILY_SCHEDULE`;
 const dailyScheduleQueueUrl = process.env.DAILY_SCHEDULE_QUEUE_URL;
 
-let tomorrow;
-let dayAfterTomorrow;
+let startDatetime;
+let endDatetime;
 
 exports.handler = async (event, context) => {
   if (event.warmup) {
@@ -24,57 +24,51 @@ exports.handler = async (event, context) => {
 };
 
 async function main(event, context) {
-  // tomorrow = moment().add(1, "days");
-  // dayAfterTomorrow = moment().add(2, "days");
-
-  // try {
-  //   // regular schedule取得
-  //   const regularScheduleList = await retrieveRegularSchedule();
-  //   // one-time schedule取得
-  //   const oneTimeScheduleList = await retrieveOneTimeSchedule();
-  //   console.log(`regularScheduleList.length: ${regularScheduleList.length}, oneTimeScheduleList.length: ${oneTimeScheduleList.length}`);
-  //   // queue
-  //   const promises = [];
-  //   for (const schedule of regularScheduleList.concat(oneTimeScheduleList)) {
-  //     promises.push(sendMessage(schedule));
-  //   }
-  //   console.log((await Promise.all(promises)).map((res => {
-  //     return res.MessageId;
-  //   })));
-  // } catch (error) {
-  //   console.log(error);
-  //   throw error;
-  // }
-}
-
-async function retrieveRegularSchedule() {
-  const params = {
-    TableName: dailyScheduleTableName,
-    IndexName: "isRegular-isUsed-index",
-  };
+  const nowUnixTime = moment().unix();
+  // 基準日を取得（0分から10分刻み）
+  startDatetime = moment.unix(Math.ceil(nowUnixTime / 600) * 600);
+  endDatetime = moment.unix(startDatetime.unix() + 599);
+  
+  console.log(`Queue schedule from ${startDatetime.format("YYYY-MM-DD HH:mm:ss")} to ${endDatetime.format("YYYY-MM-DD HH:mm:ss")}`);
   try {
-    const result = await docClient.scan(params).promise();
-    return result.Items.filter((schedule) => {
-      // 曜日で絞り込み
-      return schedule.dayOfWeek[tomorrow.format('d')];
-    });
-  }
-  catch (error) {
+    // 対象範囲内のschedule取得
+    const scheduleList = await retrieveWaitingSchedule();
+    // queue
+    console.log(`dailyScheduleList.length: ${scheduleList.length}`);
+    const promises = [];
+    for (const schedule of scheduleList) {
+      promises.push(sendMessage(schedule));
+    }
+    console.log((await Promise.all(promises)).map((res => {
+      return res.MessageId;
+    })));
+  } catch (error) {
+    console.log(error);
     throw error;
   }
 }
 
-async function retrieveOneTimeSchedule() {
+async function retrieveWaitingSchedule() {
   const params = {
     TableName: dailyScheduleTableName,
-    IndexName: "startDate-isUsed-index",
-    ExpressionAttributeNames:{'#startDate': 'startDate'},
-    ExpressionAttributeValues:{':tomorrow': tomorrow.format("YYYY-MM-DD")},
-    KeyConditionExpression: '#startDate = :tomorrow',
+    IndexName: "startDate-startTime-index",
+    ExpressionAttributeNames:{
+      '#startDate': 'startDate',
+      '#startTime': 'startTime',
+    },
+    ExpressionAttributeValues:{
+      ':startDate': startDatetime.format("YYYY-MM-DD"),
+      ':startTimeMin': startDatetime.format("HH:mm:ss"),
+      ':startTimeMax': endDatetime.format("HH:mm:ss"),
+    },
+    KeyConditionExpression: '#startDate = :startDate AND #startTime BETWEEN :startTimeMin AND :startTimeMax',
   };
   try {
     const result = await docClient.query(params).promise();
-    return result.Items;
+    return result.Items.filter((dailySchedule) => {
+      // 曜日で絞り込み
+      return dailySchedule.status === "WAITING";
+    });
   }
   catch (error) {
     throw error;
@@ -88,15 +82,15 @@ async function sendMessage(schedule) {
     MessageAttributes: {
       "memberId_scheduleId": {
         DataType: "String",
-        StringValue: `${schedule.memberId}:${schedule.createdUnixDatetime}`,
+        StringValue: schedule.memberId_scheduleId,
       },
       "startDate": {
         DataType: "String",
-        StringValue: schedule.startDate ? schedule.startDate : tomorrow.format("YYYY-MM-DD"),
+        StringValue: schedule.startDate,
       },
       "endDate": {
         DataType: "String",
-        StringValue: schedule.endDate ? schedule.endDate : getEndDate(schedule.startTime, schedule.endTime),
+        StringValue: schedule.endDate,
       },
       "startTime": {
         DataType: "String",
@@ -116,26 +110,48 @@ async function sendMessage(schedule) {
       },
       "changeToMoreChargedBikeCondition": {
         DataType: "String",
-        StringValue: schedule.changeToMoreChargedBikeCondition
+        StringValue: schedule.changeToMoreChargedBikeCondition,
       },
       "retryForExpiredReservationCondition": {
         DataType: "String",
-        StringValue: schedule.retryForExpiredReservationCondition
+        StringValue: schedule.retryForExpiredReservationCondition,
+      },
+      "version": {
+        DataType: "Number",
+        StringValue: schedule.version.toFixed(),
       },
     },
   };
   try {
-    return await sqs.sendMessage(params).promise();
+    const sendMessageResult = await sqs.sendMessage(params).promise();
+    await updateDailySchedule(schedule, sendMessageResult.MessageId);
+    return sendMessageResult;
   }
   catch (error) {
     throw error;
   }
 }
 
-function getEndDate(startTime, endTime) {
-  if (moment(startTime, 'HH:mm:ss') < moment(endTime, 'HH:mm:ss')) {
-    return tomorrow.format("YYYY-MM-DD");
-  } else {
-    return dayAfterTomorrow.format("YYYY-MM-DD");
+async function updateDailySchedule(schedule, messageId) {
+  const params = {
+    TableName: dailyScheduleTableName,
+    Key: {//更新したい項目をプライマリキー(及びソートキー)によって１つ指定
+      memberId_scheduleId: schedule.memberId_scheduleId,
+      startDate_version: schedule.startDate_version,
+    },
+    ExpressionAttributeNames: {
+        '#messageId': 'messageId',
+    },
+    ExpressionAttributeValues: {
+        ':messageId': messageId,
+    },
+    UpdateExpression: 'SET #messageId = :messageId',
+  };
+  try {
+    await docClient.update(params).promise();
+  }
+  catch (error) {
+    console.log(error);
+    throw error;
   }
 }

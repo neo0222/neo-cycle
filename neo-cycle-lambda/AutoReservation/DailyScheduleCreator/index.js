@@ -64,7 +64,7 @@ async function putDailySchedule(messageAttributes) {
     TableName: dailyScheduleTableName,
     Item: {
       memberId_scheduleId: messageAttributes.memberId_scheduleId.stringValue,
-      startDate_version: `${messageAttributes.startDate.stringValue}_0`,
+      startDate_version: `${messageAttributes.startDate.stringValue}:0`,
       startDate: messageAttributes.startDate.stringValue,
       endDate: messageAttributes.endDate.stringValue,
       startTime: messageAttributes.startTime.stringValue,

@@ -684,6 +684,7 @@ Resources:
         - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
         - !Ref NeoCycleDailyScheduleQueueSendMessagePolicy
         - !Ref NeoCycleDailyScheduleTableGetItemPolicy
+        - !Ref NeoCycleDailyScheduleTableWriteItemPolicy
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:
