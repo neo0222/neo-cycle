@@ -48,6 +48,8 @@ Resources:
       Runtime: nodejs12.x
       Timeout: 10
       ReservedConcurrentExecutions: 10
+      Layers: 
+        - !Ref LambdaCognitoLayer
 
   LambdaUserMigrator:
     Type: AWS::Lambda::Function
@@ -67,6 +69,8 @@ Resources:
       Runtime: nodejs12.x
       Timeout: 10
       ReservedConcurrentExecutions: 10
+      Layers: 
+        - !Ref LambdaCognitoLayer
 
 
   LambdaPostAuthenticator:
@@ -89,6 +93,18 @@ Resources:
       Runtime: nodejs12.x
       Timeout: 10
       ReservedConcurrentExecutions: 10
+      Layers: 
+        - !Ref LambdaCognitoLayer
+
+  LambdaCognitoLayer:
+    Type: AWS::Lambda::LayerVersion
+    Properties: 
+      CompatibleRuntimes: 
+        - nodejs12.x
+      Content: 
+        S3Bucket: !Sub ${NameTag}-${EnvName}-lambda
+        S3Key: !Sub ${ObjectKeyPrefix}/Layer/CommonLayer/Deploy.zip
+      LayerName: !Sub ${NameTag}-${EnvName}-CognitoLayer
 #################################
 # Outputs
 #################################
