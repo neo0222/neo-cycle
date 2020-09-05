@@ -1,0 +1,83 @@
+{
+  "memberId": {
+    "S": "xxxxxxx"
+  },
+  "createdUnixDatetime": {
+    "N": "1599279527"
+  },
+  "startTime": {
+    "S": "23:00:00"
+  },
+  "endTime": {
+    "S": "23:30:00"
+  },
+  "dayOfWeek": {
+    "M": {
+      "0": {
+        "BOOL": true
+      },
+      "1": {
+        "BOOL": true
+      },
+      "2": {
+        "BOOL": true
+      },
+      "3": {
+        "BOOL": true
+      },
+      "4": {
+        "BOOL": true
+      },
+      "5": {
+        "BOOL": true
+      },
+      "6": {
+        "BOOL": true
+      }
+    }
+  },
+  "parkingList": {
+    "L": [
+      {
+        "M": {
+          "parkingId": {
+            "S": "00010124"
+          },
+          "parkingName": {
+            "S": "C2-08.ファミリーマート西麻布霞町店"
+          }
+        }
+      }
+    ]
+  },
+  "batteryLevelLowerLimit": {
+    "N": "0"
+  },
+  "isChangeToMoreChargedBikeAllowed": {
+    "BOOL": true
+  },
+  "changeToMoreChargedBikeCondition": {
+    "S": "THE_SAME_ONLY"
+  },
+  "isRetryForExpiredReservationAllowed": {
+    "BOOL": true
+  },
+  "retryForExpiredReservationCondition": {
+    "S": "HIGHER_PRIORITY_ONLY"
+  },
+  "updatedUnixDatetime": {
+    "N": "1599279527"
+  },
+  "createdHumanDatetime": {
+    "S": "2020-09-05 13:18:47"
+  },
+  "updatedHumanDatetime": {
+    "S": "2020-09-05 13:18:47"
+  },
+  "isUsed": {
+    "S": "TRUE"
+  },
+  "isRegular": {
+    "S": "TRUE"
+  }
+}
