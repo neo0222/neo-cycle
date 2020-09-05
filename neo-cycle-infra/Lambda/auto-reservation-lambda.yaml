@@ -1,0 +1,90 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  AWS Lambda for auto reservation
+
+######################################################
+# Parameters:
+######################################################
+Parameters:
+  ObjectKeyPrefix:
+    Type: String
+  NameTag:
+    Type: String
+    Default: neo-cycle
+    AllowedValues:
+      - neo-cycle
+  EnvName:
+    Type: String
+    AllowedValues:
+      - dev
+      - prod
+    Description: Enter profile.
+
+######################################################
+# Resources
+######################################################
+Resources:
+  LambdaScheduleQueuer:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Sub ${NameTag}-${EnvName}-lambda
+        S3Key: !Sub ${ObjectKeyPrefix}/ScheduleQueuer/Deploy.zip
+      Environment:
+        Variables:
+          ENV_NAME: !Ref EnvName
+          SCHEDULE_QUEUE_URL: !ImportValue
+            Fn::Sub: ${NameTag}-${EnvName}-ScheduleQueueUrl
+      FunctionName: !Sub ${NameTag}-${EnvName}-ScheduleQueuer
+      Handler: index.handler
+      ReservedConcurrentExecutions: 1
+      Role: !ImportValue
+        Fn::Sub: ${NameTag}-${EnvName}-RoleScheduleQueuerArn
+      Runtime: nodejs12.x
+      Timeout: 900
+      ReservedConcurrentExecutions: 10
+      Layers: 
+        - !Ref LambdaAutoReservationLayer
+
+  # ----------------------------------------------------
+  # EventSourceMapping
+  # ----------------------------------------------------
+  # LambdaDailyScheduleCreatorEventSourceMapping:
+  #   Type: AWS::Lambda::EventSourceMapping
+  #   Properties:
+  #     EventSourceArn: !ImportValue
+  #       Fn::Sub: ${NameTag}-${EnvName}-DailyScheduleQueueArn
+  #     FunctionName: !Ref LambdaDailyScheduleCreator
+  #     StartingPosition: TRIM_HORIZON
+
+  # LambdaDailyScheduleQueueConsumerEventSourceMapping:
+  #   Type: AWS::Lambda::EventSourceMapping
+  #   Properties:
+  #     EventSourceArn: !ImportValue
+  #       Fn::Sub: ${NameTag}-${EnvName}-DailyScheduleQueueArn
+  #     FunctionName: !Ref LambdaDailyScheduleQueueConsumer
+  #     StartingPosition: TRIM_HORIZON
+
+  LambdaAutoReservationLayer:
+    Type: AWS::Lambda::LayerVersion
+    Properties: 
+      CompatibleRuntimes: 
+        - nodejs12.x
+      Content: 
+        S3Bucket: !Sub ${NameTag}-${EnvName}-lambda
+        S3Key: !Sub ${ObjectKeyPrefix}/Layer/CommonLayer/Deploy.zip
+      LayerName: !Sub ${NameTag}-${EnvName}-AutoReservationLayer
+
+#################################
+# Outputs
+#################################
+Outputs:
+  LambdaScheduleQueuerArn:
+    Value: !GetAtt LambdaScheduleQueuer.Arn
+    Export:
+      Name: !Sub ${NameTag}-${EnvName}-LambdaScheduleQueuerArn
+  LambdaScheduleQueuerFunctionName:
+    Value: !Ref LambdaScheduleQueuer
+    Export:
+      Name: !Sub ${NameTag}-${EnvName}-LambdaScheduleQueuerFunctionName
