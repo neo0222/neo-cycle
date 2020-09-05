@@ -62,7 +62,7 @@ Resources:
       Role: !ImportValue
         Fn::Sub: ${NameTag}-${EnvName}-RoleDailyScheduleCreatorArn
       Runtime: nodejs12.x
-      Timeout: 900
+      Timeout: 20
       ReservedConcurrentExecutions: 10
       Layers: 
         - !Ref LambdaAutoReservationLayer
