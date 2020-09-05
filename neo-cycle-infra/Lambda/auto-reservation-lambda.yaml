@@ -74,7 +74,7 @@ Resources:
     Type: AWS::Lambda::EventSourceMapping
     Properties:
       EventSourceArn: !ImportValue
-        Fn::Sub: ${NameTag}-${EnvName}-DailyScheduleQueueArn
+        Fn::Sub: ${NameTag}-${EnvName}-ScheduleQueueArn
       FunctionName: !Ref LambdaDailyScheduleCreator
 
   # LambdaDailyScheduleQueueConsumerEventSourceMapping:
