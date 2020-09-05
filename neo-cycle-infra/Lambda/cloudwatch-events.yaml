@@ -67,7 +67,7 @@ Resources:
     Type: AWS::Events::Rule
     Properties:
       Description: ’schedule event for lambda DailyScheduleQueuer’
-      ScheduleExpression: 'cron(50 14 * * ? *)'
+      ScheduleExpression: 'cron(7/10 * * * ? *)'
       State: ENABLED
       Targets:
         - Arn: !ImportValue
