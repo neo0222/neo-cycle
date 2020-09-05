@@ -129,3 +129,19 @@ Outputs:
     Value: !Ref LambdaScheduleQueuer
     Export:
       Name: !Sub ${NameTag}-${EnvName}-LambdaScheduleQueuerFunctionName
+  LambdaDailyScheduleCreatorArn:
+    Value: !GetAtt LambdaDailyScheduleCreator.Arn
+    Export:
+      Name: !Sub ${NameTag}-${EnvName}-LambdaDailyScheduleCreatorArn
+  LambdaDailyScheduleCreatorFunctionName:
+    Value: !Ref LambdaDailyScheduleCreator
+    Export:
+      Name: !Sub ${NameTag}-${EnvName}-LambdaDailyScheduleCreatorFunctionName
+  LambdaDailyScheduleQueuerArn:
+    Value: !GetAtt LambdaDailyScheduleQueuer.Arn
+    Export:
+      Name: !Sub ${NameTag}-${EnvName}-LambdaDailyScheduleQueuerArn
+  LambdaDailyScheduleQueuerFunctionName:
+    Value: !Ref LambdaDailyScheduleQueuer
+    Export:
+      Name: !Sub ${NameTag}-${EnvName}-LambdaDailyScheduleQueuerFunctionName

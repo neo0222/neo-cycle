@@ -42,3 +42,43 @@ Resources:
         Fn::Sub: ${NameTag}-${EnvName}-LambdaSessionMaintainerFunctionName
       Principal: events.amazonaws.com
       SourceArn: !GetAtt LambdaSessionMaintainerScheduleEvent.Arn
+
+  LambdaScheduleQueuerScheduleEvent:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: ’schedule event for lambda ScheduleQueuer’
+      ScheduleExpression: 'cron(50 14 * * ? *)'
+      State: ENABLED
+      Targets:
+        - Arn: !ImportValue
+            Fn::Sub: ${NameTag}-${EnvName}-LambdaScheduleQueuerArn
+          Id: schedule-schedule-queuer-target
+
+  LambdaScheduleQueuerInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties: 
+      Action: lambda:InvokeFunction
+      FunctionName: !ImportValue
+        Fn::Sub: ${NameTag}-${EnvName}-LambdaScheduleQueuerFunctionName
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt LambdaScheduleQueuerScheduleEvent.Arn
+
+  LambdaDailyScheduleQueuerScheduleEvent:
+    Type: AWS::Events::Rule
+    Properties:
+      Description: ’schedule event for lambda DailyScheduleQueuer’
+      ScheduleExpression: 'cron(50 14 * * ? *)'
+      State: ENABLED
+      Targets:
+        - Arn: !ImportValue
+            Fn::Sub: ${NameTag}-${EnvName}-LambdaDailyScheduleQueuerArn
+          Id: schedule-schedule-queuer-target
+
+  LambdaDailyScheduleQueuerInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties: 
+      Action: lambda:InvokeFunction
+      FunctionName: !ImportValue
+        Fn::Sub: ${NameTag}-${EnvName}-LambdaDailyScheduleQueuerFunctionName
+      Principal: events.amazonaws.com
+      SourceArn: !GetAtt LambdaDailyScheduleQueuerScheduleEvent.Arn
