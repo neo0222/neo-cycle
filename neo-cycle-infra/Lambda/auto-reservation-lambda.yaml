@@ -67,6 +67,28 @@ Resources:
       Layers: 
         - !Ref LambdaAutoReservationLayer
 
+  LambdaDailyScheduleQueuer:
+    Type: AWS::Lambda::Function
+    Properties:
+      Code:
+        S3Bucket: !Sub ${NameTag}-${EnvName}-lambda
+        S3Key: !Sub ${ObjectKeyPrefix}/DailyScheduleQueuer/Deploy.zip
+      Environment:
+        Variables:
+          ENV_NAME: !Ref EnvName
+          DAILY_SCHEDULE_QUEUE_URL: !ImportValue
+            Fn::Sub: ${NameTag}-${EnvName}-DailyScheduleQueueUrl
+      FunctionName: !Sub ${NameTag}-${EnvName}-DailyScheduleQueuer
+      Handler: index.handler
+      ReservedConcurrentExecutions: 1
+      Role: !ImportValue
+        Fn::Sub: ${NameTag}-${EnvName}-RoleDailyScheduleQueuerArn
+      Runtime: nodejs12.x
+      Timeout: 900
+      ReservedConcurrentExecutions: 10
+      Layers: 
+        - !Ref LambdaAutoReservationLayer
+
   # ----------------------------------------------------
   # EventSourceMapping
   # ----------------------------------------------------
@@ -107,3 +129,19 @@ Outputs:
     Value: !Ref LambdaScheduleQueuer
     Export:
       Name: !Sub ${NameTag}-${EnvName}-LambdaScheduleQueuerFunctionName
+  LambdaDailyScheduleCreatorArn:
+    Value: !GetAtt LambdaDailyScheduleCreator.Arn
+    Export:
+      Name: !Sub ${NameTag}-${EnvName}-LambdaDailyScheduleCreatorArn
+  LambdaDailyScheduleCreatorFunctionName:
+    Value: !Ref LambdaDailyScheduleCreator
+    Export:
+      Name: !Sub ${NameTag}-${EnvName}-LambdaDailyScheduleCreatorFunctionName
+  LambdaDailyScheduleQueuerArn:
+    Value: !GetAtt LambdaDailyScheduleQueuer.Arn
+    Export:
+      Name: !Sub ${NameTag}-${EnvName}-LambdaDailyScheduleQueuerArn
+  LambdaDailyScheduleQueuerFunctionName:
+    Value: !Ref LambdaDailyScheduleQueuer
+    Export:
+      Name: !Sub ${NameTag}-${EnvName}-LambdaDailyScheduleQueuerFunctionName
