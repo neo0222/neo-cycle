@@ -60,3 +60,139 @@ Resources:
         PointInTimeRecoveryEnabled: true
       SSESpecification:
         SSEEnabled: true 
+
+  #----------------------------------------------
+  # SCHEDULE
+  #----------------------------------------------
+  SCHEDULE:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      KeySchema:
+        - AttributeName: memberId
+          KeyType: HASH
+        - AttributeName: createdUnixDatetime
+          KeyType: RANGE
+      AttributeDefinitions:
+        - AttributeName: memberId
+          AttributeType: S
+        - AttributeName: createdUnixDatetime
+          AttributeType: N
+        - AttributeName: startDate
+          AttributeType: S
+        - AttributeName: isUsed
+          AttributeType: B
+        - AttributeName: isRegular
+          AttributeType: B
+      GlobalSecondaryIndexes:
+        - IndexName: isRegular-isUsed-index
+          KeySchema:
+            - AttributeName: isRegular
+              KeyType: HASH
+            - AttributeName: isUsed
+              KeyType: RANGE
+          Projection:
+              ProjectionType: ALL
+        - IndexName: startDate-isUsed-index
+          KeySchema:
+            - AttributeName: startDate
+              KeyType: HASH
+            - AttributeName: isUsed
+              KeyType: RANGE
+          Projection:
+              ProjectionType: ALL
+      TableName: !Sub ${NameTag}-${EnvName}-SCHEDULE
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+      StreamSpecification:
+        StreamViewType: NEW_AND_OLD_IMAGES
+
+  #----------------------------------------------
+  # DAILY_SCHEDULE
+  #----------------------------------------------
+  DAILYSCHEDULE:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      KeySchema:
+        - AttributeName: memberId_scheduleId
+          KeyType: HASH
+        - AttributeName: startDate_version
+          KeyType: RANGE
+      AttributeDefinitions:
+        - AttributeName: memberId_scheduleId
+          AttributeType: S
+        - AttributeName: startDate_version
+          AttributeType: S
+        - AttributeName: startDate
+          AttributeType: S
+        - AttributeName: startTime
+          AttributeType: S
+        - AttributeName: messageId
+          AttributeType: S
+      GlobalSecondaryIndexes:
+        # DailyScheduleQueuerによる索引で利用
+        - IndexName: startDate-startTime-index
+          KeySchema:
+            - AttributeName: startDate
+              KeyType: HASH
+            - AttributeName: startTime
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+        # Queueのconsumerによる索引で利用
+        # statusチェックのみなので一部属性のみProjection
+        - IndexName: messageId-index
+          KeySchema:
+            - AttributeName: messageId
+              KeyType: HASH
+          Projection:
+            ProjectionType: INCLUDE
+            NonKeyAttributes:
+              - status
+        # 全バージョンの取得時に利用
+        # ConsistentRead=trueでの再索引が必須となるためversionのみProjection
+        - IndexName: memberId_scheduleId-startDate-index
+          KeySchema:
+            - AttributeName: memberId_scheduleId
+              KeyType: HASH
+            - AttributeName: startDate
+              KeyType: RANGE
+          Projection:
+            ProjectionType: INCLUDE
+            NonKeyAttributes:
+              - version
+      TableName: !Sub ${NameTag}-${EnvName}-DAILY_SCHEDULE
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+
+  #----------------------------------------------
+  # QUEUE
+  #----------------------------------------------
+  QUEUE:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      KeySchema:
+        - AttributeName: messageId
+          KeyType: HASH
+      AttributeDefinitions:
+        - AttributeName: messageId
+          AttributeType: S
+      TableName: !Sub ${NameTag}-${EnvName}-QUEUE
+      BillingMode: PAY_PER_REQUEST
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+      SSESpecification:
+        SSEEnabled: true
+#################################
+# Outputs
+#################################
+Outputs:
+  SessionTableStramsArn:
+    Value: !GetAtt SCHEDULE.StreamArn
+    Export:
+      Name: !Sub ${NameTag}-${EnvName}-ScheduleTableStreamArn
