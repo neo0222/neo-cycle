@@ -170,6 +170,172 @@ Resources:
             Resource:
               - !Sub arn:aws:dynamodb:ap-northeast-1:010660485109:table/${NameTag}-common-SESSION/stream/*
 
+  NeoCycleDynamoDBScheduleTableStreamReadPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: authorize to read schedule table stream
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:DescribeStream
+              - dynamodb:GetRecords
+              - dynamodb:GetShardIterator
+              - dynamodb:ListStreams
+            Resource:
+              - !Sub arn:aws:dynamodb:ap-northeast-1:010660485109:table/${NameTag}-${EnvName}-SCHEDULE/stream/*
+
+  NeoCycleScheduleTableGetItemPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: authorize to get item from schedule dynamodb
+      ManagedPolicyName: !Sub ${NameTag}-${EnvName}-iam-NeoCycleScheduleTableGetItemPolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:Scan
+            Resource:
+              - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${NameTag}-${EnvName}-SCHEDULE
+
+  NeoCycleScheduleTableWriteItemPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: authorize to write item of schedule dynamodb
+      ManagedPolicyName: !Sub ${NameTag}-${EnvName}-iam-NeoCycleScheduleTableWriteItemPolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+            Resource:
+              - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${NameTag}-${EnvName}-SCHEDULE
+
+  NeoCycleDailyScheduleTableGetItemPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: authorize to get item from daily schedule dynamodb
+      ManagedPolicyName: !Sub ${NameTag}-${EnvName}-iam-NeoCycleDailyScheduleTableGetItemPolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:Scan
+            Resource:
+              - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${NameTag}-${EnvName}-DAILY_SCHEDULE
+
+  NeoCycleDailyScheduleTableWriteItemPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: authorize to write item of daily schedule dynamodb
+      ManagedPolicyName: !Sub ${NameTag}-${EnvName}-iam-NeoCycleDailyScheduleTableWriteItemPolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+            Resource:
+              - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${NameTag}-${EnvName}-DAILY_SCHEDULE
+
+  NeoCycleQueueTableGetItemPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: authorize to get item from queue dynamodb
+      ManagedPolicyName: !Sub ${NameTag}-${EnvName}-iam-NeoCycleQueueTableGetItemPolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:GetItem
+              - dynamodb:Scan
+            Resource:
+              - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${NameTag}-${EnvName}-QUEUE
+
+  NeoCycleQueueTableWriteItemPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: authorize to write item of queue dynamodb
+      ManagedPolicyName: !Sub ${NameTag}-${EnvName}-iam-NeoCycleQueueTableWriteItemPolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - dynamodb:PutItem
+              - dynamodb:UpdateItem
+            Resource:
+              - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${NameTag}-${EnvName}-QUEUE
+
+  NeoCycleScheduleQueueSendMessagePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: authorize to send message to schedule queue
+      ManagedPolicyName: !Sub ${NameTag}-${EnvName}-iam-NeoCycleScheduleQueueSendMessagePolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - sqs:SendMessage
+            Resource:
+              - !Sub arn:aws:sqs:ap-northeast-1:010660485109:${NameTag}-${EnvName}-ScheduleQueue
+
+  NeoCycleScheduleQueueConsumeMessagePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: authorize to consume message from schedule queue
+      ManagedPolicyName: !Sub ${NameTag}-${EnvName}-iam-NeoCycleScheduleQueueReadMessagePolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - sqs:ReceiveMessage
+              - sqs:DeleteMessage
+              - sqs:GetQueueAttributes
+            Resource:
+              - !Sub arn:aws:sqs:ap-northeast-1:010660485109:${NameTag}-${EnvName}-ScheduleQueue
+
+  NeoCycleDailyScheduleQueueSendMessagePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: authorize to send message to daily schedule queue
+      ManagedPolicyName: !Sub ${NameTag}-${EnvName}-iam-NeoCycleDailyScheduleQueueSendMessagePolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - sqs:SendMessage
+            Resource:
+              - !Sub arn:aws:sqs:ap-northeast-1:010660485109:${NameTag}-${EnvName}-DailyScheduleQueue
+
+  NeoCycleDailyScheduleQueueConsumeMessagePolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      Description: authorize to consume message from daily schedule queue
+      ManagedPolicyName: !Sub ${NameTag}-${EnvName}-iam-NeoCycleDailyScheduleQueueConsumeMessagePolicy
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action:
+              - sqs:ReceiveMessage
+              - sqs:DeleteMessage
+              - sqs:GetQueueAttributes
+            Resource:
+              - !Sub arn:aws:sqs:ap-northeast-1:010660485109:${NameTag}-${EnvName}-DailyScheduleQueue
+
   #-----------------------
   # ロールの作成
   #-----------------------
@@ -455,6 +621,118 @@ Resources:
             Action: sts:AssumeRole
             Principal:
               Service: lambda.amazonaws.com 
+
+  RoleScheduleQueuer:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub
+        - ${NameTag}-${EnvName}-schedule-queuer-role
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+      ManagedPolicyArns:
+        - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
+        - !Ref NeoCycleScheduleQueueSendMessagePolicy
+        - !Ref NeoCycleScheduleTableGetItemPolicy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: lambda.amazonaws.com 
+
+  RoleDailyScheduleCreator:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub
+        - ${NameTag}-${EnvName}-daily-schedule-creator-role
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+      ManagedPolicyArns:
+        - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
+        - !Ref NeoCycleScheduleQueueConsumeMessagePolicy
+        - !Ref NeoCycleQueueTableWriteItemPolicy
+        - !Ref NeoCycleQueueTableGetItemPolicy
+        - !Ref NeoCycleDailyScheduleTableGetItemPolicy
+        - !Ref NeoCycleDailyScheduleTableWriteItemPolicy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: lambda.amazonaws.com 
+
+  RoleDailyScheduleQueuer:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub
+        - ${NameTag}-${EnvName}-daily-daily-schedule-queuer-role
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+      ManagedPolicyArns:
+        - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
+        - !Ref NeoCycleDailyScheduleQueueSendMessagePolicy
+        - !Ref NeoCycleDailyScheduleTableGetItemPolicy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: lambda.amazonaws.com 
+
+  RoleDailyScheduleQueueConsumer:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub
+        - ${NameTag}-${EnvName}-daily-schedule-queue-consumer-role
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+      ManagedPolicyArns:
+        - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
+        - !Ref NeoCycleDailyScheduleQueueConsumeMessagePolicy
+        - !Ref NeoCycleQueueTableWriteItemPolicy
+        - !Ref NeoCycleQueueTableGetItemPolicy
+        - !Ref NeoCycleDailyScheduleTableGetItemPolicy
+        - !Ref NeoCycleDailyScheduleTableWriteItemPolicy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: lambda.amazonaws.com 
+
+  RoleDailyScheduleChanger:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub
+        - ${NameTag}-${EnvName}-daily-schedule-changer-role
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+      ManagedPolicyArns:
+        - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
+        - !Ref NeoCycleDynamoDBScheduleTableStreamReadPolicy
+        - !Ref NeoCycleDailyScheduleTableWriteItemPolicy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: lambda.amazonaws.com 
+
 #################################
 # Outputs
 #################################
@@ -584,6 +862,56 @@ Outputs:
     Export:
       Name: !Sub
         - ${NameTag}-${EnvName}-RoleBikeDetectorArn
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+
+  RoleScheduleQueuerArn:
+    Value: !GetAtt RoleScheduleQueuer.Arn
+    Export:
+      Name: !Sub
+        - ${NameTag}-${EnvName}-RoleScheduleQueuerArn
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+
+  RoleDailyScheduleCreatorArn:
+    Value: !GetAtt RoleDailyScheduleCreator.Arn
+    Export:
+      Name: !Sub
+        - ${NameTag}-${EnvName}-RoleDailyScheduleCreatorArn
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+
+  RoleDailyScheduleQueuerArn:
+    Value: !GetAtt RoleDailyScheduleQueuer.Arn
+    Export:
+      Name: !Sub
+        - ${NameTag}-${EnvName}-RoleDailyScheduleQueuerArn
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+
+  RoleDailyScheduleQueueConsumerArn:
+    Value: !GetAtt RoleDailyScheduleQueueConsumer.Arn
+    Export:
+      Name: !Sub
+        - ${NameTag}-${EnvName}-RoleDailyScheduleQueueConsumerArn
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+
+  RoleDailyScheduleChangerArn:
+    Value: !GetAtt RoleDailyScheduleChanger.Arn
+    Export:
+      Name: !Sub
+        - ${NameTag}-${EnvName}-RoleDailyScheduleChangerArn
         - {
           NameTag: !FindInMap [ StackConfig, NameTag, Value ],
           EnvName: !Ref EnvName
