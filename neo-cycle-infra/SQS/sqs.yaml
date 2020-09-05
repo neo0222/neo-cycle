@@ -1,0 +1,75 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  SQS setup
+
+######################################################
+# Parameters:
+######################################################
+Parameters:
+  NameTag:
+    Type: String
+    Default: neo-cycle
+    AllowedValues:
+      - neo-cycle
+  EnvName:
+    Type: String
+    AllowedValues:
+      - dev
+      - prod
+    Description: Enter profile.
+
+######################################################
+# Resources
+######################################################
+Resources:
+  #----------------------------------------------
+  # ScheduleQueue
+  #----------------------------------------------
+  ScheduleQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      MaximumMessageSize: 262144
+      QueueName: !Sub ${NameTag}-${EnvName}-ScheduleQueue
+
+  #----------------------------------------------
+  # DailyScheduleQueue
+  #----------------------------------------------
+  DailyScheduleQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      MaximumMessageSize: 262144
+      QueueName: !Sub ${NameTag}-${EnvName}-DailyScheduleQueue
+
+#################################
+# Outputs
+#################################
+Outputs:
+  ScheduleQueueUrl:
+    Value: !Ref ScheduleQueue
+    Export:
+      Name: !Sub ${NameTag}-${EnvName}-ScheduleQueueUrl
+
+  DailyScheduleQueueUrl:
+    Value: !Ref DailyScheduleQueue
+    Export:
+      Name: !Sub ${NameTag}-${EnvName}-DailyScheduleQueueUrl
+
+  ScheduleQueueArn:
+    Value: !GetAtt ScheduleQueue.Arn
+    Export:
+      Name: !Sub ${NameTag}-${EnvName}-ScheduleQueueArn
+
+  DailyScheduleQueueArn:
+    Value: !GetAtt DailyScheduleQueue.Arn
+    Export:
+      Name: !Sub ${NameTag}-${EnvName}-DailyScheduleQueueArn
+
+  ScheduleQueueName:
+    Value: !GetAtt ScheduleQueue.QueueName
+    Export:
+      Name: !Sub ${NameTag}-${EnvName}-ScheduleQueueName
+
+  DailyScheduleQueueName:
+    Value: !GetAtt DailyScheduleQueue.QueueName
+    Export:
+      Name: !Sub ${NameTag}-${EnvName}-DailyScheduleQueueName
