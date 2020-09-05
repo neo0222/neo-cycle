@@ -198,8 +198,10 @@ Resources:
             Action:
               - dynamodb:GetItem
               - dynamodb:Scan
+              - dynamodb:query
             Resource:
               - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${NameTag}-${EnvName}-SCHEDULE
+              - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${NameTag}-${EnvName}-SCHEDULE/index/*
 
   NeoCycleScheduleTableWriteItemPolicy:
     Type: AWS::IAM::ManagedPolicy
@@ -228,8 +230,10 @@ Resources:
             Action:
               - dynamodb:GetItem
               - dynamodb:Scan
+              - dynamodb:query
             Resource:
               - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${NameTag}-${EnvName}-DAILY_SCHEDULE
+              - !Sub arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${NameTag}-${EnvName}-DAILY_SCHEDULE/index/*
 
   NeoCycleDailyScheduleTableWriteItemPolicy:
     Type: AWS::IAM::ManagedPolicy

@@ -80,9 +80,9 @@ Resources:
         - AttributeName: startDate
           AttributeType: S
         - AttributeName: isUsed
-          AttributeType: B
+          AttributeType: S
         - AttributeName: isRegular
-          AttributeType: B
+          AttributeType: S
       GlobalSecondaryIndexes:
         - IndexName: isRegular-isUsed-index
           KeySchema:

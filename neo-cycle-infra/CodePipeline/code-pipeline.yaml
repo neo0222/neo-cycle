@@ -78,33 +78,7 @@ Resources:
               - lambda:*
           - Effect: Allow
             Resource:
-              # RoleをアタッチするLambdaが増えるごとにここに追加していく
-              - !ImportValue
-                Fn::Sub: ${NameTag}-${EnvName}-RoleSessionMaintainerArn
-              - !ImportValue
-                Fn::Sub: ${NameTag}-${EnvName}-RoleParkingRetrieverArn
-              - !ImportValue
-                Fn::Sub: ${NameTag}-${EnvName}-RoleReservationMakerArn
-              - !ImportValue
-                Fn::Sub: ${NameTag}-${EnvName}-RoleReservationCancellerArn
-              - !ImportValue
-                Fn::Sub: ${NameTag}-${EnvName}-RoleStatusCheckerArn
-              - !ImportValue
-                Fn::Sub: ${NameTag}-${EnvName}-RoleParkingNearbyRetrieverArn
-              - !ImportValue
-                Fn::Sub: ${NameTag}-${EnvName}-RoleUserInitializerArn
-              - !ImportValue
-                Fn::Sub: ${NameTag}-${EnvName}-RoleParkingRegistererArn
-              - !ImportValue
-                Fn::Sub: ${NameTag}-${EnvName}-RoleUserMigratorArn
-              - !ImportValue
-                Fn::Sub: ${NameTag}-${EnvName}-RolePostAuthenticatorArn
-              - !ImportValue
-                Fn::Sub: ${NameTag}-${EnvName}-RoleBikeAvailableRetrieverArn
-              - !ImportValue
-                Fn::Sub: ${NameTag}-${EnvName}-RoleBikeDetectorArn
-              - !ImportValue
-                Fn::Sub: ${NameTag}-${EnvName}-RoleSessionSpreaderArn
+              - "*"
             Action:
               - iam:PassRole
 

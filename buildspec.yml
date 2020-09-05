@@ -54,7 +54,11 @@ phases:
       - cd ../SessionSpreader
       - zip -r Deploy.zip ./
       - aws s3 mv ./Deploy.zip s3://neo-cycle-${ENVIRONMENT_NAME}-lambda/${CODEBUILD_BUILD_NUMBER}/SessionSpreader/Deploy.zip
-      - cd ../../neo-cycle-infra
+      - cd ../AutoReservation
+      - cd ./ScheduleQueuer
+      - zip -r Deploy.zip ./
+      - aws s3 mv ./Deploy.zip s3://neo-cycle-${ENVIRONMENT_NAME}-lambda/${CODEBUILD_BUILD_NUMBER}/ScheduleQueuer/Deploy.zip
+      - cd ../../../neo-cycle-infra
       - aws cloudformation deploy
           --stack-name neo-cycle-${ENVIRONMENT_NAME}-lambda
           --template-file Lambda/api-gateway-lambda.yaml
@@ -64,6 +68,11 @@ phases:
           --stack-name neo-cycle-${ENVIRONMENT_NAME}-cognito-lambda
           --template-file Lambda/cognito-lambda.yaml
           --parameter-overrides ObjectKeyPrefix=${CODEBUILD_BUILD_NUMBER} EnvName=${ENVIRONMENT_NAME} SlackWebhookUrlForLoginMonitoring=${SLACK_WEBHOOK_URL_FOR_LOGIN_MONITORING} ShareCycleApiUrl=${SHARE_CYCLE_API_URL}
+          --capabilities CAPABILITY_AUTO_EXPAND
+      - aws cloudformation deploy
+          --stack-name neo-cycle-${ENVIRONMENT_NAME}-auto-reservation-lambda
+          --template-file Lambda/auto-reservation-lambda.yaml
+          --parameter-overrides ObjectKeyPrefix=${CODEBUILD_BUILD_NUMBER} EnvName=${ENVIRONMENT_NAME} 
           --capabilities CAPABILITY_AUTO_EXPAND
       - cd ..
   build:
