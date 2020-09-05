@@ -76,7 +76,6 @@ Resources:
       EventSourceArn: !ImportValue
         Fn::Sub: ${NameTag}-${EnvName}-DailyScheduleQueueArn
       FunctionName: !Ref LambdaDailyScheduleCreator
-      StartingPosition: TRIM_HORIZON
 
   # LambdaDailyScheduleQueueConsumerEventSourceMapping:
   #   Type: AWS::Lambda::EventSourceMapping
