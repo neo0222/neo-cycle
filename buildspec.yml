@@ -61,6 +61,9 @@ phases:
       - cd ../DailyScheduleCreator
       - zip -r Deploy.zip ./
       - aws s3 mv ./Deploy.zip s3://neo-cycle-${ENVIRONMENT_NAME}-lambda/${CODEBUILD_BUILD_NUMBER}/DailyScheduleCreator/Deploy.zip
+      - cd ../DailyScheduleQueuer
+      - zip -r Deploy.zip ./
+      - aws s3 mv ./Deploy.zip s3://neo-cycle-${ENVIRONMENT_NAME}-lambda/${CODEBUILD_BUILD_NUMBER}/DailyScheduleQueuer/Deploy.zip
       - cd ../../../neo-cycle-infra
       - aws cloudformation deploy
           --stack-name neo-cycle-${ENVIRONMENT_NAME}-lambda
