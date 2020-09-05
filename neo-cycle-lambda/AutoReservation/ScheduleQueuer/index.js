@@ -7,11 +7,14 @@ const docClient = new AWS.DynamoDB.DocumentClient({
 });
 const sqs = new AWS.SQS({
   region: 'ap-northeast-1',
-})
+});
 
 const envName = process.env.ENV_NAME;
 const scheduleTableName = `neo-cycle-${envName}-SCHEDULE`;
 const scheduleQueueUrl = process.env.SCHEDULE_QUEUE_URL;
+
+let tomorrow;
+let dayAfterTomorrow;
 
 exports.handler = async (event, context) => {
   if (event.warmup) {
@@ -21,53 +24,58 @@ exports.handler = async (event, context) => {
 };
 
 async function main(event, context) {
+  tomorrow = moment().add(1, "days");
+  dayAfterTomorrow = moment().add(2, "days");
+
   try {
     // regular schedule取得
     const regularScheduleList = await retrieveRegularSchedule();
     // one-time schedule取得
     const oneTimeScheduleList = await retrieveOneTimeSchedule();
+    console.log(`regularScheduleList: ${JSON.stringify(regularScheduleList)}, oneTimeScheduleList: ${JSON.stringify(oneTimeScheduleList)}`);
     // queue
     const promises = [];
     for (const schedule of regularScheduleList.concat(oneTimeScheduleList)) {
       promises.push(sendMessage(schedule));
     }
-    await Promise.all(promises);
+    console.log(await Promise.all(promises));
   } catch (error) {
     console.log(error);
+    throw error;
   }
 }
 
 async function retrieveRegularSchedule() {
   const params = {
     TableName: scheduleTableName,
-    IndexName: "isUsed-isRegular-index",
+    IndexName: "isRegular-isUsed-index",
   };
   try {
     const result = await docClient.scan(params).promise();
     return result.Items.filter((schedule) => {
       // 曜日で絞り込み
-      return schedule.dayOfWeek[moment().add('days', 1).format('d')]；
+      return schedule.dayOfWeek[tomorrow.format('d')];
     });
   }
   catch (error) {
-    throw error
+    throw error;
   }
 }
 
 async function retrieveOneTimeSchedule() {
   const params = {
     TableName: scheduleTableName,
-    IndexName: "isUsed-startDate-index",
+    IndexName: "startDate-isUsed-index",
     ExpressionAttributeNames:{'#startDate': 'startDate'},
-    ExpressionAttributeValues:{':tomorrow': moment().add('days', 1).format("YYYY-MM-DD")},
-    KeyConditionExpression: '#startDate = :startDate',
+    ExpressionAttributeValues:{':tomorrow': tomorrow.format("YYYY-MM-DD")},
+    KeyConditionExpression: '#startDate = :tomorrow',
   };
   try {
-    const result = await docClient.scan(params).promise();
+    const result = await docClient.query(params).promise();
     return result.Items;
   }
   catch (error) {
-    throw error
+    throw error;
   }
 }
 
@@ -82,11 +90,11 @@ async function sendMessage(schedule) {
       },
       "startDate": {
         DataType: "String",
-        StringValue: schedule.startDate,
+        StringValue: schedule.startDate ? schedule.startDate : tomorrow.format("YYYY-MM-DD"),
       },
       "endDate": {
         DataType: "String",
-        StringValue: schedule.endDate,
+        StringValue: schedule.endDate ? schedule.endDate : getEndDate(schedule.startTime, schedule.endTime),
       },
       "startTime": {
         DataType: "String",
@@ -102,30 +110,30 @@ async function sendMessage(schedule) {
       },
       "batteryLevelLowerLimit": {
         DataType: "Number",
-        StringValue: schedule.batteryLevelLowerLimit,
-      },
-      "isChangeToMoreChargedBikeAllowed": {
-        DataType: "Number",
-        StringValue: schedule.isChangeToMoreChargedBikeAllowed ? 1 : 0,
+        StringValue: schedule.batteryLevelLowerLimit.toFixed(),
       },
       "changeToMoreChargedBikeCondition": {
-        DateType: "String",
+        DataType: "String",
         StringValue: schedule.changeToMoreChargedBikeCondition
       },
-      "isRetryForExpiredReservationAllowed": {
-        DataType: "Number",
-        StringValue: schedule.isRetryForExpiredReservationAllowed ? 1 : 0,
-      },
       "retryForExpiredReservationCondition": {
-        DateType: "String",
+        DataType: "String",
         StringValue: schedule.retryForExpiredReservationCondition
       },
     },
   };
   try {
-    await sqs.sendMessage(params).promise();
+    return await sqs.sendMessage(params).promise();
   }
   catch (error) {
-    throw error
+    throw error;
+  }
+}
+
+function getEndDate(startTime, endTime) {
+  if (moment(startTime, 'HH:mm:ss') < moment(endTime, 'HH:mm:ss')) {
+    return tomorrow.format("YYYY-MM-DD");
+  } else {
+    return dayAfterTomorrow.format("YYYY-MM-DD");
   }
 }
