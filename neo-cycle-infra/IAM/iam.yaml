@@ -490,6 +490,7 @@ Resources:
       ManagedPolicyArns:
         - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
         - !Ref NeoCycleGetParameterPolicy
+        - !Ref NeoCycleSessionTableGetItemPolicy
       AssumeRolePolicyDocument:
         Version: "2012-10-17"
         Statement:

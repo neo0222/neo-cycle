@@ -118,7 +118,7 @@ async function retrieveAvailableBikeByParkingId(sessionId, parkingId, availableB
   try {
     const res = await axios.get(process.env['SHARE_CYCLE_API_URL'] + '/parkcycleinfo/' + parkingId + '/100/1', config);
     
-    availableBikeMap[parkingId.substring(3)] = res.data.cycle_info ? res.data.cycle_info.map((cycle) => {
+    availableBikeMap[parkingId] = res.data.cycle_info ? res.data.cycle_info.map((cycle) => {
       return {
         cycleName: cycle.cyc_name,
         batteryLevel: cycle.battery_level,
