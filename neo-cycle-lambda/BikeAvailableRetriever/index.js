@@ -82,10 +82,7 @@ async function retrieveParkingIdList(memberId, cursor, limit) {
       return index >= firstIndex && index < firstIndex + limit;
     }).map((parking) => {
       if (!parking.parkingId) return; // 販売所はidがnullで登録されるので無視
-      const parkingIdStr = parking.parkingId.toFixed();
-      if (parkingIdStr.length !== 5) throw `unexpected data: memberId ${memberId}, parkingId: ${parking.parkingId}, parkingName: ${parking.parkingName}`;
-      const parkingIdForRequest = '000' + parkingIdStr;
-      return parkingIdForRequest;
+      return parking.parkingId;
     }) : [];
     // nullを除外して返す
     return maybeParkingIdList.filter((parkingId) => {
