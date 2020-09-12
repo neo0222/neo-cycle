@@ -98,6 +98,7 @@ Resources:
       Environment:
         Variables:
           ENV_NAME: !Ref EnvName
+      FunctionName: !Sub ${NameTag}-${EnvName}-DailyScheduleQueueConsumer
       Handler: index.handler
       ReservedConcurrentExecutions: 1
       Role: !ImportValue

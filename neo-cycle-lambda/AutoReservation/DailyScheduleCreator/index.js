@@ -18,7 +18,6 @@ exports.handler = async (event, context) => {
 };
 
 async function main(event, context) {
-  console.log(JSON.stringify(event));
 
   try {
     for (const message of event.Records) {
@@ -78,7 +77,7 @@ async function putDailySchedule(messageAttributes) {
       createdHumanDatetime: today.format("YYYY-MM-DD HH:mm:ss"),
       updatedHumanDatetime: today.format("YYYY-MM-DD HH:mm:ss"),
       version: 0,
-      status: "WAITING",
+      status: "QUEUE_WAITING",
     },
   };
   try {
