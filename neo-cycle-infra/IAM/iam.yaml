@@ -617,6 +617,26 @@ Resources:
             Principal:
               Service: lambda.amazonaws.com 
 
+  RoleParkingAndAvailableBikeRetriever:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub
+        - ${NameTag}-${EnvName}-parking-and-available-bike-retriever-role
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+      ManagedPolicyArns:
+        - !FindInMap [StackConfig, ManagedPolicyArns, AWSLambdaBasicExecutionRole]
+        - !Ref NeoCycleSessionTableGetItemPolicy
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRole
+            Principal:
+              Service: lambda.amazonaws.com 
+
   RoleBikeDetector:
     Type: AWS::IAM::Role
     Properties:
@@ -868,6 +888,16 @@ Outputs:
     Export:
       Name: !Sub
         - ${NameTag}-${EnvName}-RoleBikeAvailableRetrieverArn
+        - {
+          NameTag: !FindInMap [ StackConfig, NameTag, Value ],
+          EnvName: !Ref EnvName
+        }
+
+  RoleParkingAndAvailableBikeRetrieverArn:
+    Value: !GetAtt RoleParkingAndAvailableBikeRetriever.Arn
+    Export:
+      Name: !Sub
+        - ${NameTag}-${EnvName}-RoleParkingAndAvailableBikeRetrieverArn
         - {
           NameTag: !FindInMap [ StackConfig, NameTag, Value ],
           EnvName: !Ref EnvName
