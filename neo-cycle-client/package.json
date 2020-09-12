@@ -9,7 +9,8 @@
     "start": "npm run dev",
     "build": "node build/build.js",
     "build:dev": "node build/build_dev.js",
-    "build:prod": "node build/build_prod.js"
+    "build:it1": "node build/build_it1.js",
+    "build:prod": "node build/prod/build_prod.js"
   },
   "dependencies": {
     "amazon-cognito-identity-js": "^4.2.1",

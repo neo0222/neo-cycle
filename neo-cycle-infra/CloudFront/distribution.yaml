@@ -13,6 +13,16 @@ Parameters:
     Type: String
     AllowedValues:
       - dev
+      - it1
+      - it2
+      - it3
+      - it4
+      - it5
+      - staging1
+      - staging2
+      - staging3
+      - staging4
+      - staging5
       - prod
   NameTag:
     Type: String
@@ -58,4 +68,4 @@ Resources:
     Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
     Properties:
       CloudFrontOriginAccessIdentityConfig:
-        Comment: !Ref neo-cycle-${EnvName}
+        Comment: !Sub neo-cycle-${EnvName}
