@@ -78,7 +78,7 @@ async function retrieveParkingWithAvailableBikeList(sessionId, parkingIdList, ap
     // 駐輪場情報取得
     innerPromises.push((async () => {
       const res = await axios.get(process.env['SHARE_CYCLE_API_URL'] + '/parkinfo/' + parkingId, config);
-      if (res !== 200) throw "error occurred";
+      if (res.data.result !== 200) throw "error occurred";
       const parking = res.data.park_info;
       return {
         parkingId: parking.park_id,
