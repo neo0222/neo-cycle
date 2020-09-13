@@ -147,11 +147,13 @@ async function updateDailySchedule(schedule, messageId) {
     },
     ExpressionAttributeNames: {
         '#messageId': 'messageId',
+        '#status': 'status',
     },
     ExpressionAttributeValues: {
         ':messageId': messageId,
+        ':status': 'QUEUED',
     },
-    UpdateExpression: 'SET #messageId = :messageId',
+    UpdateExpression: 'SET #messageId = :messageId, #status = :status',
   };
   try {
     await docClient.update(params).promise();
