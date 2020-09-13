@@ -1,0 +1,92 @@
+{
+	"parkingWithAvailableBikeList": [
+		{
+			"parkingId": "00010124",
+			"parkingName": "C2-08.ファミリーマート西麻布霞町店",
+			"lat": 35.661673,
+			"lon": 139.721118,
+			"availableBikeList": [
+				{
+					"cycleName": "TYO11122",
+					"cycleType": "グリッター・EB",
+					"batteryLevel": 2
+				},
+				{
+					"cycleName": "TYO4116",
+					"cycleType": "アシスタ　ユニ",
+					"batteryLevel": 3
+				},
+				{
+					"cycleName": "TYO13347",
+					"cycleType": "SW",
+					"batteryLevel": 1
+				},
+				{
+					"cycleName": "TYO7715",
+					"cycleType": "アシスタ　ユニ",
+					"batteryLevel": 3
+				}
+			]
+		},
+		{
+			"parkingId": "00010077",
+			"parkingName": "C1-09.愛宕グリーンヒルズ",
+			"lat": 35.662051,
+			"lon": 139.748132,
+			"availableBikeList": []
+		},
+		{
+			"parkingId": "00010089",
+			"parkingName": "C1-16.機械振興会館",
+			"lat": 35.659442,
+			"lon": 139.745549,
+			"availableBikeList": [
+				{
+					"cycleName": "TYO4328",
+					"cycleType": "グリッター・EB",
+					"batteryLevel": 3
+				},
+				{
+					"cycleName": "TYO4014",
+					"cycleType": "アシスタ　ユニ",
+					"batteryLevel": 3
+				},
+				{
+					"cycleName": "TYO3663",
+					"cycleType": "アシスタ　ユニ",
+					"batteryLevel": 2
+				}
+			]
+		},
+		{
+			"parkingId": "00010507",
+			"parkingName": "C2-17.goodoffice ROPPONGI",
+			"lat": 35.66591,
+			"lon": 139.727816,
+			"availableBikeList": [
+				{
+					"cycleName": "MNT1820",
+					"cycleType": "グリッター・EB",
+					"batteryLevel": 3
+				},
+				{
+					"cycleName": "CYD0452",
+					"cycleType": "アシスタ　ユニ",
+					"batteryLevel": 3
+				},
+				{
+					"cycleName": "TYO5512",
+					"cycleType": "アシスタ　ユニ",
+					"batteryLevel": 2
+				}
+			]
+		},
+		{
+			"parkingId": "00010087",
+			"parkingName": "C1-15.東京タワー",
+			"lat": 35.657847,
+			"lon": 139.745571,
+			"availableBikeList": []
+		}
+	]
+}
