@@ -39,9 +39,6 @@ async function main(event, context) {
       await checkDatetimeRangeAndUpdateStatusIfCompleted(dailySchedule);
       // statusで場合分け
       await handleStatus(dailySchedule, message.receiptHandle);
-      // 重複していない場合
-      await putDailySchedule(message.messageAttributes);
-      await updateQueue(message);
     }
   } catch (error) {
     console.log(error);
@@ -107,19 +104,26 @@ async function updateStatus(dailySchedule, status) {
 }
 
 async function handleStatus(dailySchedule, receiptHandle) {
-  switch (dailySchedule.status) {
-    case 'QUEUED':
-    case 'PROCESSING':
-      return await reserveBikeIfNeeded(dailySchedule, receiptHandle);
-    case 'EXPIRATION_WAITING':
-      return await reserveBikeIfExpired(dailySchedule, receiptHandle);
-    case 'QUEUE_DELETION_NEEDED':
-    case 'COMPLETED':
-      // エラーをthrowせずに正常終了→自動的にMessageがDeleteされる
-      return {result: {}, error: undefined};
-    default:
-      console.log(`invalid status`);
+  try {
+    switch (dailySchedule.status) {
+      case 'QUEUED':
+      case 'PROCESSING':
+        return await reserveBikeIfNeeded(dailySchedule, receiptHandle);
+      case 'EXPIRATION_WAITING':
+        return await reserveBikeIfExpired(dailySchedule, receiptHandle);
+      case 'QUEUE_DELETION_NEEDED':
+      case 'COMPLETED':
+        // エラーをthrowせずに正常終了→自動的にMessageがDeleteされる
+        return {result: {}, error: undefined};
+      default:
+        console.log(`invalid status`);
+    }
   }
+  catch (error) {
+    console.log(error);
+    throw error;
+  }
+  
 }
 
 async function isMessageDuplicated(messageId) {
@@ -143,15 +147,15 @@ async function isMessageDuplicated(messageId) {
   }
 }
 
-async function reserveBikeIfNeeded(ctx, dailySchedule) {
+async function reserveBikeIfNeeded(dailySchedule, receiptHandle) {
   const memberId = dailySchedule.memberId_scheduleId.split(":")[0];
   // 予約ステータスチェック
-  const statusResponse = await invokeMethodWithExtendVisibilityTimeout(checkStatus, memberId);
+  const statusResponse = await invokeMethodWithExtendVisibilityTimeout(receiptHandle, checkStatus, memberId);
   // 未予約の場合
   if (statusResponse.status === "WAITING_FOR_RESERVATION") {
     if (!dailySchedule.latestReservation) {
       // 最終予約情報がundefinedの場合、新規予約する
-      await reserveBike(memberId, dailySchedule.parkingList, dailySchedule.batteryLevelLowerLimit);
+      await reserveBike(memberId, dailySchedule);
     } else {
       // 最終予約情報が存在する（前に借りたが20分経ってキャンセルになった）場合、再度借り直すかチェック
       if (dailySchedule.retryForExpiredReservationCondition === "NONE") {
@@ -160,14 +164,7 @@ async function reserveBikeIfNeeded(ctx, dailySchedule) {
         await updateStatus(dailySchedule, "COMPLETED");
       } else {
         // 借り直す場合
-        await reserveBike(
-          memberId,
-          dailySchedule.parkingList,
-          dailySchedule.batteryLevelLowerLimit,
-          dailySchedule.changeToMoreChargedBikeCondition,
-          dailySchedule.retryForExpiredReservationCondition,
-          dailySchedule
-        )
+        await reserveBike(memberId, dailySchedule)
       }
     }
   } else {
@@ -179,22 +176,20 @@ async function reserveBikeIfNeeded(ctx, dailySchedule) {
     // TODO: 予約ポート候補にない自転車がレンタルされている場合は借り直さないようにしたい
     // 充電のあるものを借り直すかチェック、ONの場合は借り直す
     if (dailySchedule.changeToMoreChargedBikeCondition !== "NONE") {
-      await reserveMoreChargedBike(
+      await cancelCurrentReservationAndReserveMoreChargedBike(
         memberId,
-        dailySchedule.parkingList,
-        dailySchedule.batteryLevelLowerLimit,
-        dailySchedule.changeToMoreChargedBikeCondition
+        dailySchedule
       );
     }
     // 借り直さない場合は何もしない（キャンセル時の借り直しのみがONの場合など）
     
     // 最終ステータスチェック
-    const eventualStatusResponse = await invokeMethodWithExtendVisibilityTimeout(checkStatus, memberId);
+    const eventualStatusResponse = await invokeMethodWithExtendVisibilityTimeout(receiptHandle, checkStatus, memberId);
     // スケジュールの最終予約情報/ステータス更新
     await updateStatus(dailySchedule, eventualStatusResponse);
     // 残量借り換え: OFFなら、可視性タイムアウト秒数を1200秒に
     if (dailySchedule.changeToMoreChargedBikeCondition !== "NONE") {
-      await extendVisibilityTimeout(dailySchedule, 1200);
+      await extendVisibilityTimeout(receiptHandle, dailySchedule, 1200);
     }
   }
 }
@@ -203,54 +198,112 @@ async function checkStatus(memberId) {
   return (await axios.post(url + '/status', { memberId: memberId, sessionId: null, aplVersion: "20073101" })).data;
 }
 
-async function reserveBike(memberId, parkingList, batteryLevelLowerLimit, changeToMoreChargedBikeCondition, retryForExpiredReservationCondition, dailySchedule) {
-  const availableBikeListMap = await invokeMethodWithExtendVisibilityTimeout(getParkingIdAvaliableBikeListMap, memberId);
-  for (const parking of parkingList) {
-    const bikeList = availableBikeListMap[parking.parkingId.substring(3)];// TODO: parkingIdの持ち方を統一する（000から始まるのが最新）
-    for (let i = 3; i >= batteryLevelLowerLimit; i--) {
+async function reserveBike(memberId, dailySchedule) {
+  const parkingWithAvailableBikeList =
+    await invokeMethodWithExtendVisibilityTimeout(
+      receiptHandle, 
+      getParkingAndAvailableBikeList,
+      memberId,
+      dailySchedule.parkingList.map((parking) => parking.parkingId)
+    );
+  for (const parking of dailySchedule.parkingList) {
+    const bikeList = parkingWithAvailableBikeList[parking.parkingId];
+    for (let i = 3; i >= dailySchedule.batteryLevelLowerLimit; i--) {
       const filteredBikeList = bikeList.filter((bike) => {
         return bike.batteryLevel === i;
       });
       for (const bike of filteredBikeList) {
-        const res2 = await invokeMethodWithExtendVisibilityTimeout(makeReservation, memberId, bike.cycleName);
+        const res2 = await invokeMethodWithExtendVisibilityTimeout(receiptHandle, makeReservation, memberId, bike.cycleName);
         if (res2.data.cycleName === bike.cycleName) {
-          const resStatus = await invokeMethodWithExtendVisibilityTimeout(checkStatus, memberId);
+          const resStatus = await invokeMethodWithExtendVisibilityTimeout(receiptHandle, checkStatus, memberId);
           // status更新
-          if (changeToMoreChargedBikeCondition === "NONE" && retryForExpiredReservationCondition === "NONE") {
+          if (dailySchedule.changeToMoreChargedBikeCondition === "NONE" && dailySchedule.retryForExpiredReservationCondition === "NONE") {
             await updateStatus(dailySchedule, "COMPLETED");
-          } else if (changeToMoreChargedBikeCondition === "NONE" && retryForExpiredReservationCondition !== "NONE") {
+          } else if (dailySchedule.changeToMoreChargedBikeCondition === "NONE" && dailySchedule.retryForExpiredReservationCondition !== "NONE") {
             await updateStatus(dailySchedule, "EXPIRATION_WAITING");
           } else {
             await updateStatus(dailySchedule, "PROCESSING");
           }
+          return;
         }
       }
     }
   }
 }
 
-async function reserveMoreChargedBike(
-  memberId,
-  parkingList,
-  batteryLevelLowerLimit,
-  changeToMoreChargedBikeCondition
-) {
-  // TODO: implement
+async function cancelCurrentReservationAndReserveMoreChargedBike(memberId, dailySchedule) {
+  const parkingWithAvailableBikeList =
+    await invokeMethodWithExtendVisibilityTimeout(
+      receiptHandle, 
+      getParkingAndAvailableBikeList,
+      memberId,
+      dailySchedule.parkingList.map((parking) => parking.parkingId)
+    );
+  // 再予約条件を満たすポートのIDだけを抽出
+  let targetParkingIdList;
+  if (dailySchedule.changeToMoreChargedBikeCondition === "ANY") {
+    targetParkingIdList = dailySchedule.parkingList.map(parking => parking.parkingId);
+  } else if (dailySchedule.changeToMoreChargedBikeCondition === "SAME_ONLY") {
+    targetParkingIdList = [ dailySchedule.parkingList[dailySchedule.parkingList.length - 1].parkingId ];
+  } else if (dailySchedule.changeToMoreChargedBikeCondition === "HIGHER_PRIORITY_ONLY") {
+    const currentParkingIdPriority = dailySchedule.parkingList.findIndex((parking) => {
+      return parking.parkingId === dailySchedule.latestReservation.parkingId;
+    });
+    targetParkingIdList = dailySchedule.parkingList
+      .map(parking => parking.parkingId)
+      .filter((parkingId, index) => {
+        return index <= currentParkingIdPriority;
+      });
+  }
+  // 現在の予約をキャンセル
+  await invokeMethodWithExtendVisibilityTimeout(receiptHandle, cancelReservation, memberId);
+  // 予約ループ
+  for (const parkingId of targetParkingIdList) {
+    const bikeList = parkingWithAvailableBikeList[parkingId];
+    for (let i = 3; i >= dailySchedule.batteryLevelLowerLimit; i--) {
+      const filteredBikeList = bikeList.filter((bike) => {
+        return bike.batteryLevel === i;
+      });
+      for (const bike of filteredBikeList) {
+        const res2 = await invokeMethodWithExtendVisibilityTimeout(receiptHandle, makeReservation, memberId, bike.cycleName);
+        if (res2.data.cycleName === bike.cycleName) {
+          const resStatus = await invokeMethodWithExtendVisibilityTimeout(receiptHandle, checkStatus, memberId);
+          // status更新
+          if (dailySchedule.changeToMoreChargedBikeCondition === "NONE" && dailySchedule.retryForExpiredReservationCondition === "NONE") {
+            await updateStatus(dailySchedule, "COMPLETED");
+          } else if (dailySchedule.changeToMoreChargedBikeCondition === "NONE" && dailySchedule.retryForExpiredReservationCondition !== "NONE") {
+            await updateStatus(dailySchedule, "EXPIRATION_WAITING");
+          } else {
+            await updateStatus(dailySchedule, "PROCESSING");
+          }
+          return;
+        }
+      }
+    }
+  }
 }
 
-async function getParkingIdAvaliableBikeListMap(memberId) {
-  return (await axios.post(url + '/bikes/available', { memberId: memberId, sessionId: null, aplVersion: "20073101" })).data.availableBikeMap;
+async function getParkingAndAvailableBikeList(memberId, parkingIdList) {
+  return (await axios.post(url + '/parkings/id', { memberId: memberId, parkingIdList: parkingIdList, sessionId: null, aplVersion: "20073101" })).data.parkingWithAvailableBikeList;
 }
 
 async function makeReservation(memberId, cycleName) {
   return (await axios.post(url + '/reservation', { memberId: memberId, sessionId: null, cycleName: cycleName, aplVersion: "20073101" })).data;
 }
 
-async function reserveBikeIfExpired(ctx, dailySchedule) {
+async function cancelReservation(memberId) {
+  await axios.post(url + '/cancellation', { memberId: memberId, sessionId: null, aplVersion: "20073101" });
+}
+
+async function reserveBikeIfExpired(dailySchedule, receiptHandle) {
+  const memberId = dailySchedule.memberId_scheduleId.split(":")[0];
   // 予約ステータスチェック
+  const statusResponse = await invokeMethodWithExtendVisibilityTimeout(receiptHandle, checkStatus, memberId);
   // 未予約の場合
-  // 再度借り直す
-  
+  if (statusResponse.status === "WAITING_FOR_RESERVATION") {
+    // 再度借り直す
+    await reserveBike(memberId, dailySchedule);
+  }
 }
 
 function getCurrentMomentDatetime() {
@@ -281,7 +334,7 @@ function calcVisibilityTimeoutWithDatetime(upcomingExecutionDatetime) {
   return upcomingExecutionDatetime.unix() - getCurrentUnixDatetime();
 }
 
-async function invokeMethodWithExtendVisibilityTimeout(method, ...args) {
+async function invokeMethodWithExtendVisibilityTimeout(receiptHandle, method, ...args) {
   const before = getCurrentUnixDatetimeMilliSec();
   console.log(before)
   try {
@@ -307,6 +360,7 @@ async function invokeMethodWithExtendVisibilityTimeout(method, ...args) {
 function calcExecutionDurationSec(before) {
   return Math.ceil((getCurrentUnixDatetimeMilliSec() - before) / 1000);
 }
+
 async function putDailySchedule(messageAttributes) {
   const today = moment();
   const params = {
@@ -327,7 +381,7 @@ async function putDailySchedule(messageAttributes) {
       createdHumanDatetime: today.format("YYYY-MM-DD HH:mm:ss"),
       updatedHumanDatetime: today.format("YYYY-MM-DD HH:mm:ss"),
       version: 0,
-      status: "WAITING",
+      status: "QUEUE_WAITING",
     },
   };
   try {
@@ -357,5 +411,18 @@ async function updateQueue(message) {
 }
 
 async function extendVisibilityTimeout(dailySchedule, newTimeoutSeconds) {
-  // TODO: implement
+  const params = {
+    QueueUrl: dailyScheduleQueueUrl,
+    ReceiptHandle: receiptHandle,
+    VisibilityTimeout: newTimeoutSeconds,
+  };
+  try {
+    const sqsResponse = await sqs.changeMessageVisibility(params).promise();
+    console.log(sqsResponse)
+    console.log(`extend VisibilityTimeout: ${visibilityTimeout}`);
+  }
+  catch (error) {
+    console.log(error);
+    throw error;
+  }
 }
