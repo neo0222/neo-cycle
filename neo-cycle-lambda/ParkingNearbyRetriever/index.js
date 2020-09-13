@@ -77,8 +77,8 @@ async function retrieveParkingList(memberId, sessionId, lat, lon) {
     },
     params: {
       // ここにクエリパラメータを指定する
-      lon,
-      lat,
+      lon: lon.toFixed(6),
+      lat: lat.toFixed(6),
       get_start_no: 1,
       zoom_level: 14,
       get_num: 150,

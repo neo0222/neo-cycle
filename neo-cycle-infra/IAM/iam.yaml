@@ -347,6 +347,7 @@ Resources:
               - sqs:ReceiveMessage
               - sqs:DeleteMessage
               - sqs:GetQueueAttributes
+              - sqs:ChangeMessageVisibility
             Resource:
               - !Sub arn:aws:sqs:ap-northeast-1:010660485109:${NameTag}-${EnvName}-DailyScheduleQueue
 

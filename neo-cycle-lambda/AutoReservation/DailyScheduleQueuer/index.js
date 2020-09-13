@@ -67,7 +67,7 @@ async function retrieveWaitingSchedule() {
     const result = await docClient.query(params).promise();
     return result.Items.filter((dailySchedule) => {
       // 曜日で絞り込み
-      return dailySchedule.status === "WAITING";
+      return dailySchedule.status === "QUEUE_WAITING";
     });
   }
   catch (error) {
@@ -78,6 +78,7 @@ async function retrieveWaitingSchedule() {
 async function sendMessage(schedule) {
   const params = {
     QueueUrl: dailyScheduleQueueUrl,
+    DelaySeconds: calcDelaySeconds(schedule.startDate, schedule.startTime),
     MessageBody: `${schedule.memberId}:${schedule.createdUnixDatetime}`,
     MessageAttributes: {
       "memberId_scheduleId": {
@@ -132,6 +133,11 @@ async function sendMessage(schedule) {
   }
 }
 
+function calcDelaySeconds(startDate, startTime) {
+  const startDatetime = moment(`${startDate} ${startTime}`, "YYYY-MM-DD HH:mm:ss").unix();
+  return startDatetime - moment().unix();
+}
+
 async function updateDailySchedule(schedule, messageId) {
   const params = {
     TableName: dailyScheduleTableName,
@@ -141,11 +147,13 @@ async function updateDailySchedule(schedule, messageId) {
     },
     ExpressionAttributeNames: {
         '#messageId': 'messageId',
+        '#status': 'status',
     },
     ExpressionAttributeValues: {
         ':messageId': messageId,
+        ':status': 'QUEUED',
     },
-    UpdateExpression: 'SET #messageId = :messageId',
+    UpdateExpression: 'SET #messageId = :messageId, #status = :status',
   };
   try {
     await docClient.update(params).promise();
