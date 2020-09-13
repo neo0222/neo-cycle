@@ -82,10 +82,7 @@ async function retrieveParkingIdList(memberId, cursor, limit) {
       return index >= firstIndex && index < firstIndex + limit;
     }).map((parking) => {
       if (!parking.parkingId) return; // 販売所はidがnullで登録されるので無視
-      const parkingIdStr = parking.parkingId.toFixed();
-      if (parkingIdStr.length !== 5) throw `unexpected data: memberId ${memberId}, parkingId: ${parking.parkingId}, parkingName: ${parking.parkingName}`;
-      const parkingIdForRequest = '000' + parkingIdStr;
-      return parkingIdForRequest;
+      return parking.parkingId;
     }) : [];
     // nullを除外して返す
     return maybeParkingIdList.filter((parkingId) => {
@@ -121,7 +118,7 @@ async function retrieveAvailableBikeByParkingId(sessionId, parkingId, availableB
   try {
     const res = await axios.get(process.env['SHARE_CYCLE_API_URL'] + '/parkcycleinfo/' + parkingId + '/100/1', config);
     
-    availableBikeMap[parkingId.substring(3)] = res.data.cycle_info ? res.data.cycle_info.map((cycle) => {
+    availableBikeMap[parkingId] = res.data.cycle_info ? res.data.cycle_info.map((cycle) => {
       return {
         cycleName: cycle.cyc_name,
         batteryLevel: cycle.battery_level,
