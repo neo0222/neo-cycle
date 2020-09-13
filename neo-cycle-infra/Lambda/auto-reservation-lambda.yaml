@@ -108,6 +108,9 @@ Resources:
       Environment:
         Variables:
           ENV_NAME: !Ref EnvName
+          INITIAL_VISIBILITY_TIMEOUT: 5
+          DAILY_SCHEDULE_QUEUE_URL: !ImportValue
+            Fn::Sub: ${NameTag}-${EnvName}-DailyScheduleQueueUrl
       FunctionName: !Sub ${NameTag}-${EnvName}-DailyScheduleQueueConsumer
       Handler: index.handler
       ReservedConcurrentExecutions: 1
