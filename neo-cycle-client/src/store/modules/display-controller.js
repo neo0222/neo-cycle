@@ -11,6 +11,7 @@ const state = {
   lastCancellationAttemptedDatetime: undefined,
   isParkingTableEditable: false,
   isParkingCardVisible: false,
+  isReservedBikeDetailDrawerVisible: false,
   currentPage: 'Search from Fav. List',
 }
 
@@ -29,6 +30,9 @@ const getters = {
   },
   isParkingCardVisible(state) {
     return state.isParkingCardVisible
+  },
+  isReservedBikeDetailDrawerVisible(state) {
+    return state.isReservedBikeDetailDrawerVisible
   },
   currentPage(state) {
     return state.currentPage
@@ -61,6 +65,12 @@ const mutations = {
   },
   unableParkingCardVisible(state) {
     state.isParkingCardVisible = false
+  },
+  enableReservedBikeDetailDrawerVisible(state) {
+    state.isReservedBikeDetailDrawerVisible = true
+  },
+  disableReservedBikeDetailDrawerVisible(state) {
+    state.isReservedBikeDetailDrawerVisible = false
   },
   updateCurrentPage(state, payload) {
     state.currentPage = payload.currentPage

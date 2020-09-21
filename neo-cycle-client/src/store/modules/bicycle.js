@@ -176,7 +176,7 @@ const mutations = {
     const h = payload.vue.$createElement;
     state.reservedBikeMessage = payload.vue.$message({
       message: h('div', { style: 'display: flex' }, [
-        h('p', { style: 'padding-left: 4vw; padding-left: 4vw' }, [
+        h('p', { style: 'padding-left: 4vw; padding-left: 4vw; width: 60vw;' }, [
           h('span', { style: 'color: #606266; font-family: Avenir, Helvetica, Arial, sans-serif' }, `CycleName: ${payload.reservedBike.cycleName}`),
           h('br'),
           h('span', { style: 'color: #606266; font-family: Avenir, Helvetica, Arial, sans-serif' }, `Passcode: ${payload.reservedBike.cyclePasscode}`),
@@ -184,19 +184,30 @@ const mutations = {
           h('span', { style: 'color: #606266; font-family: Avenir, Helvetica, Arial, sans-serif' }, `ReserveLimit: ${payload.reservedBike.reserveLimit.substring(11)}`),
           h('br'),
         ]),
-        h('div', { style: 'padding-left: 4vw; padding-left: 4vw; display: flex; justify-content: center; align-items: center;' }, [
+        h('div', { style: 'margin: auto; width: 20vw; text-align: center;' }, [
           h('el-button', {
             props: {
               type: "danger",
               plain: true,
-              size: "mini"
+              size: "mini",
             },
-            style: 'color: #F56C6C;',
+            style: 'color: #F56C6C; width: 20vw; margin-bottom: 10px;',
             nativeOn: {
               click: payload.vue.cancelReservation
             },
-          }, 'cancel')
-        ])
+          }, 'cancel'),
+          h('el-button', {
+            props: {
+              type: "info",
+              plain: true,
+              size: "mini",
+            },
+            style: 'color: #F8CC5FF; width: 20vw; margin: 0px;',
+            nativeOn: {
+              click: payload.vue.showReservedBikeDetailDrawer,
+            },
+          }, 'detail')
+        ]),
       ]),
       type: 'info',
       iconClass: 'el-icon-bicycle',
