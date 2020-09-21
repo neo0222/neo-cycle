@@ -9,7 +9,7 @@
       <span>Passcode: {{reservedBike.cyclePasscode}}</span><br/>
       <span>ParkingName: {{reservedBike.parkingName}}</span><br/>
       <span>reserveLimit: {{reservedBike.reserveLimit}}</span><br/>
-      <span>batteryLevel: {{reservedBike.batteryLevel}}</span><br/>
+      <span>batteryLevel: {{reservedBike.batteryLevel}} / 3</span><br/>
     </div>
   </el-drawer>
 </template>
