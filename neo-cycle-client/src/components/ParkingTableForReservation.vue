@@ -102,8 +102,8 @@ export default {
       // TODO: implement me.
       this.isSessionTimeOutDialogVisible = true;
     },
-    async showReservedBikeDetailDrawer() {
-      
+    showReservedBikeDetailDrawer() {
+      this.$store.commit('displayController/enableReservedBikeDetailDrawerVisible')
     },
   },
   computed: {

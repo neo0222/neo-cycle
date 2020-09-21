@@ -251,8 +251,11 @@ export default {
     async cancelReservation() {
       await this.$store.dispatch('bicycle/cancelReservation', { vue: this })
     },
-    async showReservedBikeDetailDrawer() {
-      
+    showReservedBikeDetailDrawer() {
+      this.$store.commit('displayController/enableReservedBikeDetailDrawerVisible')
+    },
+    hideReservedBikeDetailDrawer() {
+      this.$store.commit('displayController/disableReservedBikeDetailDrawerVisible')
     },
   },
   destroyed() {

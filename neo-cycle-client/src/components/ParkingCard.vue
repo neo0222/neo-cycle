@@ -125,8 +125,8 @@ export default {
         background: 'rgba(208, 208, 208, 0.7)'
       }
     },
-    async showReservedBikeDetailDrawer() {
-      
+    showReservedBikeDetailDrawer() {
+      this.$store.commit('displayController/enableReservedBikeDetailDrawerVisible')
     },
   },
   updated() {
