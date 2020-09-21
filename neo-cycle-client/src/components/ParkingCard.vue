@@ -125,6 +125,9 @@ export default {
         background: 'rgba(208, 208, 208, 0.7)'
       }
     },
+    async showReservedBikeDetailDrawer() {
+      
+    },
   },
   updated() {
     

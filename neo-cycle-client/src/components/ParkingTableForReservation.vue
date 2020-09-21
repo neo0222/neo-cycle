@@ -102,6 +102,9 @@ export default {
       // TODO: implement me.
       this.isSessionTimeOutDialogVisible = true;
     },
+    async showReservedBikeDetailDrawer() {
+      
+    },
   },
   computed: {
     status() {
