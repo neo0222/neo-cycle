@@ -17,6 +17,7 @@
     <reservation-by-image-card
       v-if="currentPage === 'Reserve By Image'"
       />
+    <reserved-bike-detail-drawer/>
     <el-dialog
       :visible.sync="isSessionTimeOutDialogVisible"
       title="Oops! Session expired."
@@ -40,6 +41,7 @@ import ParkingTableForReservation from './ParkingTableForReservation'
 import ParkingMap from './ParkingMap'
 import ParkingTableForSorting from './ParkingTableForSorting'
 import ReservationByImageCard from './ReservationByImageCard'
+import ReservedBikeDetailDrawer from './ReservedBikeDetailDrawer'
 
 const getLocationOptions = {
   enableHighAccuracy: false,
@@ -58,6 +60,7 @@ export default {
     ParkingMap,
     ParkingTableForSorting,
     ReservationByImageCard,
+    ReservedBikeDetailDrawer,
   },
   data () {
     return {
