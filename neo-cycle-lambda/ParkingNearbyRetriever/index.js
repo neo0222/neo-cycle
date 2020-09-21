@@ -89,6 +89,8 @@ async function retrieveParkingList(memberId, sessionId, lat, lon) {
     console.log(JSON.stringify(res.data));
     
     if (res.data.result !== 200) throw "error occurred";
+    // 近くのポートが0台の場合はpark_info = undefined
+    if (res.data.total_num === 0) return [];
     return res.data.park_info.map((parking) => {
       return {
         parkingId: parking.park_id,
