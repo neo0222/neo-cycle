@@ -248,7 +248,7 @@ async function reserveBike(receiptHandle, memberId, dailySchedule) {
   for (const parking of dailySchedule.parkingList) {
     const targetParking = parkingWithAvailableBikeList.filter(el => el.parkingId === parking.parkingId)[0];
     const bikeList = targetParking ? targetParking.availableBikeList : [];
-    console.log(`parkingId ${parkingId}, avaliableBikeList: ${JSON.stringify(bikeList)}`);
+    console.log(`parkingId ${targetParking.parkingId}, avaliableBikeList: ${JSON.stringify(bikeList)}`);
     for (let i = 3; i >= dailySchedule.batteryLevelLowerLimit; i--) {
       const filteredBikeList = bikeList.filter((bike) => {
         return bike.batteryLevel === i;
