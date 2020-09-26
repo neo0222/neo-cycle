@@ -31,19 +31,24 @@ async function main(event, context) {
   // console.log(JSON.stringify(event));
   visibilityTimeout = Number(initialVisibilityTimeout);
   
-  try {
-    for (const message of event.Records) {
+  for (const message of event.Records) {
+    try {
       // schedule取得(ConsistentRead=true)
       const dailySchedule = await getDailySchedule(message.messageAttributes);
       console.log(`target dailySchedule: ${JSON.stringify(dailySchedule)}`)
       // 時刻チェック&終了日時を超えていたらステータスをCOMPLETEDに
-      await checkDatetimeRangeAndUpdateStatusIfCompleted(dailySchedule);
-      // statusで場合分け
-      await handleStatus(dailySchedule, message.receiptHandle);
+      const result = await checkDatetimeRangeAndUpdateStatusIfCompleted(dailySchedule);
+      if (result !== "this schedule expired.") {
+        // statusで場合分け
+        await handleStatus(dailySchedule, message.receiptHandle);
+      }
     }
-  } catch (error) {
-    console.log(error);
-    throw error;
+    catch (error) {
+      console.log(error);
+      throw error;
+    } finally {
+      await extendVisibilityTimeout(message.receiptHandle, 0);
+    }
   }
 }
 
@@ -79,6 +84,7 @@ async function checkDatetimeRangeAndUpdateStatusIfCompleted(dailySchedule) {
     // スケジュールが完了しているのでステータスを更新
     console.log("this schedule expired.");
     await updateStatus(dailySchedule, "COMPLETED");
+    return "this schedule expired.";
   }
 }
 
@@ -227,7 +233,7 @@ async function reserveBikeIfNeeded(dailySchedule, receiptHandle) {
     // 残量借り換え: OFFなら、可視性タイムアウト秒数を1200秒に
     if (dailySchedule.changeToMoreChargedBikeCondition === "NONE") {
       console.log("reservation succeeded and charged bike change setting is disable, so process is made restart 1200 sec.")
-      await extendVisibilityTimeout(receiptHandle, dailySchedule, 1200);
+      await extendVisibilityTimeout(receiptHandle, 1200);
     }
   }
 }
@@ -248,7 +254,7 @@ async function reserveBike(receiptHandle, memberId, dailySchedule) {
   for (const parking of dailySchedule.parkingList) {
     const targetParking = parkingWithAvailableBikeList.filter(el => el.parkingId === parking.parkingId)[0];
     const bikeList = targetParking ? targetParking.availableBikeList : [];
-    console.log(`parkingId ${parkingId}, avaliableBikeList: ${JSON.stringify(bikeList)}`);
+    console.log(`parkingId ${targetParking.parkingId}, avaliableBikeList: ${JSON.stringify(bikeList)}`);
     for (let i = 3; i >= dailySchedule.batteryLevelLowerLimit; i--) {
       const filteredBikeList = bikeList.filter((bike) => {
         return bike.batteryLevel === i;
@@ -274,6 +280,8 @@ async function reserveBike(receiptHandle, memberId, dailySchedule) {
       }
     }
   }
+  console.log(`there is no available bike.`);
+  throw "no available bike";
 }
 
 async function cancelCurrentReservationAndReserveMoreChargedBike(receiptHandle, memberId, dailySchedule) {
@@ -463,7 +471,7 @@ async function updateQueue(message) {
   }
 }
 
-async function extendVisibilityTimeout(receiptHandle, dailySchedule, newTimeoutSeconds) {
+async function extendVisibilityTimeout(receiptHandle, newTimeoutSeconds) {
   const params = {
     QueueUrl: dailyScheduleQueueUrl,
     ReceiptHandle: receiptHandle,
@@ -472,7 +480,7 @@ async function extendVisibilityTimeout(receiptHandle, dailySchedule, newTimeoutS
   try {
     const sqsResponse = await sqs.changeMessageVisibility(params).promise();
     console.log(sqsResponse)
-    console.log(`extend VisibilityTimeout: ${visibilityTimeout}`);
+    console.log(`extend VisibilityTimeout: ${newTimeoutSeconds}`);
   }
   catch (error) {
     console.log(error);
