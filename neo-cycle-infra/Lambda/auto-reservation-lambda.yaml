@@ -135,6 +135,7 @@ Resources:
   LambdaDailyScheduleQueueConsumerEventSourceMapping:
     Type: AWS::Lambda::EventSourceMapping
     Properties:
+      BatchSize: 1
       EventSourceArn: !ImportValue
         Fn::Sub: ${NameTag}-${EnvName}-DailyScheduleQueueArn
       FunctionName: !Ref LambdaDailyScheduleQueueConsumer
